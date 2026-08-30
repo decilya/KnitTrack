@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">KnitTrac</string>
+    <string name="category_knitting">Вязание спицами</string>
+    <string name="category_crochet">Вязание крючком</string>
+    <string name="category_beading">Бисероплетение</string>
+    <string name="category_macrame">Макраме</string>
+    <string name="category_other">Другое</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_premium_status">Статус: Бесплатный</string>
+    <string name="settings_buy_premium">Купить подписку</string>
+</resources>
