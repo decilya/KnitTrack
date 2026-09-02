@@ -1,17 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <application android:name=".KnitTracApplication" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.KnitTrac" tools:targetApi="34">
-        <activity android:name=".MainActivity" android:exported="true" android:theme="@style/Theme.KnitTrac">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:targetApi="34"
+        tools:ignore="ForegroundServicePermission" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        tools:targetApi="34"
+        tools:ignore="ForegroundServicePermission" />
+
+    <application
+        android:name=".KnitTracApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="KnitTrac"
+        android:theme="@style/Theme.KnitTrac">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.KnitTrac">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".platform.timer.TimerForegroundService" android:foregroundServiceType="specialUse" />
-        <service android:name="com.yandex.mobile.ads.common.AdService" android:exported="false" />
+
+        <service
+            android:name=".platform.service.TimerForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
     </application>
 </manifest>
