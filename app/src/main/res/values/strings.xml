@@ -29,4 +29,10 @@
     <string name="reset">Сброс</string>
     <string name="save_session">Сохранить сессию</string>
     <string name="session_saved">Сессия успешно сохранена</string>
+    <string name="add_project">Добавить проект</string>
+    <string name="no_projects_yet">Нет проектов. Создайте первый!</string>
+    <string name="project_name">Название проекта</string>
+    <string name="category">Категория</string>
+    <string name="description">Описание</string>
+    <string name="save">Сохранить</string>
 </resources>

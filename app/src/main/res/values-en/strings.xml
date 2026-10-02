@@ -19,4 +19,10 @@
     <string name="reset">Reset</string>
     <string name="save_session">Save session</string>
     <string name="session_saved">Session saved successfully</string>
+    <string name="add_project">Add project</string>
+    <string name="no_projects_yet">No projects yet. Create your first one!</string>
+    <string name="project_name">Project name</string>
+    <string name="category">Category</string>
+    <string name="description">Description</string>
+    <string name="save">Save</string>
 </resources>
