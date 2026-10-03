@@ -1,39 +1,30 @@
 package com.knittrac.app.domain.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.knittrac.app.core.common.SyncStatus
 
 /**
- * Доменная сущность проекта (вязального проекта).
- *
- * Эта класс представляет проект в доменном слое приложения и содержит
- * всю необходимую информацию о проекте: название, категорию, время создания,
- * общее затраченное время и статус синхронизации.
- *
- * Важные особенности:
- * - [syncStatus] отслеживает необходимость синхронизации с сервером
- * - [updatedAt] автоматически обновляется при любых изменениях (Правило 3)
- * - [totalTimeSeconds] агрегирует время из всех сессий проекта
- *
- * @param id Уникальный идентификатор проекта (0 для новых проектов).
- * @param name Название проекта (например, "Зимний шарф").
- * @param category Категория проекта (определяет тип рукоделия).
- * @param createdAt Временная метка создания проекта (в миллисекундах).
- * @param totalTimeSeconds Общее затраченное время на проект в секундах.
- *        Агрегируется из всех сессий работы над проектом.
- * @param updatedAt Временная метка последнего обновления проекта (в миллисекундах).
- *        Автоматически обновляется при любом изменении (Правило 3).
- * @param syncStatus Статус синхронизации с облачным сервером.
- *        Устанавливается в [SyncStatus.PENDING] при любых изменениях.
- *
- * @see Session Сущность сессии работы над проектом.
- * @see SyncStatus Статусы синхронизации.
+ * Сущность проекта для базы данных Room.
  */
+@Entity(tableName = "projects")
 data class Project(
-    val id: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+
+    @ColumnInfo(name = "name")
     val name: String,
-    val category: Category,
+
+    @ColumnInfo(name = "category")
+    val category: Category, // Room автоматически сохранит Enum как TEXT
+
+    @ColumnInfo(name = "created_at")
     val createdAt: Long,
-    val totalTimeSeconds: Long = 0L,
+
+    @ColumnInfo(name = "updated_at")
     val updatedAt: Long,
-    val syncStatus: SyncStatus
+
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: String = SyncStatus.PENDING.name
 )

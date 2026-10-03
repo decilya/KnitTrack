@@ -1,45 +1,31 @@
 package com.knittrac.app.domain.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.knittrac.app.core.common.SyncStatus
 
 /**
- * Доменная сущность сессии работы над проектом.
- *
- * Сессия представляет собой один непрерывный период работы над проектом
- * (например, "вязала шарф с 14:00 до 15:30"). Каждая сессия содержит:
- * - Временные метки начала и окончания
- * - Продолжительность в секундах
- * - Количество выполненных рядов (или другую метрику прогресса)
- *
- * Важные особенности:
- * - [durationSeconds] вычисляется как разница между [endTimestamp] и [startTimestamp]
- * - [syncStatus] устанавливается в PENDING при создании (Правило 3)
- * - [updatedAt] автоматически обновляется при сохранении
- *
- * @param id Уникальный идентификатор сессии (0 для новых сессий).
- * @param projectId Идентификатор проекта, к которому относится сессия.
- *        Внешний ключ для связи с таблицей проектов.
- * @param startTimestamp Временная метка начала сессии (в миллисекундах).
- * @param endTimestamp Временная метка окончания сессии (в миллисекундах).
- * @param durationSeconds Продолжительность сессии в секундах.
- *        Вычисляется как (endTimestamp - startTimestamp) / 1000.
- * @param rowCount Количество выполненных рядов (или другая метрика прогресса).
- *        Может быть 0, если пользователь не указал количество.
- * @param updatedAt Временная метка последнего обновления (в миллисекундах).
- *        Автоматически устанавливается при сохранении.
- * @param syncStatus Статус синхронизации с облачным сервером.
- *        Устанавливается в [SyncStatus.PENDING] при создании.
- *
- * @see Project Сущность проекта, к которому относится сессия.
- * @see SyncStatus Статусы синхронизации.
+ * Сущность завершенной сессии вязания.
+ * Хранится в локальной базе данных Room.
  */
+@Entity(tableName = "sessions")
 data class Session(
-    val id: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+
+    @ColumnInfo(name = "project_id")
     val projectId: Long,
-    val startTimestamp: Long,
-    val endTimestamp: Long,
-    val durationSeconds: Long,
+
+    @ColumnInfo(name = "start_time")
+    val startTime: Long,
+
+    @ColumnInfo(name = "end_time")
+    val endTime: Long,
+
+    @ColumnInfo(name = "row_count")
     val rowCount: Int,
-    val updatedAt: Long,
-    val syncStatus: SyncStatus
+
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: String = SyncStatus.PENDING.name
 )
