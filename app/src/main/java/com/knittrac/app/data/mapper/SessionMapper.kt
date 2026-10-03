@@ -1,11 +1,27 @@
 package com.knittrac.app.data.mapper
-import com.knittrac.app.core.common.SyncStatus
-import com.knittrac.app.data.local.entity.SessionEntity
+
 import com.knittrac.app.domain.entity.Session
+import com.knittrac.app.core.common.SyncStatus
+
 object SessionMapper {
-    fun SessionEntity.toDomain(): Session {
-        val sync = runCatching { SyncStatus.valueOf(this.syncStatus) }.getOrDefault(SyncStatus.PENDING)
-        return Session(id, projectId, startTimestamp, endTimestamp, durationSeconds, rowCount, updatedAt, sync)
+    /**
+     * Маппинг в доменную модель Session.
+     */
+    fun mapToDomain(
+        id: Long = 0,
+        projectId: Long,
+        startTime: Long,
+        endTime: Long,
+        rowCount: Int,
+        syncStatus: String = SyncStatus.PENDING.name
+    ): Session {
+        return Session(
+            id = id,
+            projectId = projectId,
+            startTime = startTime,
+            endTime = endTime,
+            rowCount = rowCount,
+            syncStatus = syncStatus
+        )
     }
-    fun Session.toEntity(): SessionEntity = SessionEntity(id, projectId, startTimestamp, endTimestamp, durationSeconds, rowCount, updatedAt, syncStatus.name)
 }

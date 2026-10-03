@@ -1,13 +1,30 @@
 package com.knittrac.app.data.mapper
-import com.knittrac.app.core.common.SyncStatus
-import com.knittrac.app.data.local.entity.ProjectEntity
+
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.core.common.SyncStatus
+
 object ProjectMapper {
-    fun ProjectEntity.toDomain(): Project {
-        val cat = runCatching { Category.valueOf(this.category) }.getOrDefault(Category.OTHER)
-        val sync = runCatching { SyncStatus.valueOf(this.syncStatus) }.getOrDefault(SyncStatus.PENDING)
-        return Project(id, name, cat, createdAt, totalTimeSeconds, updatedAt, sync)
+    /**
+     * Маппинг в доменную модель Project.
+     * Адаптируйте параметры под ваш DTO, если этот маппер используется для сети.
+     * Главное - соблюдать сигнатуру конструктора Project.
+     */
+    fun mapToDomain(
+        id: Long = 0,
+        name: String,
+        category: Category,
+        createdAt: Long,
+        updatedAt: Long,
+        syncStatus: String = SyncStatus.PENDING.name
+    ): Project {
+        return Project(
+            id = id,
+            name = name,
+            category = category,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            syncStatus = syncStatus
+        )
     }
-    fun Project.toEntity(): ProjectEntity = ProjectEntity(id, name, category.name, createdAt, totalTimeSeconds, updatedAt, syncStatus.name)
 }
