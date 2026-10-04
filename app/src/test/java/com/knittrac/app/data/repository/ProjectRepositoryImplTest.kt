@@ -29,6 +29,7 @@ class ProjectRepositoryImplTest {
 
     @Test
     fun `addProject should set PENDING sync status and current timestamp`() = runTest {
+        // Arrange
         val project = Project(
             id = 0,
             name = "Тест",
@@ -41,8 +42,10 @@ class ProjectRepositoryImplTest {
         
         coEvery { projectDao.insertProject(any()) } returns 1L
 
+        // Act
         val result = repository.addProject(project)
 
+        // Assert
         assertTrue(result is Result.Success)
         coVerify {
             projectDao.insertProject(match { p ->
@@ -54,14 +57,16 @@ class ProjectRepositoryImplTest {
 
     @Test
     fun `getAllProjectsFlow should return projects from DAO`() = runTest {
+        // Arrange
         val projects = listOf(
-            Project(1L, "P1", Category.KNITTING, 0, 0, 0, SyncStatus.SYNCED.name)
+            Project(1L, "P1", Category.KNITTING, 0L, 0L, 0L, SyncStatus.SYNCED.name)
         )
         coEvery { projectDao.getAllProjectsFlow() } returns flowOf(projects)
 
-        // ИСПРАВЛЕНО: используем .first() для получения первого значения из Flow
+        // Act: используем .first() для получения первого значения из холодного Flow
         val result = repository.getAllProjectsFlow().first()
 
+        // Assert
         assertEquals(projects, result)
     }
 }
