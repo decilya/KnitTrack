@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +23,8 @@ import kotlinx.coroutines.flow.collectLatest
 fun ProjectsListScreen(
     viewModel: ProjectsListViewModel = hiltViewModel(),
     onNavigateToAddProject: () -> Unit,
-    onNavigateToTimer: (Long) -> Unit
+    onNavigateToTimer: (Long) -> Unit,
+    onNavigateToStats: (Long) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     
@@ -39,7 +41,14 @@ fun ProjectsListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) }
+                title = { Text(stringResource(R.string.app_name)) },
+                actions = {
+                    if (state.projects.isNotEmpty()) {
+                        IconButton(onClick = { onNavigateToStats(state.projects.first().id) }) {
+                            Icon(Icons.Default.ShowChart, contentDescription = "Статистика")
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -100,7 +109,7 @@ private fun ProjectCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = project.category.name, // <-- ИСПРАВЛЕНО: добавлено .name
+                text = project.category.name,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
