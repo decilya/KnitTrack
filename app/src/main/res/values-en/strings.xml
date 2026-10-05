@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">KnitTrac</string>
+
+    <!-- Categories -->
+    <string name="category_knitting">Knitting</string>
+    <string name="category_crochet">Crochet</string>
+    <string name="category_beading">Beading</string>
+    <string name="category_macrame">Macrame</string>
+    <string name="category_other">Other</string>
+
+    <!-- Navigation and Actions -->
+    <string name="action_back">Back</string>
+    <string name="action_stats">Statistics</string>
+    <string name="add_project">Add project</string>
+    <string name="no_projects_yet">No projects yet. Create your first one!</string>
+
     <!-- Settings -->
+    <string name="settings_title">Settings</string>
     <string name="settings_language_ru">Русский</string>
     <string name="settings_language_en">English</string>
     <string name="settings_premium_status">Status: Free</string>
     <string name="settings_buy_premium">Buy subscription</string>
 
-    <!-- Timer -->
+    <!-- Timer and Projects -->
     <string name="timer_channel_name">KnitTrac Timer</string>
     <string name="timer_channel_description">Notifications about timer operation</string>
     <string name="timer_started">Timer started</string>
@@ -19,8 +35,6 @@
     <string name="reset">Reset</string>
     <string name="save_session">Save session</string>
     <string name="session_saved">Session saved successfully</string>
-    <string name="add_project">Add project</string>
-    <string name="no_projects_yet">No projects yet. Create your first one!</string>
     <string name="project_name">Project name</string>
     <string name="category">Category</string>
     <string name="description">Description</string>

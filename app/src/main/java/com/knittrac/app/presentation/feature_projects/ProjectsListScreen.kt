@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,7 +45,10 @@ fun ProjectsListScreen(
                 actions = {
                     if (state.projects.isNotEmpty()) {
                         IconButton(onClick = { onNavigateToStats(state.projects.first().id) }) {
-                            Icon(Icons.Default.Star, contentDescription = "Статистика")
+                            Icon(
+                                imageVector = Icons.Default.Assessment,
+                                contentDescription = stringResource(R.string.action_stats)
+                            )
                         }
                     }
                 }
@@ -55,7 +58,10 @@ fun ProjectsListScreen(
             FloatingActionButton(
                 onClick = onNavigateToAddProject
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_project))
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_project)
+                )
             }
         }
     ) { paddingValues ->
@@ -80,7 +86,8 @@ fun ProjectsListScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.projects) { project ->
+                // ИСПРАВЛЕНО: добавлен key = { it.id } для оптимизации рекомпозиции
+                items(state.projects, key = { it.id }) { project ->
                     ProjectCard(
                         project = project,
                         onClick = { onNavigateToTimer(project.id) }

@@ -9,6 +9,12 @@
     <string name="category_macrame">Макраме</string>
     <string name="category_other">Другое</string>
 
+    <!-- Навигация и действия -->
+    <string name="action_back">Назад</string>
+    <string name="action_stats">Статистика</string>
+    <string name="add_project">Добавить проект</string>
+    <string name="no_projects_yet">Нет проектов. Создайте первый!</string>
+
     <!-- Настройки -->
     <string name="settings_title">Настройки</string>
     <string name="settings_language_ru">Русский</string>
@@ -16,7 +22,7 @@
     <string name="settings_premium_status">Статус: Бесплатный</string>
     <string name="settings_buy_premium">Купить подписку</string>
 
-    <!-- Таймер -->
+    <!-- Таймер и проекты -->
     <string name="timer_channel_name">Таймер KnitTrac</string>
     <string name="timer_channel_description">Уведомления о работе таймера</string>
     <string name="timer_started">Таймер запущен</string>
@@ -29,8 +35,6 @@
     <string name="reset">Сброс</string>
     <string name="save_session">Сохранить сессию</string>
     <string name="session_saved">Сессия успешно сохранена</string>
-    <string name="add_project">Добавить проект</string>
-    <string name="no_projects_yet">Нет проектов. Создайте первый!</string>
     <string name="project_name">Название проекта</string>
     <string name="category">Категория</string>
     <string name="description">Описание</string>
