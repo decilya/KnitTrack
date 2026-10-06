@@ -36,6 +36,13 @@ import java.io.OutputStream
  * - Данные (экспорт/импорт)
  *
  * Весь текст через stringResource → полная поддержка мультиязычности.
+ *
+ * Управление потоками SAF:
+ * - Потоки создаются в launcher'ах и передаются во ViewModel через Action.
+ * - ViewModel НЕ закрывает потоки — это ответственность Screen.
+ * - Потоки закрываются после получения Effect (успех/ошибка).
+ * - DisposableEffect гарантирует закрытие потоков при уходе с экрана
+ *   (например, при навигации назад во время операции) — защита от утечки дескрипторов.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,8 +55,27 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // Ссылки на активные потоки — для гарантированного закрытия.
     var activeOutputStream by remember { mutableStateOf<OutputStream?>(null) }
     var activeInputStream by remember { mutableStateOf<InputStream?>(null) }
+
+    /**
+     * Гарантирует закрытие потоков при уходе с экрана (навигация назад, смена конфигурации).
+     *
+     * Без этого возможна утечка файловых дескрипторов, если пользователь покинет
+     * экран во время активной операции экспорта или импорта.
+     * 
+     * ВАЖНО: close() обёрнут в runCatching, так как IOException в onDispose
+     * может привести к крашу приложения при разрыве композиции.
+     */
+    DisposableEffect(Unit) {
+        onDispose {
+            runCatching { activeOutputStream?.close() }
+                .onFailure { Timber.e(it, "Failed to close output stream on dispose") }
+            runCatching { activeInputStream?.close() }
+                .onFailure { Timber.e(it, "Failed to close input stream on dispose") }
+        }
+    }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -137,92 +163,118 @@ fun SettingsScreen(
         } else {
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp) // Уменьшено с 24.dp для лучшей интеграции разделителей
             ) {
                 // --- Секция: Внешний вид (темы) ---
-                Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
-                listOf(
-                    "SYSTEM" to stringResource(R.string.settings_theme_system),
-                    "LIGHT" to stringResource(R.string.settings_theme_light),
-                    "DARK" to stringResource(R.string.settings_theme_dark)
-                ).forEach { (mode, label) ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = state.themeMode == mode,
-                            onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(label)
+                SettingsSection(title = stringResource(R.string.settings_appearance)) {
+                    listOf(
+                        "SYSTEM" to stringResource(R.string.settings_theme_system),
+                        "LIGHT" to stringResource(R.string.settings_theme_light),
+                        "DARK" to stringResource(R.string.settings_theme_dark)
+                    ).forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = state.themeMode == mode,
+                                onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(label)
+                        }
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(thickness = 0.5.dp)
 
                 // --- Секция: Язык (динамический список) ---
-                Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
-                viewModel.supportedLanguages.forEach { lang ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .clickable { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = state.currentLanguage == lang.code,
-                            onClick = { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(lang.displayName)
+                SettingsSection(title = stringResource(R.string.settings_language)) {
+                    viewModel.supportedLanguages.forEach { lang ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .clickable { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = state.currentLanguage == lang.code,
+                                onClick = { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(lang.displayName)
+                        }
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(thickness = 0.5.dp)
 
                 // --- Секция: Уведомления ---
-                Text(stringResource(R.string.settings_notifications), style = MaterialTheme.typography.titleMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.settings_notifications_enable))
-                    Switch(
-                        checked = state.notificationsEnabled,
-                        onCheckedChange = { viewModel.onAction(SettingsContract.Action.ToggleNotifications(it)) }
-                    )
+                SettingsSection(title = stringResource(R.string.settings_notifications)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(R.string.settings_notifications_enable))
+                        Switch(
+                            checked = state.notificationsEnabled,
+                            onCheckedChange = { viewModel.onAction(SettingsContract.Action.ToggleNotifications(it)) }
+                        )
+                    }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(thickness = 0.5.dp)
 
                 // --- Секция: Данные (экспорт/импорт) ---
-                Text(stringResource(R.string.settings_data), style = MaterialTheme.typography.titleMedium)
+                SettingsSection(title = stringResource(R.string.settings_data)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { exportLauncher.launch("knittrac_backup.json") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isExporting
+                        ) {
+                            Icon(Icons.Default.Upload, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.settings_export_data))
+                        }
 
-                Button(
-                    onClick = { exportLauncher.launch("knittrac_backup.json") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isExporting
-                ) {
-                    Icon(Icons.Default.Upload, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.settings_export_data))
-                }
-
-                OutlinedButton(
-                    onClick = { importLauncher.launch("application/json") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isImporting
-                ) {
-                    Icon(Icons.Default.Download, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.settings_import_data))
+                        OutlinedButton(
+                            onClick = { importLauncher.launch("application/json") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isImporting
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.settings_import_data))
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * Переиспользуемая секция настроек с заголовком.
+ *
+ * @param title Заголовок секции (стиль: titleMedium, цвет: onSurfaceVariant по стандарту Material 3).
+ * @param content Содержимое секции (список опций, переключатели и т.д.).
+ */
+@Composable
+private fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant // Стандарт Material 3 для второстепенных заголовков
+        )
+        content()
     }
 }
 
