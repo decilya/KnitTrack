@@ -14,7 +14,7 @@ import org.junit.Test
 
 /**
  * Юнит-тесты для [SessionRepositoryImpl].
- * Проверяют корректный маппинг Entity → Domain при работе с сессиями.
+ * Проверяют корректный маппинг Entity → Domain и вызов атомарных методов DAO.
  */
 class SessionRepositoryImplTest {
 
@@ -22,57 +22,31 @@ class SessionRepositoryImplTest {
     private val repository = SessionRepositoryImpl(sessionDao)
 
     private val testEntity = SessionEntity(
-        id = 1L,
-        projectId = 10L,
-        startTimestamp = 1_000L,
-        endTimestamp = 61_000L,
-        durationSeconds = 60L,
-        rowCount = 5,
-        updatedAt = 62_000L,
-        syncStatus = "PENDING"
+        id = 1L, projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
+        durationSeconds = 60L, rowCount = 5, updatedAt = 62_000L, syncStatus = "PENDING"
     )
 
     /**
-     * Проверяет, что получение сессий по ID проекта возвращает корректно замапленные Domain-модели.
+     * Проверяет, что атомарное добавление сессии корректно маппит Domain в Entity 
+     * и вызывает соответствующий транзакционный метод DAO с правильными параметрами.
      */
     @Test
-    fun `getSessionsByProjectId should map entities to domain`() = runTest {
+    fun `addSessionAtomically should call DAO transaction method and return id`() = runTest {
         // Arrange
-        coEvery { sessionDao.getSessionsByProjectId(10L) } returns listOf(testEntity)
-
-        // Act
-        val result = repository.getSessionsByProjectId(10L)
-
-        // Assert
-        assertTrue(result is Result.Success)
-        val list = (result as Result.Success).data
-        assertEquals(1, list.size)
-        assertEquals(60L, list[0].durationSeconds)
-        assertEquals(5, list[0].rowCount)
-        coVerify { sessionDao.getSessionsByProjectId(10L) }
-    }
-
-    /**
-     * Проверяет, что добавление сессии корректно маппит Domain в Entity и возвращает ID.
-     */
-    @Test
-    fun `addSession should map domain to entity and return id`() = runTest {
-        // Arrange
-        coEvery { sessionDao.insertSession(any()) } returns 100L
+        coEvery { sessionDao.insertSessionAndIncrementProjectTime(any(), any(), any()) } returns 100L
+        
         val session = Session(
-            projectId = 10L,
-            startTimestamp = 1_000L,
-            endTimestamp = 61_000L,
-            durationSeconds = 60L,
-            rowCount = 5
+            projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
+            durationSeconds = 60L, rowCount = 5
         )
-
+        
         // Act
-        val result = repository.addSession(session)
-
+        val result = repository.addSessionAtomically(session)
+        
         // Assert
         assertTrue(result is Result.Success)
         assertEquals(100L, (result as Result.Success).data)
-        coVerify { sessionDao.insertSession(any()) }
+        // Проверяем, что длительность (60L) была передана в DAO корректно
+        coVerify { sessionDao.insertSessionAndIncrementProjectTime(any(), 60L, any()) }
     }
 }

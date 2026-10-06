@@ -3,7 +3,6 @@ package com.knittrac.app.domain.service
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Session
-import com.knittrac.app.domain.repository.ProjectRepository
 import com.knittrac.app.domain.repository.SessionRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -11,26 +10,27 @@ import javax.inject.Inject
 /**
  * UseCase для сохранения сессии вязания.
  * 
- * Реализует Правило 7 ТЗ: сохранить сессию, затем атомарно обновить 
- * общее время проекта. При ошибке обновления времени — логирует её, 
- * но возвращает успех (частичный успех, так как сессия уже сохранена).
+ * Реализует Правило 7 ТЗ: делегирует атомарное сохранение в [SessionRepository], 
+ * что гарантирует целостность данных на уровне БД. Сессия и время проекта обновляются 
+ * в одной транзакции, исключая возможность "частичного успеха".
  */
 class SaveSessionService @Inject constructor(
-    private val sessionRepository: SessionRepository,
-    private val projectRepository: ProjectRepository
+    private val sessionRepository: SessionRepository
 ) {
     /**
-     * Сохраняет сессию и обновляет время проекта.
+     * Сохраняет сессию и атомарно обновляет время проекта.
      * 
-     * @param params Параметры сессии для сохранения.
-     * @return [Result.Success] с ID сессии или [Result.Error] при сбое.
+     * @param params Параметры сессии для сохранения (включая временные метки и количество рядов).
+     * @return [Result.Success] с ID новой сессии или [Result.Error] при сбое валидации или БД.
      */
     suspend operator fun invoke(params: SaveSessionParams): Result<Long> {
+        // 1. Валидация: длительность сессии должна быть строго больше нуля
         val durationSeconds = (params.endTimestamp - params.startTimestamp) / 1000L
         if (durationSeconds <= 0L) {
             return Result.Error(AppError.ValidationError("Пустая сессия"))
         }
 
+        // 2. Сборка Domain-модели из параметров
         val session = Session(
             projectId = params.projectId,
             startTimestamp = params.startTimestamp,
@@ -39,19 +39,13 @@ class SaveSessionService @Inject constructor(
             rowCount = params.rowCount
         )
 
-        val addResult = sessionRepository.addSession(session)
-        return when (addResult) {
-            is Result.Success -> {
-                val updateResult = projectRepository.updateTotalTime(
-                    projectId = params.projectId,
-                    additionalSeconds = durationSeconds
-                )
-                if (updateResult is Result.Error) {
-                    Timber.e("Не удалось обновить время проекта ${params.projectId}")
-                }
-                addResult
+        // 3. Атомарное сохранение. Если что-то пойдет не так, транзакция откатится целиком.
+        return when (val result = sessionRepository.addSessionAtomically(session)) {
+            is Result.Success -> result
+            is Result.Error -> {
+                Timber.e("Не удалось атомарно сохранить сессию: ${result.error.message}")
+                result
             }
-            is Result.Error -> addResult
         }
     }
 }

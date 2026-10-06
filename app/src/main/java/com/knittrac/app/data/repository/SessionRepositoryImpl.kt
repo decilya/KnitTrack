@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 /**
  * Реализация [SessionRepository], инкапсулирующая логику работы с [SessionDao].
- * Отвечает за преобразование Entity в Domain-модели и обратно.
+ * Отвечает за преобразование Entity в Domain-модели и обработку ошибок базы данных.
  */
 @Singleton
 class SessionRepositoryImpl @Inject constructor(
@@ -44,12 +44,20 @@ class SessionRepositoryImpl @Inject constructor(
         Result.Error(AppError.DatabaseError(e))
     }
 
-    override suspend fun addSession(session: Session): Result<Long> = try {
+    override suspend fun addSessionAtomically(session: Session): Result<Long> = try {
+        // Преобразуем Domain-модель в Entity и устанавливаем актуальные метаданные
         val entity = session.toEntity().copy(
             updatedAt = System.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        Result.Success(sessionDao.insertSession(entity))
+        
+        // Вызываем атомарный метод DAO, который гарантирует целостность данных
+        val newRowId = sessionDao.insertSessionAndIncrementProjectTime(
+            session = entity,
+            durationSeconds = session.durationSeconds,
+            updatedAt = entity.updatedAt
+        )
+        Result.Success(newRowId)
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -59,7 +67,7 @@ class SessionRepositoryImpl @Inject constructor(
             updatedAt = System.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        sessionDao.insertSession(entity) // REPLACE работает как upsert
+        sessionDao.insertSession(entity) // REPLACE сработает как upsert
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
