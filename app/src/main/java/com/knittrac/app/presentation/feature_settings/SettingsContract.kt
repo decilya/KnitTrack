@@ -6,8 +6,7 @@ import java.io.OutputStream
 /**
  * Контракт для экрана настроек (MVI).
  *
- * Особенность: Action несёт потоки [OutputStream]/[InputStream].
- * Это допустимо — потоки создаются в Screen через SAF и передаются во ViewModel.
+ * Особенность: Action несёт потоки [OutputStream]/[InputStream] для экспорта/импорта.
  * ViewModel не знает про Uri/ContentResolver/Context, соблюдая Clean Architecture.
  */
 object SettingsContract {
@@ -17,15 +16,17 @@ object SettingsContract {
         val notificationsEnabled: Boolean = true,
         val isLoading: Boolean = true,
         val isExporting: Boolean = false,
-        val isImporting: Boolean = false
+        val isImporting: Boolean = false,
+        /** Текущий код языка (например, "ru", "en"). */
+        val currentLanguage: String = ""
     )
 
     sealed class Action {
         data class ChangeThemeMode(val mode: String) : Action()
         data class ToggleNotifications(val enabled: Boolean) : Action()
-        /** Экспорт в предоставленный поток. */
+        /** Смена языка. Требует recreate() Activity для применения. */
+        data class ChangeLanguage(val code: String) : Action()
         data class RequestExport(val outputStream: OutputStream) : Action()
-        /** Импорт из предоставленного потока. */
         data class ImportData(val inputStream: InputStream) : Action()
     }
 
@@ -34,5 +35,7 @@ object SettingsContract {
         data object ExportError : Effect()
         data object ImportSuccess : Effect()
         data object ImportError : Effect()
+        /** Требуется перезапуск Activity для применения нового языка. */
+        data object RecreateActivity : Effect()
     }
 }

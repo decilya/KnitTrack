@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Список поддерживаемых языков приложения.
+
+    ВАЖНО: translatable="false", потому что названия языков должны отображаться
+    на САМИХ СЕБЕ (например, "Русский" всегда "Русский", "English" всегда "English").
+
+    === Как добавить новый язык (например, немецкий) ===
+    1. Создать папку res/values-de/ и скопировать туда strings.xml с переводом.
+    2. Добавить <item>de</item> в supported_language_codes.
+    3. Добавить <item>Deutsch</item> в supported_language_names.
+    4. Готово. UI автоматически покажет новую опцию, Kotlin-код менять не нужно.
+    -->
+    <string-array name="supported_language_codes" translatable="false">
+        <item>ru</item>
+        <item>en</item>
+    </string-array>
+
+    <string-array name="supported_language_names" translatable="false">
+        <item>Русский</item>
+        <item>English</item>
+    </string-array>
+</resources>

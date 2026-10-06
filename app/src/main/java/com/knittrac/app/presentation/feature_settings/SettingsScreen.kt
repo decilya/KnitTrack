@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_settings
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -27,10 +28,14 @@ import java.io.OutputStream
 
 /**
  * Экран настроек.
- * 
- * ВАЖНО: Весь текст в этом экране (заголовки, опции, кнопки) получен через 
- * stringResource(R.string.*), что гарантирует полную поддержку мультиязычности (RU/EN).
- * Screen полностью отвечает за создание и безопасное закрытие потоков SAF.
+ *
+ * Содержит 4 секции:
+ * - Внешний вид (тема)
+ * - Язык (динамический список из resources)
+ * - Уведомления
+ * - Данные (экспорт/импорт)
+ *
+ * Весь текст через stringResource → полная поддержка мультиязычности.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,8 +83,6 @@ fun SettingsScreen(
         }
     }
 
-    // FIX: используем collect вместо collectLatest, и закрываем поток ДО showSnackbar.
-    // Это гарантирует, что close() выполнится даже если showSnackbar приостановит корутину.
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
@@ -102,6 +105,10 @@ fun SettingsScreen(
                     activeInputStream?.close()
                     activeInputStream = null
                     snackbarHostState.showSnackbar(context.getString(R.string.settings_import_error))
+                }
+                SettingsContract.Effect.RecreateActivity -> {
+                    // Перезапуск Activity для применения нового языка (ресурсы + LayoutDirection)
+                    (context as? ComponentActivity)?.recreate()
                 }
             }
         }
@@ -132,7 +139,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // FIX: Все заголовки и опции теперь используют stringResource
+                // --- Секция: Внешний вид (темы) ---
                 Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
                 listOf(
                     "SYSTEM" to stringResource(R.string.settings_theme_system),
@@ -156,6 +163,27 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                // --- Секция: Язык (динамический список) ---
+                Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
+                viewModel.supportedLanguages.forEach { lang ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .clickable { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = state.currentLanguage == lang.code,
+                            onClick = { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(lang.displayName)
+                    }
+                }
+
+                HorizontalDivider()
+
+                // --- Секция: Уведомления ---
                 Text(stringResource(R.string.settings_notifications), style = MaterialTheme.typography.titleMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -171,6 +199,7 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                // --- Секция: Данные (экспорт/импорт) ---
                 Text(stringResource(R.string.settings_data), style = MaterialTheme.typography.titleMedium)
 
                 Button(
