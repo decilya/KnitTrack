@@ -31,13 +31,26 @@
     <!-- Таймер -->
     <string name="timer_started">Таймер запущен</string>
     <string name="timer_running">Таймер работает</string>
+    <string name="timer_channel_name">Таймер KnitTrac</string>
+    <string name="timer_channel_description">Уведомления о работе таймера</string>
+    <string name="timer_save_error">Ошибка сохранения сессии</string>
 
     <!-- Настройки -->
     <string name="settings_title">Настройки</string>
+    <string name="settings_appearance">Внешний вид</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Темная</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notifications_enable">Разрешить уведомления</string>
+    <string name="settings_data">Данные</string>
     <string name="settings_export_data">Экспорт данных</string>
     <string name="settings_import_data">Импорт данных</string>
     <string name="settings_export_success">Данные успешно экспортированы</string>
     <string name="settings_export_error">Ошибка при экспорте данных</string>
     <string name="settings_import_success">Данные успешно импортированы</string>
     <string name="settings_import_error">Ошибка при импорте данных</string>
+
+    <!-- Статистика -->
+    <string name="stats_title">Статистика</string>
 </resources>

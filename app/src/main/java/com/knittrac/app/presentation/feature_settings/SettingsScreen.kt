@@ -27,13 +27,10 @@ import java.io.OutputStream
 
 /**
  * Экран настроек.
- *
- * Screen полностью отвечает за:
- * - Создание потоков из Uri через [ContentResolver].
- * - Передачу потоков во ViewModel через Action.
- * - Закрытие потоков после завершения операции (предотвращение утечек дескрипторов).
- *
- * ViewModel работает только с потоками, не зная про Android.
+ * 
+ * ВАЖНО: Весь текст в этом экране (заголовки, опции, кнопки) получен через 
+ * stringResource(R.string.*), что гарантирует полную поддержку мультиязычности (RU/EN).
+ * Screen полностью отвечает за создание и безопасное закрытие потоков SAF.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +43,6 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Храним ссылки на открытые потоки, чтобы закрыть их после завершения операции
     var activeOutputStream by remember { mutableStateOf<OutputStream?>(null) }
     var activeInputStream by remember { mutableStateOf<InputStream?>(null) }
 
@@ -136,33 +132,37 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Text("Внешний вид", style = MaterialTheme.typography.titleMedium)
-                listOf("SYSTEM" to "Как в системе", "LIGHT" to "Светлая", "DARK" to "Темная")
-                    .forEach { (mode, label) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                                .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = state.themeMode == mode,
-                                onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(label)
-                        }
+                // FIX: Все заголовки и опции теперь используют stringResource
+                Text(stringResource(R.string.settings_appearance), style = MaterialTheme.typography.titleMedium)
+                listOf(
+                    "SYSTEM" to stringResource(R.string.settings_theme_system),
+                    "LIGHT" to stringResource(R.string.settings_theme_light),
+                    "DARK" to stringResource(R.string.settings_theme_dark)
+                ).forEach { (mode, label) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = state.themeMode == mode,
+                            onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(label)
                     }
+                }
 
                 HorizontalDivider()
 
-                Text("Уведомления", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.settings_notifications), style = MaterialTheme.typography.titleMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Разрешить уведомления")
+                    Text(stringResource(R.string.settings_notifications_enable))
                     Switch(
                         checked = state.notificationsEnabled,
                         onCheckedChange = { viewModel.onAction(SettingsContract.Action.ToggleNotifications(it)) }
@@ -171,7 +171,7 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
-                Text("Данные", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.settings_data), style = MaterialTheme.typography.titleMedium)
 
                 Button(
                     onClick = { exportLauncher.launch("knittrac_backup.json") },

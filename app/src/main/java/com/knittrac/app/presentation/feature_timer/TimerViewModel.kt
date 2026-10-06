@@ -89,7 +89,7 @@ class TimerViewModel @Inject constructor(
                         timerManager.reset()
                         _state.update { it.copy(rowCount = 0) }
                     } else {
-                        _effect.send(TimerContract.Effect.ShowError("Ошибка сохранения сессии"))
+                        _effect.send(TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error))
                     }
                 }
             }

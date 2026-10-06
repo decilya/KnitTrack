@@ -23,7 +23,7 @@ object TimerContract {
     }
 
     sealed class Effect {
-        data class ShowError(val message: String) : Effect()
+        data class ShowError(@androidx.annotation.StringRes val messageResId: Int) : Effect()
         object SessionSaved : Effect()
         object NavigateToProjects : Effect()
     }

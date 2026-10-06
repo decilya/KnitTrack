@@ -32,7 +32,7 @@ fun TimerScreen(
                     Toast.makeText(context, context.getString(R.string.session_saved), Toast.LENGTH_SHORT).show()
                 }
                 is TimerContract.Effect.ShowError -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(effect.messageResId), Toast.LENGTH_SHORT).show()
                 }
             }
         }

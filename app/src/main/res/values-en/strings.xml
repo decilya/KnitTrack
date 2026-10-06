@@ -31,13 +31,26 @@
     <!-- Timer -->
     <string name="timer_started">Timer started</string>
     <string name="timer_running">Timer is running</string>
+    <string name="timer_channel_name">KnitTrac Timer</string>
+    <string name="timer_channel_description">Notifications about timer operation</string>
+    <string name="timer_save_error">Failed to save session</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_enable">Enable notifications</string>
+    <string name="settings_data">Data</string>
     <string name="settings_export_data">Export data</string>
     <string name="settings_import_data">Import data</string>
     <string name="settings_export_success">Data exported successfully</string>
     <string name="settings_export_error">Error exporting data</string>
     <string name="settings_import_success">Data imported successfully</string>
     <string name="settings_import_error">Error importing data</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Statistics</string>
 </resources>

@@ -80,10 +80,10 @@ class TimerForegroundService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Timer Service",
+            getString(R.string.timer_channel_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Уведомление о работе таймера вязания"
+            description = getString(R.string.timer_channel_description)
         }
         notificationManager.createNotificationChannel(channel)
     }
