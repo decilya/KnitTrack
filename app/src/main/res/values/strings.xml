@@ -2,56 +2,56 @@
 <resources>
     <string name="app_name">KnitTrac</string>
 
-    <!-- Навигация и общие действия -->
-    <string name="action_back">Назад</string>
-    <string name="action_stats">Статистика</string>
-    <string name="save">Сохранить</string>
-    <string name="start">Старт</string>
-    <string name="pause">Пауза</string>
-    <string name="reset">Сброс</string>
-    <string name="save_session">Сохранить сессию</string>
-    <string name="session_saved">Сессия успешно сохранена</string>
+    <!-- Navigation and common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_stats">Statistics</string>
+    <string name="save">Save</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="reset">Reset</string>
+    <string name="save_session">Save session</string>
+    <string name="session_saved">Session saved successfully</string>
 
-    <!-- Категории -->
-    <string name="category_knitting">Вязание спицами</string>
-    <string name="category_crochet">Вязание крючком</string>
-    <string name="category_beading">Бисероплетение</string>
-    <string name="category_macrame">Макраме</string>
-    <string name="category_other">Другое</string>
-    <string name="category">Категория</string>
+    <!-- Categories -->
+    <string name="category_knitting">Knitting</string>
+    <string name="category_crochet">Crochet</string>
+    <string name="category_beading">Beading</string>
+    <string name="category_macrame">Macrame</string>
+    <string name="category_other">Other</string>
+    <string name="category">Category</string>
 
-    <!-- Проекты -->
-    <string name="add_project">Добавить проект</string>
-    <string name="project_name">Название проекта</string>
-    <string name="no_projects_yet">Нет проектов. Создайте первый!</string>
-    <string name="no_projects_available">Нет доступных проектов</string>
-    <string name="select_project">Выберите проект</string>
-    <string name="row_count">Количество рядов</string>
+    <!-- Projects -->
+    <string name="add_project">Add project</string>
+    <string name="project_name">Project name</string>
+    <string name="no_projects_yet">No projects yet. Create your first one!</string>
+    <string name="no_projects_available">No projects available</string>
+    <string name="select_project">Select a project</string>
+    <string name="row_count">Row count</string>
 
-    <!-- Таймер -->
-    <string name="timer_started">Таймер запущен</string>
-    <string name="timer_running">Таймер работает</string>
-    <string name="timer_channel_name">Таймер KnitTrac</string>
-    <string name="timer_channel_description">Уведомления о работе таймера</string>
-    <string name="timer_save_error">Ошибка сохранения сессии</string>
+    <!-- Timer -->
+    <string name="timer_started">Timer started</string>
+    <string name="timer_running">Timer is running</string>
+    <string name="timer_channel_name">KnitTrac Timer</string>
+    <string name="timer_channel_description">Notifications about timer operation</string>
+    <string name="timer_save_error">Failed to save session</string>
 
-    <!-- Настройки -->
-    <string name="settings_title">Настройки</string>
-    <string name="settings_language">Язык</string>
-    <string name="settings_appearance">Внешний вид</string>
-    <string name="settings_theme_system">Как в системе</string>
-    <string name="settings_theme_light">Светлая</string>
-    <string name="settings_theme_dark">Темная</string>
-    <string name="settings_notifications">Уведомления</string>
-    <string name="settings_notifications_enable">Разрешить уведомления</string>
-    <string name="settings_data">Данные</string>
-    <string name="settings_export_data">Экспорт данных</string>
-    <string name="settings_import_data">Импорт данных</string>
-    <string name="settings_export_success">Данные успешно экспортированы</string>
-    <string name="settings_export_error">Ошибка при экспорте данных</string>
-    <string name="settings_import_success">Данные успешно импортированы</string>
-    <string name="settings_import_error">Ошибка при импорте данных</string>
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_enable">Enable notifications</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_export_data">Export data</string>
+    <string name="settings_import_data">Import data</string>
+    <string name="settings_export_success">Data exported successfully</string>
+    <string name="settings_export_error">Error exporting data</string>
+    <string name="settings_import_success">Data imported successfully</string>
+    <string name="settings_import_error">Error importing data</string>
 
-    <!-- Статистика -->
-    <string name="stats_title">Статистика</string>
+    <!-- Statistics -->
+    <string name="stats_title">Statistics</string>
 </resources>
