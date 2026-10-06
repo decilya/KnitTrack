@@ -22,7 +22,9 @@ import javax.inject.Inject
 
 /**
  * ViewModel для экрана настроек.
+ * 
  * Эмитит только маркеры ошибок — UI сам подбирает локализованный текст.
+ * Технические детали ошибок логируются через Timber и не попадают в UI.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -41,6 +43,13 @@ class SettingsViewModel @Inject constructor(
         observeSettings()
     }
 
+    /**
+     * Наблюдает за изменениями настроек и обновляет состояние.
+     * 
+     * FIX Bug3: используем _state.update { current.copy(...) } вместо _state.value = it.
+     * Это гарантирует, что при изменении темы или уведомлений флаги isExporting и isImporting
+     * не будут сброшены, предотвращая возможность повторного запуска операции поверх текущей.
+     */
     private fun observeSettings() {
         viewModelScope.launch {
             combine(
@@ -52,7 +61,15 @@ class SettingsViewModel @Inject constructor(
                     notificationsEnabled = enabled,
                     isLoading = false
                 )
-            }.collect { _state.value = it }
+            }.collect { newState ->
+                _state.update { current ->
+                    current.copy(
+                        themeMode = newState.themeMode,
+                        notificationsEnabled = newState.notificationsEnabled,
+                        isLoading = false
+                    )
+                }
+            }
         }
     }
 
@@ -77,6 +94,7 @@ class SettingsViewModel @Inject constructor(
                 is Result.Success ->
                     _effect.emit(SettingsContract.Effect.ExportReady(result.data))
                 is Result.Error -> {
+                    // Логируем только message, так как AppError не имеет свойства cause
                     Timber.e("Export failed: ${result.error.message}")
                     _effect.emit(SettingsContract.Effect.ExportError)
                 }
@@ -88,11 +106,11 @@ class SettingsViewModel @Inject constructor(
     private fun importData(json: String) {
         viewModelScope.launch {
             _state.update { it.copy(isImporting = true) }
-            // Передаем объект ImportDataParams вместо голой строки
             when (val result = importDataService(ImportDataParams(json))) {
                 is Result.Success ->
                     _effect.emit(SettingsContract.Effect.ImportSuccess)
                 is Result.Error -> {
+                    // Логируем только message, так как AppError не имеет свойства cause
                     Timber.e("Import failed: ${result.error.message}")
                     _effect.emit(SettingsContract.Effect.ImportError)
                 }

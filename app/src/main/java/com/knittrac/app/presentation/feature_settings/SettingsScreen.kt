@@ -20,11 +20,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
  * Экран настроек.
+ * 
  * Screen отвечает за чтение/запись файлов через ContentResolver (SAF),
  * ViewModel работает только со String (JSON), соблюдая Clean Architecture.
  */
@@ -37,6 +41,9 @@ fun SettingsScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // FIX Bug1: scope для запуска suspend-функций из callback'ов лаунчеров
+    val scope = rememberCoroutineScope()
 
     var pendingExportUri by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -53,11 +60,15 @@ fun SettingsScreen(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            val json = readJsonFromUri(context, it)
-            if (json != null) {
-                viewModel.onAction(SettingsContract.Action.ImportData(json))
-            } else {
-                viewModel.onAction(SettingsContract.Action.ImportData(""))
+            // FIX Bug1: запускаем suspend-чтение в корутине на IO-диспетчере,
+            // чтобы не блокировать главный поток при чтении больших файлов (защита от ANR)
+            scope.launch {
+                val json = readJsonFromUri(context, it)
+                if (json != null) {
+                    viewModel.onAction(SettingsContract.Action.ImportData(json))
+                } else {
+                    viewModel.onAction(SettingsContract.Action.ImportData(""))
+                }
             }
         }
     }
@@ -174,23 +185,31 @@ fun SettingsScreen(
 
 /**
  * Читает содержимое файла по Uri и возвращает его как String.
+ * 
+ * FIX Bug1: выполняется на Dispatchers.IO для избежания блокировки main thread (ANR).
  * Возвращает null при ошибке чтения.
  */
-private fun readJsonFromUri(context: Context, uri: Uri): String? = try {
-    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-} catch (e: Exception) {
-    Timber.e(e, "Failed to read JSON from uri")
-    null
+private suspend fun readJsonFromUri(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
+    try {
+        context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to read JSON from uri")
+        null
+    }
 }
 
 /**
  * Записывает JSON-строку в файл по Uri.
+ * 
+ * FIX Bug1: выполняется на Dispatchers.IO для избежания блокировки main thread (ANR).
  * Возвращает true при успехе, false при ошибке записи.
  */
-private fun writeJsonToUri(context: Context, uri: Uri, json: String): Boolean = try {
-    context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-    true
-} catch (e: Exception) {
-    Timber.e(e, "Failed to write JSON to uri")
-    false
+private suspend fun writeJsonToUri(context: Context, uri: Uri, json: String): Boolean = withContext(Dispatchers.IO) {
+    try {
+        context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+        true
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to write JSON to uri")
+        false
+    }
 }
