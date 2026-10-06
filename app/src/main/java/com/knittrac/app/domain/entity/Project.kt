@@ -1,30 +1,24 @@
 package com.knittrac.app.domain.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.knittrac.app.core.common.SyncStatus
-
-@Entity(tableName = "projects")
+/**
+ * Доменная модель проекта вязания.
+ * 
+ * Представляет бизнес-сущность проекта, независимую от деталей хранения в БД.
+ * 
+ * @property id Уникальный идентификатор проекта.
+ * @property name Название проекта.
+ * @property category Категория проекта (например, "Вязание спицами").
+ * @property createdAt Временная метка создания проекта (в миллисекундах).
+ * @property totalTimeSeconds Общее затраченное на проект время в секундах.
+ * @property updatedAt Временная метка последнего обновления проекта.
+ * @property syncStatus Статус синхронизации данных с облаком.
+ */
 data class Project(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-
-    @ColumnInfo(name = "name")
+    val id: Long = 0L,
     val name: String,
-
-    @ColumnInfo(name = "category")
     val category: Category,
-
-    @ColumnInfo(name = "created_at")
     val createdAt: Long,
-
-    @ColumnInfo(name = "updated_at")
+    val totalTimeSeconds: Long = 0L,
     val updatedAt: Long,
-
-    @ColumnInfo(name = "total_time_seconds")
-    val totalTimeSeconds: Long = 0,
-
-    @ColumnInfo(name = "sync_status")
-    val syncStatus: String = SyncStatus.PENDING.name
+    val syncStatus: String
 )

@@ -4,30 +4,20 @@ import com.knittrac.app.domain.entity.Category
 
 /**
  * Параметры для добавления нового проекта.
- *
- * Используется как входной параметр для [AddProjectService].
- *
- * @param name Название проекта (например, "Зимний шарф").
- * @param category Категория проекта (определяет тип рукоделия).
- *
- * @see AddProjectService Сервис для добавления проекта.
  */
 data class AddProjectParams(
-    val name: String,
+    val name: String, 
     val category: Category
 )
 
 /**
- * Параметры для сохранения завершенной сессии работы.
- *
- * Используется как входной параметр для [SaveSessionService].
- *
- * @param projectId Идентификатор проекта, над которым велась работа.
- * @param startTimestamp Временная метка начала сессии (в миллисекундах).
- * @param endTimestamp Временная метка окончания сессии (в миллисекундах).
- * @param rowCount Количество выполненных рядов (или другая метрика).
- *
- * @see SaveSessionService Сервис для сохранения сессии.
+ * Параметры для сохранения сессии вязания.
+ * Используется в SaveSessionService для расчета длительности и создания Domain-модели.
+ * 
+ * @property projectId Идентификатор проекта.
+ * @property startTimestamp Время начала сессии (в миллисекундах).
+ * @property endTimestamp Время окончания сессии (в миллисекундах).
+ * @property rowCount Количество связанных рядов.
  */
 data class SaveSessionParams(
     val projectId: Long,
@@ -38,13 +28,5 @@ data class SaveSessionParams(
 
 /**
  * Параметры для импорта данных из JSON.
- *
- * Используется как входной параметр для [ImportDataService].
- *
- * @param json JSON строка с данными для импорта.
- *
- * @see ImportDataService Сервис для импорта данных.
  */
-data class ImportDataParams(
-    val json: String
-)
+data class ImportDataParams(val json: String)

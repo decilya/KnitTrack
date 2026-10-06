@@ -1,31 +1,30 @@
 package com.knittrac.app.domain.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.knittrac.app.core.common.SyncStatus
 
 /**
- * Сущность завершенной сессии вязания.
- * Хранится в локальной базе данных Room.
+ * Доменная модель сессии вязания.
+ * 
+ * ВАЖНО: Поля startTimestamp, endTimestamp и durationSeconds используются 
+ * единообразно по всему проекту (и в Domain, и в Data слоях) для избежания 
+ * путаницы при маппинге.
+ * 
+ * @property id Уникальный идентификатор сессии.
+ * @property projectId Идентификатор проекта, к которому привязана сессия.
+ * @property startTimestamp Время начала сессии (в миллисекундах).
+ * @property endTimestamp Время окончания сессии (в миллисекундах).
+ * @property durationSeconds Длительность сессии в секундах.
+ * @property rowCount Количество связанных рядов, выполненных за сессию.
+ * @property updatedAt Временная метка последнего обновления сессии.
+ * @property syncStatus Статус синхронизации сессии (по умолчанию PENDING).
  */
-@Entity(tableName = "sessions")
 data class Session(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-
-    @ColumnInfo(name = "project_id")
+    val id: Long = 0L,
     val projectId: Long,
-
-    @ColumnInfo(name = "start_time")
-    val startTime: Long,
-
-    @ColumnInfo(name = "end_time")
-    val endTime: Long,
-
-    @ColumnInfo(name = "row_count")
+    val startTimestamp: Long,
+    val endTimestamp: Long,
+    val durationSeconds: Long,
     val rowCount: Int,
-
-    @ColumnInfo(name = "sync_status")
+    val updatedAt: Long = System.currentTimeMillis(),
     val syncStatus: String = SyncStatus.PENDING.name
 )
