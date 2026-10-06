@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.repository.SettingsRepository
 import com.knittrac.app.domain.service.ExportDataService
-import com.knittrac.app.domain.service.ImportDataParams
 import com.knittrac.app.domain.service.ImportDataService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,13 +17,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.InputStream
+import java.io.OutputStream
 import javax.inject.Inject
 
 /**
  * ViewModel для экрана настроек.
- * 
+ *
  * Эмитит только маркеры ошибок — UI сам подбирает локализованный текст.
- * Технические детали ошибок логируются через Timber и не попадают в UI.
+ * Не зависит от Android Framework: работает с потоками, а не с Uri.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -44,32 +45,23 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Наблюдает за изменениями настроек и обновляет состояние.
-     * 
-     * FIX Bug3: используем _state.update { current.copy(...) } вместо _state.value = it.
-     * Это гарантирует, что при изменении темы или уведомлений флаги isExporting и isImporting
-     * не будут сброшены, предотвращая возможность повторного запуска операции поверх текущей.
+     * combine + update сохраняет isExporting/isImporting при смене темы.
      */
     private fun observeSettings() {
         viewModelScope.launch {
             combine(
                 settingsRepository.themeModeFlow,
                 settingsRepository.notificationsEnabledFlow
-            ) { theme, enabled ->
-                SettingsContract.State(
-                    themeMode = theme,
-                    notificationsEnabled = enabled,
-                    isLoading = false
-                )
-            }.collect { newState ->
-                _state.update { current ->
-                    current.copy(
-                        themeMode = newState.themeMode,
-                        notificationsEnabled = newState.notificationsEnabled,
-                        isLoading = false
-                    )
+            ) { theme, enabled -> theme to enabled }
+                .collect { (theme, enabled) ->
+                    _state.update {
+                        it.copy(
+                            themeMode = theme,
+                            notificationsEnabled = enabled,
+                            isLoading = false
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -81,20 +73,18 @@ class SettingsViewModel @Inject constructor(
             is SettingsContract.Action.ToggleNotifications ->
                 viewModelScope.launch { settingsRepository.setNotificationsEnabled(action.enabled) }
 
-            SettingsContract.Action.RequestExport -> requestExport()
+            is SettingsContract.Action.RequestExport -> exportData(action.outputStream)
 
-            is SettingsContract.Action.ImportData -> importData(action.json)
+            is SettingsContract.Action.ImportData -> importData(action.inputStream)
         }
     }
 
-    private fun requestExport() {
+    private fun exportData(outputStream: OutputStream) {
         viewModelScope.launch {
             _state.update { it.copy(isExporting = true) }
-            when (val result = exportDataService()) {
-                is Result.Success ->
-                    _effect.emit(SettingsContract.Effect.ExportReady(result.data))
+            when (val result = exportDataService(outputStream)) {
+                is Result.Success -> _effect.emit(SettingsContract.Effect.ExportSuccess)
                 is Result.Error -> {
-                    // Логируем только message, так как AppError не имеет свойства cause
                     Timber.e("Export failed: ${result.error.message}")
                     _effect.emit(SettingsContract.Effect.ExportError)
                 }
@@ -103,14 +93,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun importData(json: String) {
+    private fun importData(inputStream: InputStream) {
         viewModelScope.launch {
             _state.update { it.copy(isImporting = true) }
-            when (val result = importDataService(ImportDataParams(json))) {
-                is Result.Success ->
-                    _effect.emit(SettingsContract.Effect.ImportSuccess)
+            when (val result = importDataService(inputStream)) {
+                is Result.Success -> _effect.emit(SettingsContract.Effect.ImportSuccess)
                 is Result.Error -> {
-                    // Логируем только message, так как AppError не имеет свойства cause
                     Timber.e("Import failed: ${result.error.message}")
                     _effect.emit(SettingsContract.Effect.ImportError)
                 }

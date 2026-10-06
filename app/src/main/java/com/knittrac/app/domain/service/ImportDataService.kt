@@ -1,16 +1,23 @@
 package com.knittrac.app.domain.service
 
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.domain.repository.SyncRepository
+import com.knittrac.app.domain.repository.DataImporter
+import java.io.InputStream
 import javax.inject.Inject
 
 /**
- * UseCase для импорта данных из JSON-строки.
+ * UseCase для импорта всех данных из предоставленного потока.
+ *
+ * Делегирует работу в [DataImporter], соблюдая DIP.
+ * Поток не закрывает — ответственность вызывающей стороны.
  */
 class ImportDataService @Inject constructor(
-    private val syncRepository: SyncRepository
+    private val dataImporter: DataImporter
 ) {
-    suspend operator fun invoke(params: ImportDataParams): Result<Unit> {
-        return syncRepository.importFromJson(params.json)
-    }
+    /**
+     * @param inputStream поток для чтения (не закрывается здесь).
+     * @return [Result.Success] при успехе, [Result.Error] при сбое.
+     */
+    suspend operator fun invoke(inputStream: InputStream): Result<Unit> =
+        dataImporter.importFrom(inputStream)
 }

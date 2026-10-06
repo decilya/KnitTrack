@@ -1,16 +1,23 @@
 package com.knittrac.app.domain.service
 
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.domain.repository.SyncRepository
+import com.knittrac.app.domain.repository.DataExporter
+import java.io.OutputStream
 import javax.inject.Inject
 
 /**
- * UseCase для экспорта всех данных приложения в JSON-строку.
+ * UseCase для экспорта всех данных в предоставленный поток.
+ *
+ * Делегирует работу в [DataExporter], соблюдая DIP.
+ * Поток не закрывает — ответственность вызывающей стороны.
  */
 class ExportDataService @Inject constructor(
-    private val syncRepository: SyncRepository
+    private val dataExporter: DataExporter
 ) {
-    suspend operator fun invoke(): Result<String> {
-        return syncRepository.exportToJson()
-    }
+    /**
+     * @param outputStream поток для записи (не закрывается здесь).
+     * @return [Result.Success] при успехе, [Result.Error] при сбое.
+     */
+    suspend operator fun invoke(outputStream: OutputStream): Result<Unit> =
+        dataExporter.exportTo(outputStream)
 }

@@ -1,11 +1,14 @@
 package com.knittrac.app.presentation.feature_settings
 
+import java.io.InputStream
+import java.io.OutputStream
+
 /**
  * Контракт для экрана настроек (MVI).
  *
- * ВАЖНО: эффекты не несут сырых сообщений об ошибках.
- * Локализация выполняется в UI через stringResource() / getString().
- * Детали ошибок логируются через Timber в ViewModel для безопасности.
+ * Особенность: Action несёт потоки [OutputStream]/[InputStream].
+ * Это допустимо — потоки создаются в Screen через SAF и передаются во ViewModel.
+ * ViewModel не знает про Uri/ContentResolver/Context, соблюдая Clean Architecture.
  */
 object SettingsContract {
 
@@ -20,27 +23,16 @@ object SettingsContract {
     sealed class Action {
         data class ChangeThemeMode(val mode: String) : Action()
         data class ToggleNotifications(val enabled: Boolean) : Action()
-        data object RequestExport : Action()
-        data class ImportData(val json: String) : Action()
+        /** Экспорт в предоставленный поток. */
+        data class RequestExport(val outputStream: OutputStream) : Action()
+        /** Импорт из предоставленного потока. */
+        data class ImportData(val inputStream: InputStream) : Action()
     }
 
     sealed class Effect {
-        /** JSON готов, Screen запишет его в Uri. */
-        data class ExportReady(val json: String) : Effect()
-        
-        /** 
-         * Ошибка экспорта. 
-         * UI покажет R.string.settings_export_error, а детали останутся в логах.
-         */
+        data object ExportSuccess : Effect()
         data object ExportError : Effect()
-        
-        /** Импорт успешен. */
         data object ImportSuccess : Effect()
-        
-        /** 
-         * Ошибка импорта. 
-         * UI покажет R.string.settings_import_error, а детали останутся в логах.
-         */
         data object ImportError : Effect()
     }
 }

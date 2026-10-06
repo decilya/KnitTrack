@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,17 +19,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Экран настроек.
- * 
- * Screen отвечает за чтение/запись файлов через ContentResolver (SAF),
- * ViewModel работает только со String (JSON), соблюдая Clean Architecture.
+ *
+ * Screen полностью отвечает за:
+ * - Создание потоков из Uri через [ContentResolver].
+ * - Передачу потоков во ViewModel через Action.
+ * - Закрытие потоков после завершения операции (предотвращение утечек дескрипторов).
+ *
+ * ViewModel работает только с потоками, не зная про Android.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,18 +44,25 @@ fun SettingsScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // FIX Bug1: scope для запуска suspend-функций из callback'ов лаунчеров
     val scope = rememberCoroutineScope()
 
-    var pendingExportUri by rememberSaveable { mutableStateOf<String?>(null) }
+    // Храним ссылки на открытые потоки, чтобы закрыть их после завершения операции
+    var activeOutputStream by remember { mutableStateOf<OutputStream?>(null) }
+    var activeInputStream by remember { mutableStateOf<InputStream?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let {
-            pendingExportUri = it.toString()
-            viewModel.onAction(SettingsContract.Action.RequestExport)
+            scope.launch {
+                val outputStream = openOutputStreamSafe(context, it)
+                if (outputStream != null) {
+                    activeOutputStream = outputStream
+                    viewModel.onAction(SettingsContract.Action.RequestExport(outputStream))
+                } else {
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_export_error))
+                }
+            }
         }
     }
 
@@ -60,39 +70,43 @@ fun SettingsScreen(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // FIX Bug1: запускаем suspend-чтение в корутине на IO-диспетчере,
-            // чтобы не блокировать главный поток при чтении больших файлов (защита от ANR)
             scope.launch {
-                val json = readJsonFromUri(context, it)
-                if (json != null) {
-                    viewModel.onAction(SettingsContract.Action.ImportData(json))
+                val inputStream = openInputStreamSafe(context, it)
+                if (inputStream != null) {
+                    activeInputStream = inputStream
+                    viewModel.onAction(SettingsContract.Action.ImportData(inputStream))
                 } else {
-                    viewModel.onAction(SettingsContract.Action.ImportData(""))
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_import_error))
                 }
             }
         }
     }
 
+    // FIX: используем collect вместо collectLatest, и закрываем поток ДО showSnackbar.
+    // Это гарантирует, что close() выполнится даже если showSnackbar приостановит корутину.
     LaunchedEffect(Unit) {
-        viewModel.effect.collectLatest { effect ->
+        viewModel.effect.collect { effect ->
             when (effect) {
-                is SettingsContract.Effect.ExportReady -> {
-                    val uriStr = pendingExportUri
-                    if (uriStr != null) {
-                        val ok = writeJsonToUri(context, Uri.parse(uriStr), effect.json)
-                        val msgRes = if (ok) R.string.settings_export_success else R.string.settings_export_error
-                        snackbarHostState.showSnackbar(context.getString(msgRes))
-                        pendingExportUri = null
-                    }
+                SettingsContract.Effect.ExportSuccess -> {
+                    activeOutputStream?.close()
+                    activeOutputStream = null
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_export_success))
                 }
-                is SettingsContract.Effect.ExportError ->
+                SettingsContract.Effect.ExportError -> {
+                    activeOutputStream?.close()
+                    activeOutputStream = null
                     snackbarHostState.showSnackbar(context.getString(R.string.settings_export_error))
-                
-                SettingsContract.Effect.ImportSuccess ->
+                }
+                SettingsContract.Effect.ImportSuccess -> {
+                    activeInputStream?.close()
+                    activeInputStream = null
                     snackbarHostState.showSnackbar(context.getString(R.string.settings_import_success))
-                
-                is SettingsContract.Effect.ImportError ->
+                }
+                SettingsContract.Effect.ImportError -> {
+                    activeInputStream?.close()
+                    activeInputStream = null
                     snackbarHostState.showSnackbar(context.getString(R.string.settings_import_error))
+                }
             }
         }
     }
@@ -184,32 +198,23 @@ fun SettingsScreen(
 }
 
 /**
- * Читает содержимое файла по Uri и возвращает его как String.
- * 
- * FIX Bug1: выполняется на Dispatchers.IO для избежания блокировки main thread (ANR).
- * Возвращает null при ошибке чтения.
+ * Безопасно открывает [java.io.OutputStream] по Uri.
+ * @return поток или null при ошибке.
  */
-private suspend fun readJsonFromUri(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
-    try {
-        context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-    } catch (e: Exception) {
-        Timber.e(e, "Failed to read JSON from uri")
-        null
-    }
+private fun openOutputStreamSafe(context: Context, uri: Uri): OutputStream? = try {
+    context.contentResolver.openOutputStream(uri)
+} catch (e: Exception) {
+    Timber.e(e, "Failed to open output stream for uri: $uri")
+    null
 }
 
 /**
- * Записывает JSON-строку в файл по Uri.
- * 
- * FIX Bug1: выполняется на Dispatchers.IO для избежания блокировки main thread (ANR).
- * Возвращает true при успехе, false при ошибке записи.
+ * Безопасно открывает [java.io.InputStream] по Uri.
+ * @return поток или null при ошибке.
  */
-private suspend fun writeJsonToUri(context: Context, uri: Uri, json: String): Boolean = withContext(Dispatchers.IO) {
-    try {
-        context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-        true
-    } catch (e: Exception) {
-        Timber.e(e, "Failed to write JSON to uri")
-        false
-    }
+private fun openInputStreamSafe(context: Context, uri: Uri): InputStream? = try {
+    context.contentResolver.openInputStream(uri)
+} catch (e: Exception) {
+    Timber.e(e, "Failed to open input stream for uri: $uri")
+    null
 }
