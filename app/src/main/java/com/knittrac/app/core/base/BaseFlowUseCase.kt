@@ -32,7 +32,7 @@ abstract class BaseFlowUseCase<in Params, out T>(
         // Явное приведение типа ЗДЕСЬ НЕОБХОДИМО, чтобы компилятор Kotlin
         // правильно вывел тип Flow как Flow<Result<T>>, а не Flow<Result.Success<T>>.
         // Без этого блок catch не сможет эмитить Result.Error.
-        .map { data -> Result.Success(data) as Result<T> }
+        .map<T, Result<T>> { data -> Result.Success(data) }
         .catch { e -> emit(Result.Error(AppErrorMapper.map(e))) }
         .flowOn(dispatcher)
 }

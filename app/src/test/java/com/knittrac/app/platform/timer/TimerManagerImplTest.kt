@@ -1,5 +1,7 @@
 package com.knittrac.app.platform.timer
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+
 import com.knittrac.app.domain.service.TimerState
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -8,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TimerManagerImplTest {
 
     private lateinit var timerManager: TimerManagerImpl
