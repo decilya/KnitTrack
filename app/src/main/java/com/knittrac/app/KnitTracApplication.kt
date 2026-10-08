@@ -17,6 +17,11 @@ import javax.inject.Inject
  * заменяет прежний `runBlocking`, который подвешивал главный поток на время
  * чтения DataStore (~50ms) и создавал jank на старте.
  *
+ * Диспетчер [Dispatchers.Default]: инициализация локали не требует Main.
+ * Чтение DataStore уходит на IO внутри самой библиотеки, мутация
+ * Configuration и Locale.setDefault — потокобезопасны. Main-поток остаётся
+ * свободным для первого кадра.
+ *
  * Гарантия корректного первого кадра обеспечивается на уровне UI:
  * [com.knittrac.app.MainActivity] удерживает splash-экран, пока
  * [LocaleManager.isInitialized] не станет true.
@@ -31,8 +36,13 @@ class KnitTracApplication : Application() {
      * Долгоживущий scope приложения. Не отменяется — живёт весь жизненный цикл
      * процесса. SupervisorJob — чтобы падение одного дочернего корутина не
      * отменяло остальные.
+     *
+     * Диспетчер [Dispatchers.Default], а не [Dispatchers.Main]: scope
+     * предназначен для фоновой инициализации, ничего UI-специфичного здесь
+     * быть не должно. Если в будущем понадобится Main — конкретная задача
+     * должна явно указать его через launch(Dispatchers.Main).
      */
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
