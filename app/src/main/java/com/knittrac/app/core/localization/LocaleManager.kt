@@ -8,7 +8,6 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.knittrac.app.R
-import com.knittrac.app.domain.entity.Category
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -133,17 +132,6 @@ class LocaleManager @Inject constructor(
         val config = Configuration(context.resources.configuration).apply { setLocale(locale) }
         @Suppress("DEPRECATION")
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
-    }
-
-    /**
-     * Возвращает локализованное название категории.
-     */
-    fun getLocalizedCategoryName(category: Category): String = when (category) {
-        Category.KNITTING -> context.getString(R.string.category_knitting)
-        Category.CROCHET -> context.getString(R.string.category_crochet)
-        Category.BEADING -> context.getString(R.string.category_beading)
-        Category.MACRAME -> context.getString(R.string.category_macrame)
-        Category.OTHER -> context.getString(R.string.category_other)
     }
 
     companion object {

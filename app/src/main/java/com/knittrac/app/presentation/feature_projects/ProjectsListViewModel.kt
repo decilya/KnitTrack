@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_projects
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.core.localization.CategoryLocalizer
 import com.knittrac.app.domain.service.GetAllProjectsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -17,15 +17,24 @@ import javax.inject.Inject
 
 /**
  * MVI-контракт экрана списка проектов.
- *
- * `isLoading` критичен для правильного UX: без него при загрузке
- * мигнёт EmptyStateView до появления списка.
  */
 object ProjectsContract {
 
+    /**
+     * UI-модель проекта для отображения в списке.
+     *
+     * Содержит только те данные, которые нужны экрану, включая
+     * локализованное название категории. Domain-сущность [com.knittrac.app.domain.entity.Project]
+     * не покидает Data/Domain слои.
+     */
+    data class ProjectUiModel(
+        val id: Long,
+        val name: String,
+        val localizedCategoryName: String
+    )
+
     data class State(
-        val projects: List<Project> = emptyList(),
-        /** true — данные ещё загружаются (показываем CircularProgressIndicator). */
+        val projects: List<ProjectUiModel> = emptyList(),
         val isLoading: Boolean = true
     )
 
@@ -37,13 +46,14 @@ object ProjectsContract {
 /**
  * ViewModel экрана списка проектов.
  *
- * Загружает проекты через [GetAllProjectsService] и обновляет State.
- * После первого эмита (успех или ошибка) выставляет `isLoading = false`,
- * чтобы Screen переключился с индикатора загрузки на список или EmptyState.
+ * Загружает проекты через [GetAllProjectsService], локализует категории через
+ * [CategoryLocalizer] и обновляет State. После первого эмита (успех или ошибка)
+ * выставляет `isLoading = false`.
  */
 @HiltViewModel
 class ProjectsListViewModel @Inject constructor(
-    private val getAllProjectsService: GetAllProjectsService
+    private val getAllProjectsService: GetAllProjectsService,
+    private val categoryLocalizer: CategoryLocalizer
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProjectsContract.State())
@@ -57,19 +67,26 @@ class ProjectsListViewModel @Inject constructor(
     }
 
     /**
-     * Подписывается на поток проектов.
-     * Первый эмит снимает `isLoading`, чтобы UI показал список или EmptyState.
+     * Подписывается на поток проектов. Первый эмит (успех или ошибка) снимает
+     * `isLoading`, чтобы UI показал список или EmptyState.
      */
     private fun loadProjects() {
         viewModelScope.launch {
             getAllProjectsService(Unit).collect { result ->
                 when (result) {
-                    is Result.Success -> _state.update {
-                        it.copy(projects = result.data, isLoading = false)
+                    is Result.Success -> {
+                        val uiProjects = result.data.map { project ->
+                            ProjectsContract.ProjectUiModel(
+                                id = project.id,
+                                name = project.name,
+                                localizedCategoryName = categoryLocalizer.localize(project.category)
+                            )
+                        }
+                        _state.update { it.copy(projects = uiProjects, isLoading = false) }
                     }
-                    is Result.Error -> _state.update {
+                    is Result.Error -> {
                         // Даже при ошибке — снимаем isLoading, чтобы UI не висел
-                        it.copy(isLoading = false)
+                        _state.update { it.copy(isLoading = false) }
                     }
                 }
             }

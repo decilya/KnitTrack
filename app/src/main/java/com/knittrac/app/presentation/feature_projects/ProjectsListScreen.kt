@@ -16,17 +16,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
-import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.presentation.common.EmptyStateView
 import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Экран списка проектов.
  *
- * Три состояния (в правильном порядке):
+ * Состояния:
  * 1. isLoading → CircularProgressIndicator.
  * 2. projects.isEmpty() → EmptyStateView с кнопкой «Добавить».
- * 3. else → LazyColumn с карточками.
+ * 3. else → LazyColumn с карточками проектов.
  *
  * @param onNavigateToAddProject Лямбда навигации на экран создания проекта.
  * @param onNavigateToTimer Лямбда навигации на таймер с projectId.
@@ -110,10 +109,10 @@ fun ProjectsListScreen(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(state.projects, key = { it.id }) { project ->
+                    items(state.projects, key = { it.id }) { projectUi ->
                         ProjectCard(
-                            project = project,
-                            onClick = { onNavigateToTimer(project.id) }
+                            project = projectUi,
+                            onClick = { onNavigateToTimer(projectUi.id) }
                         )
                     }
                 }
@@ -122,9 +121,15 @@ fun ProjectsListScreen(
     }
 }
 
+/**
+ * Карточка проекта в списке.
+ *
+ * Отображает название и локализованную категорию, полученные из
+ * [ProjectsContract.ProjectUiModel].
+ */
 @Composable
 private fun ProjectCard(
-    project: Project,
+    project: ProjectsContract.ProjectUiModel,
     onClick: () -> Unit
 ) {
     Card(
@@ -140,7 +145,7 @@ private fun ProjectCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = project.category.name,
+                text = project.localizedCategoryName,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
