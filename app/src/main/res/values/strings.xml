@@ -54,4 +54,10 @@
 
     <!-- Statistics -->
     <string name="stats_title">Statistics</string>
+
+    <!-- Empty States -->
+    <string name="no_projects_description">Add your first project to start tracking your knitting time.</string>
+    <string name="no_stats_title">No statistics yet</string>
+    <string name="no_stats_description">Complete a few sessions to see your progress and charts.</string>
+    <string name="chart_time_by_day">Knitting time by day (minutes)</string>
 </resources>

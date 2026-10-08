@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,8 +17,21 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.presentation.common.EmptyStateView
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * Экран списка проектов.
+ *
+ * Три состояния (в правильном порядке):
+ * 1. isLoading → CircularProgressIndicator.
+ * 2. projects.isEmpty() → EmptyStateView с кнопкой «Добавить».
+ * 3. else → LazyColumn с карточками.
+ *
+ * @param onNavigateToAddProject Лямбда навигации на экран создания проекта.
+ * @param onNavigateToTimer Лямбда навигации на таймер с projectId.
+ * @param onNavigateToStats Лямбда навигации на статистику с projectId.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsListScreen(
@@ -27,7 +41,7 @@ fun ProjectsListScreen(
     onNavigateToStats: (Long) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    
+
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
@@ -37,7 +51,7 @@ fun ProjectsListScreen(
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -65,33 +79,43 @@ fun ProjectsListScreen(
             }
         }
     ) { paddingValues ->
-        if (state.projects.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.no_projects_yet),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            state.projects.isEmpty() -> {
+                EmptyStateView(
+                    icon = Icons.Default.Inbox,
+                    title = stringResource(R.string.no_projects_yet),
+                    description = stringResource(R.string.no_projects_description),
+                    actionText = stringResource(R.string.add_project),
+                    onActionClick = onNavigateToAddProject,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // ИСПРАВЛЕНО: добавлен key = { it.id } для оптимизации рекомпозиции
-                items(state.projects, key = { it.id }) { project ->
-                    ProjectCard(
-                        project = project,
-                        onClick = { onNavigateToTimer(project.id) }
-                    )
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.projects, key = { it.id }) { project ->
+                        ProjectCard(
+                            project = project,
+                            onClick = { onNavigateToTimer(project.id) }
+                        )
+                    }
                 }
             }
         }

@@ -54,4 +54,10 @@
 
     <!-- Статистика -->
     <string name="stats_title">Статистика</string>
+
+    <!-- Empty States -->
+    <string name="no_projects_description">Добавьте первый проект, чтобы начать отслеживать время вязания.</string>
+    <string name="no_stats_title">Статистика пуста</string>
+    <string name="no_stats_description">Завершите несколько сессий, чтобы увидеть прогресс и графики.</string>
+    <string name="chart_time_by_day">Время вязания по дням (минуты)</string>
 </resources>
