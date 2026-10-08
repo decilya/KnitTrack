@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_projects
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.collectLatest
  * @param onNavigateToTimer Лямбда навигации на таймер с projectId.
  * @param onNavigateToStats Лямбда навигации на статистику с projectId.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProjectsListScreen(
     viewModel: ProjectsListViewModel = hiltViewModel(),
@@ -122,6 +123,7 @@ fun ProjectsListScreen(
                     items(state.projects, key = { it.id }) { projectUi ->
                         ProjectCard(
                             project = projectUi,
+                            modifier = Modifier.animateItemPlacement(),
                             onClick = { onNavigateToTimer(projectUi.id) }
                         )
                     }
@@ -140,10 +142,11 @@ fun ProjectsListScreen(
 @Composable
 private fun ProjectCard(
     project: ProjectsContract.ProjectUiModel,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .hapticClickable(onClick = onClick)
     ) {
