@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.entity
 
+import androidx.annotation.Keep
 import com.knittrac.app.core.common.SyncStatus
 
 /**
@@ -18,6 +19,7 @@ import com.knittrac.app.core.common.SyncStatus
  * @property updatedAt Временная метка последнего обновления сессии.
  * @property syncStatus Статус синхронизации сессии (по умолчанию PENDING).
  */
+@Keep
 data class Session(
     val id: Long = 0L,
     val projectId: Long,

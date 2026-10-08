@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.entity
 
+import androidx.annotation.Keep
+
 /**
  * Доменная модель проекта вязания.
  * 
@@ -13,6 +15,7 @@ package com.knittrac.app.domain.entity
  * @property updatedAt Временная метка последнего обновления проекта.
  * @property syncStatus Статус синхронизации данных с облаком.
  */
+@Keep
 data class Project(
     val id: Long = 0L,
     val name: String,

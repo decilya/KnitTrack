@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.entity
 
+import androidx.annotation.Keep
+
 /**
  * Категории проектов для вязания и рукоделия.
  *
@@ -14,6 +16,7 @@ package com.knittrac.app.domain.entity
  * @see com.knittrac.app.core.localization.LocaleManager Менеджер для получения локализованных названий.
  * @see com.knittrac.app.R Строковые ресурсы для каждой категории.
  */
+@Keep
 enum class Category {
     /** Вязание спицами. */
     KNITTING,
