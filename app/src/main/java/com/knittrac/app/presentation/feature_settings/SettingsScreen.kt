@@ -16,10 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
+import com.knittrac.app.domain.entity.ThemeMode
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -167,11 +169,7 @@ fun SettingsScreen(
             ) {
                 // --- Секция: Внешний вид (темы) ---
                 SettingsSection(title = stringResource(R.string.settings_appearance)) {
-                    listOf(
-                        "SYSTEM" to stringResource(R.string.settings_theme_system),
-                        "LIGHT" to stringResource(R.string.settings_theme_light),
-                        "DARK" to stringResource(R.string.settings_theme_dark)
-                    ).forEach { (mode, label) ->
+                    ThemeMode.entries.forEach { mode ->
                         Row(
                             modifier = Modifier.fillMaxWidth()
                                 .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
@@ -183,7 +181,7 @@ fun SettingsScreen(
                                 onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(label)
+                            Text(stringResource(mode.labelRes()))
                         }
                     }
                 }
@@ -299,3 +297,17 @@ private fun openInputStreamSafe(context: Context, uri: Uri): InputStream? = try 
     Timber.e(e, "Failed to open input stream for uri: $uri")
     null
 }
+
+/**
+ * Возвращает строковый ресурс с локализованным названием режима темы.
+ *
+ * Extension на [ThemeMode] держит UI-специфику (R.string.*) в UI-слое,
+ * не загрязняя Domain-модель.
+ */
+@StringRes
+private fun ThemeMode.labelRes(): Int = when (this) {
+    ThemeMode.SYSTEM -> R.string.settings_theme_system
+    ThemeMode.LIGHT -> R.string.settings_theme_light
+    ThemeMode.DARK -> R.string.settings_theme_dark
+}
+

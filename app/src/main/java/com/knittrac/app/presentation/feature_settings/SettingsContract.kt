@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_settings
 
+import com.knittrac.app.domain.entity.ThemeMode
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -8,11 +9,14 @@ import java.io.OutputStream
  *
  * Особенность: Action несёт потоки [OutputStream]/[InputStream] для экспорта/импорта.
  * ViewModel не знает про Uri/ContentResolver/Context, соблюдая Clean Architecture.
+ *
+ * Тема представлена типобезопасным enum [ThemeMode] вместо строк —
+ * устранены магические строки "SYSTEM"/"LIGHT"/"DARK".
  */
 object SettingsContract {
 
     data class State(
-        val themeMode: String = "SYSTEM",
+        val themeMode: ThemeMode = ThemeMode.SYSTEM,
         val notificationsEnabled: Boolean = true,
         val isLoading: Boolean = true,
         val isExporting: Boolean = false,
@@ -22,7 +26,7 @@ object SettingsContract {
     )
 
     sealed class Action {
-        data class ChangeThemeMode(val mode: String) : Action()
+        data class ChangeThemeMode(val mode: ThemeMode) : Action()
         data class ToggleNotifications(val enabled: Boolean) : Action()
         /** Смена языка. Требует recreate() Activity для применения. */
         data class ChangeLanguage(val code: String) : Action()

@@ -102,7 +102,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Меняет язык и эмитит [RecreateActivity], чтобы Screen переприменил ресурсы.
+     * Меняет язык и эмитит [SettingsContract.Effect.RecreateActivity], чтобы Screen
+     * переприменил ресурсы.
      */
     private fun changeLanguage(code: String) {
         viewModelScope.launch {
