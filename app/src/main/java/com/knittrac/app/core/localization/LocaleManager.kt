@@ -6,7 +6,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.knittrac.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -16,8 +15,6 @@ import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
-
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 /**
  * Модель поддерживаемого языка.
@@ -35,24 +32,32 @@ data class LanguageOption(val code: String, val displayName: String)
  *   что позволяет добавлять новые языки БЕЗ правок Kotlin-кода.
  * - Первый запуск: берёт язык системы, если он поддерживается; иначе fallback "en".
  * - Смена языка: сохраняет в DataStore + применяет к Configuration + требует recreate().
+ *
+ * DataStore<Preferences> инжектится через Hilt из core/di/DataStoreModule —
+ * единственный источник истины для файла settings.preferences_pb. Это исключает
+ * дубликат DataStore и рантайм-краш "multiple DataStores active for the same file".
+ *
+ * @param context Контекст приложения — для доступа к Configuration и ресурсам.
+ * @param dataStore Общий DataStore, предоставляемый DataStoreModule.
  */
 @Singleton
 class LocaleManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val dataStore: DataStore<Preferences>
 ) {
     private val languageKey = stringPreferencesKey("app_language")
 
     /**
      * Список поддерживаемых языков, читается из ресурсов.
      * Кэшируется через lazy — ресурсы не меняются в рантайме.
-     * 
+     *
      * ВАЖНО: включает защиту от рассогласования размеров массивов codes и names,
      * что критично при ручном добавлении новых языков в arrays.xml.
      */
     val supportedLanguages: List<LanguageOption> by lazy {
         val codes = context.resources.getStringArray(R.array.supported_language_codes)
         val names = context.resources.getStringArray(R.array.supported_language_names)
-        
+
         if (codes.size != names.size) {
             Timber.e(
                 "Language arrays mismatch: codes=%d, names=%d. " +
@@ -83,13 +88,13 @@ class LocaleManager @Inject constructor(
      * чтобы первый кадр показывался на нужном языке.
      */
     suspend fun ensureLanguageInitialized() {
-        val prefs = context.dataStore.data.first()
+        val prefs = dataStore.data.first()
         val storedLanguage = prefs[languageKey]
         val initial = storedLanguage ?: defaultLanguage
 
         // Если язык ранее не сохранялся — сохраняем его для консистентности.
         if (storedLanguage == null) {
-            context.dataStore.edit { it[languageKey] = initial }
+            dataStore.edit { it[languageKey] = initial }
         }
 
         // Всегда применяем к Configuration — на первом и последующих запусках.
@@ -100,13 +105,13 @@ class LocaleManager @Inject constructor(
      * Поток текущей локали (для чтения, если нужно в UI).
      */
     fun getCurrentLocaleFlow(): Flow<Locale> =
-        context.dataStore.data.map { prefs -> Locale(prefs[languageKey] ?: defaultLanguage) }
+        dataStore.data.map { prefs -> Locale(prefs[languageKey] ?: defaultLanguage) }
 
     /**
      * Поток текущего кода языка (для UI-селектора в настройках).
      */
     fun getCurrentLanguageFlow(): Flow<String> =
-        context.dataStore.data.map { prefs -> prefs[languageKey] ?: defaultLanguage }
+        dataStore.data.map { prefs -> prefs[languageKey] ?: defaultLanguage }
 
     /**
      * Устанавливает язык пользователя.
@@ -118,7 +123,7 @@ class LocaleManager @Inject constructor(
         require(supportedLanguages.any { it.code == langCode }) {
             "Unsupported language: $langCode. Supported: ${supportedLanguages.map { it.code }}"
         }
-        context.dataStore.edit { it[languageKey] = langCode }
+        dataStore.edit { it[languageKey] = langCode }
         updateLocale(langCode)
     }
 
