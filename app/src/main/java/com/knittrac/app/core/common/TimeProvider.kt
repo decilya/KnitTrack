@@ -2,17 +2,21 @@ package com.knittrac.app.core.common
 
 /**
  * Абстракция для получения текущего времени.
- * Внедрение этого интерфейса вместо прямого вызова System.currentTimeMillis()
- * позволяет легко тестировать таймер, подменяя время (соблюдение DIP и тестируемости).
+ *
+ * Внедрение этого интерфейса вместо прямого вызова [System.currentTimeMillis]
+ * и [android.os.SystemClock.elapsedRealtime] позволяет легко тестировать
+ * компоненты, зависящие от времени, подменяя реализацию (DIP + testability).
+ *
+ * Разделение двух методов:
+ * - [currentTimeMillis] — wall clock (Unix epoch). Для сохранения в БД
+ *   (startTimestamp, updatedAt). Может идти назад при NTP-синхронизации.
+ * - [elapsedRealtime] — монотонное время (мс с загрузки устройства).
+ *   Для расчёта длительности сессий. Никогда не идёт назад.
  */
 interface TimeProvider {
-    /** Возвращает текущее время в миллисекундах с начала эпохи (Unix time) */
+    /** Wall clock: миллисекунды с начала Unix-эпохи. */
     fun currentTimeMillis(): Long
-}
 
-/**
- * Стандартная реализация, использующая системные часы устройства.
- */
-class SystemTimeProvider : TimeProvider {
-    override fun currentTimeMillis(): Long = System.currentTimeMillis()
+    /** Monotonic: миллисекунды с момента загрузки устройства, включая сон. */
+    fun elapsedRealtime(): Long
 }

@@ -1,5 +1,6 @@
 package com.knittrac.app.platform.timer
 
+import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.domain.service.TimerManager
 import com.knittrac.app.domain.service.TimerState
@@ -15,9 +16,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Реализация [TimerManager] с корректной работой при NTP-синхронизации.
+ *
+ * Расчёт elapsedTime базируется на [TimeProvider.elapsedRealtime] —
+ * монотонном времени, которое не идёт назад при переводе часов,
+ * смене часового пояса или NTP-синхронизации. Wall-clock время
+ * сохраняется отдельно в [sessionStartTime] для записи в БД.
+ */
 @Singleton
 class TimerManagerImpl @Inject constructor(
-    @param:IoDispatcher private val dispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
+    private val timeProvider: TimeProvider
 ) : TimerManager {
 
     private val _elapsedTime = MutableStateFlow(0L)
@@ -26,11 +36,25 @@ class TimerManagerImpl @Inject constructor(
     private val _state = MutableStateFlow(TimerState.IDLE)
     override val state: StateFlow<TimerState> = _state
 
+    /**
+     * Wall clock (Unix epoch) первой сессии. Идёт в [Session.startTimestamp].
+     * Не меняется при pause/resume — это момент старта.
+     */
     override var sessionStartTime: Long = 0L
         private set
 
+    /**
+     * Monotonic-время ([TimeProvider.elapsedRealtime]) первой сессии.
+     * Используется только для расчёта [elapsedTime].
+     */
+    private var sessionStartElapsed: Long = 0L
+
+    /** Накопленное время пауз (monotonic), миллисекунды. */
     private var totalPausedDuration: Long = 0L
-    private var lastPauseTime: Long = 0L
+
+    /** Monotonic-время последней паузы. */
+    private var lastPauseElapsed: Long = 0L
+
     private var job: Job? = null
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
@@ -38,20 +62,25 @@ class TimerManagerImpl @Inject constructor(
     override fun start() {
         if (job?.isActive == true) return
 
-        val now = System.currentTimeMillis()
+        val nowWallClock = timeProvider.currentTimeMillis()
+        val nowElapsed = timeProvider.elapsedRealtime()
 
         if (sessionStartTime == 0L) {
-            sessionStartTime = now
+            // Первый старт сессии
+            sessionStartTime = nowWallClock
+            sessionStartElapsed = nowElapsed
         } else {
-            totalPausedDuration += (now - lastPauseTime)
+            // Resume после паузы: добавляем длительность паузы
+            totalPausedDuration += (nowElapsed - lastPauseElapsed)
         }
 
         _state.value = TimerState.RUNNING
 
         job = scope.launch {
             while (isActive) {
-                val current = System.currentTimeMillis()
-                _elapsedTime.value = (current - sessionStartTime - totalPausedDuration) / 1000L
+                val current = timeProvider.elapsedRealtime()
+                _elapsedTime.value =
+                    (current - sessionStartElapsed - totalPausedDuration) / 1000L
                 delay(1000L)
             }
         }
@@ -60,14 +89,15 @@ class TimerManagerImpl @Inject constructor(
     override fun pause() {
         job?.cancel()
         _state.value = TimerState.PAUSED
-        lastPauseTime = System.currentTimeMillis()
+        lastPauseElapsed = timeProvider.elapsedRealtime()
     }
 
     override fun reset() {
         job?.cancel()
         sessionStartTime = 0L
+        sessionStartElapsed = 0L
         totalPausedDuration = 0L
-        lastPauseTime = 0L
+        lastPauseElapsed = 0L
         _elapsedTime.value = 0L
         _state.value = TimerState.IDLE
     }

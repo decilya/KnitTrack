@@ -1,8 +1,8 @@
 package com.knittrac.app.platform.di
 
-import com.knittrac.app.core.common.SystemTimeProvider
 import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.platform.timer.SystemTimeProvider
 import com.knittrac.app.platform.timer.TimerManagerImpl
 import dagger.Binds
 import dagger.Module
@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 /**
  * DI-модуль для предоставления зависимостей таймера.
- * Правило: Для @Binds используется abstract class. @Singleton на классе реализации.
+ * Правило: для @Binds используется abstract class, @Singleton на реализации.
  */
 @Module
 @InstallIn(SingletonComponent::class)
