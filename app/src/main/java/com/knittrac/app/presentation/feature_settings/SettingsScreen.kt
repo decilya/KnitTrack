@@ -17,10 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.annotation.StringRes
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
+import com.knittrac.app.presentation.common.hapticClickable
 import com.knittrac.app.domain.entity.ThemeMode
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -56,6 +59,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     // Ссылки на активные потоки — для гарантированного закрытия.
     var activeOutputStream by remember { mutableStateOf<OutputStream?>(null) }
@@ -172,13 +176,13 @@ fun SettingsScreen(
                     ThemeMode.entries.forEach { mode ->
                         Row(
                             modifier = Modifier.fillMaxWidth()
-                                .clickable { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                                .hapticClickable(type = HapticFeedbackType.TextHandleMove) { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = state.themeMode == mode,
-                                onClick = { viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
+                                onClick = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); viewModel.onAction(SettingsContract.Action.ChangeThemeMode(mode)) }
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(mode.labelRes()))
@@ -230,7 +234,7 @@ fun SettingsScreen(
                 SettingsSection(title = stringResource(R.string.settings_data)) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
-                            onClick = { exportLauncher.launch("knittrac_backup.json") },
+                            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); exportLauncher.launch("knittrac_backup.json") },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isExporting
                         ) {
@@ -240,7 +244,7 @@ fun SettingsScreen(
                         }
 
                         OutlinedButton(
-                            onClick = { importLauncher.launch("application/json") },
+                            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); importLauncher.launch("application/json") },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isImporting
                         ) {

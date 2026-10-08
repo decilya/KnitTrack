@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -23,6 +25,7 @@ fun TimerScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -78,22 +81,22 @@ fun TimerScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (state.status == TimerState.IDLE || state.status == TimerState.PAUSED) {
-                Button(onClick = { viewModel.onIntent(TimerContract.Intent.Start) }) {
+                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Start) }) {
                     Text(stringResource(R.string.start))
                 }
             }
             if (state.status == TimerState.RUNNING) {
-                Button(onClick = { viewModel.onIntent(TimerContract.Intent.Pause) }) {
+                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Pause) }) {
                     Text(stringResource(R.string.pause))
                 }
             }
             
-            Button(onClick = { viewModel.onIntent(TimerContract.Intent.Reset) }) {
+            Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Reset) }) {
                 Text(stringResource(R.string.reset))
             }
             
             if ((state.status == TimerState.PAUSED || state.status == TimerState.IDLE) && state.elapsedTime > 0) {
-                Button(onClick = { viewModel.onIntent(TimerContract.Intent.SaveSession) }) {
+                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.SaveSession) }) {
                     Text(stringResource(R.string.save_session))
                 }
             }

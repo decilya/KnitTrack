@@ -12,11 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
 import com.knittrac.app.presentation.common.EmptyStateView
+import com.knittrac.app.presentation.common.hapticClickable
 import kotlinx.coroutines.flow.collectLatest
 
 /**
@@ -40,6 +43,7 @@ fun ProjectsListScreen(
     onNavigateToStats: (Long) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -57,7 +61,10 @@ fun ProjectsListScreen(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     if (state.projects.isNotEmpty()) {
-                        IconButton(onClick = { onNavigateToStats(state.projects.first().id) }) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onNavigateToStats(state.projects.first().id)
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Assessment,
                                 contentDescription = stringResource(R.string.action_stats)
@@ -69,7 +76,10 @@ fun ProjectsListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onNavigateToAddProject
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onNavigateToAddProject()
+                }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -135,7 +145,7 @@ private fun ProjectCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .hapticClickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
