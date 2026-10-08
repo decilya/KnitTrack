@@ -9,6 +9,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.knittrac.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -46,6 +49,15 @@ class LocaleManager @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
     private val languageKey = stringPreferencesKey("app_language")
+
+    /**
+     * Флаг завершения инициализации языка.
+     *
+     * true — [ensureLanguageInitialized] отработала (успех или ошибка),
+     * можно скрывать splash-экран. false — splash ещё держится.
+     */
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
     /**
      * Список поддерживаемых языков, читается из ресурсов.
@@ -88,17 +100,23 @@ class LocaleManager @Inject constructor(
      * чтобы первый кадр показывался на нужном языке.
      */
     suspend fun ensureLanguageInitialized() {
-        val prefs = dataStore.data.first()
-        val storedLanguage = prefs[languageKey]
-        val initial = storedLanguage ?: defaultLanguage
+        try {
+            val prefs = dataStore.data.first()
+            val storedLanguage = prefs[languageKey]
+            val initial = storedLanguage ?: defaultLanguage
 
-        // Если язык ранее не сохранялся — сохраняем его для консистентности.
-        if (storedLanguage == null) {
-            dataStore.edit { it[languageKey] = initial }
+            // Если язык ранее не сохранялся — сохраняем его для консистентности.
+            if (storedLanguage == null) {
+                dataStore.edit { it[languageKey] = initial }
+            }
+
+            // Всегда применяем к Configuration — на первом и последующих запусках.
+            updateLocale(initial)
+        } finally {
+            // Сбрасываем splash даже при ошибке: лучше показать UI на системном
+            // языке, чем застрять на splash-экране навсегда.
+            _isInitialized.value = true
         }
-
-        // Всегда применяем к Configuration — на первом и последующих запусках.
-        updateLocale(initial)
     }
 
     /**

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Базовая тема приложения: используется после скрытия splash. -->
     <style name="Theme.KnitTrac" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+        Тема Splash Screen. Наследует Theme.SplashScreen из
+        androidx.core:core-splashscreen — обеспечивает совместимость
+        с Android 12+ (system splash) и старыми версиями (compat-слой).
+
+        postSplashScreenTheme: тема, которая применится после скрытия splash.
+    -->
+    <style name="Theme.KnitTrac.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.KnitTrac</item>
+    </style>
+
 </resources>

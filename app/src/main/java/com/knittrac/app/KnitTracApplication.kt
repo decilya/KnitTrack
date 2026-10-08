@@ -3,26 +3,36 @@ package com.knittrac.app
 import android.app.Application
 import com.knittrac.app.core.localization.LocaleManager
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 /**
  * Точка входа приложения.
  *
- * В onCreate синхронно инициализируется язык:
- * - На первом запуске — берётся язык системы (если поддерживается) или fallback "en".
- * - На последующих — применяется сохранённый выбор пользователя.
+ * Инициализация языка запускается асинхронно в [applicationScope] — это
+ * заменяет прежний `runBlocking`, который подвешивал главный поток на время
+ * чтения DataStore (~50ms) и создавал jank на старте.
  *
- * Синхронность гарантирует, что первый кадр UI отрисуется на нужном языке.
- * runBlocking оправдан: DataStore читает маленький файл с диска (< 50ms).
- * try/catch защищает от редких I/O сбоев, чтобы не уронить приложение.
+ * Гарантия корректного первого кадра обеспечивается на уровне UI:
+ * [com.knittrac.app.MainActivity] удерживает splash-экран, пока
+ * [LocaleManager.isInitialized] не станет true.
  */
 @HiltAndroidApp
 class KnitTracApplication : Application() {
 
     @Inject
     lateinit var localeManager: LocaleManager
+
+    /**
+     * Долгоживущий scope приложения. Не отменяется — живёт весь жизненный цикл
+     * процесса. SupervisorJob — чтобы падение одного дочернего корутина не
+     * отменяло остальные.
+     */
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
@@ -31,11 +41,7 @@ class KnitTracApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
 
-        // Синхронно применяем язык ДО первого рендера UI
-        // runBlocking — pragmatic trade-off для гарантии языка на первом кадре.
-        // DataStore читается с диска, обычно < 50ms.
-        // try/catch — защита от редких сбоев I/O, чтобы не уронить приложение.
-        runBlocking {
+        applicationScope.launch {
             try {
                 localeManager.ensureLanguageInitialized()
             } catch (e: Exception) {
