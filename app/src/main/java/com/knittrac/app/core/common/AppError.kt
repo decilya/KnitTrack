@@ -8,13 +8,19 @@ package com.knittrac.app.core.common
  * конкретный тип ошибки для более точной обработки.
  *
  * @param message Человекочитаемое сообщение об ошибке на русском языке.
+ * @param cause Исходное исключение (если есть) — для логирования стектрейса
+ *              через Timber. У ValidationError всегда null, у остальных —
+ *              тот Throwable, который обернули.
  *
  * @see ValidationError Ошибка валидации входных данных.
  * @see DatabaseError Ошибка при работе с базой данных.
  * @see NetworkError Ошибка сетевого взаимодействия.
  * @see UnknownError Неизвестная ошибка.
  */
-sealed class AppError(open val message: String) {
+sealed class AppError(
+    open val message: String,
+    val cause: Throwable? = null
+) {
     /**
      * Ошибка валидации входных данных.
      *
@@ -34,7 +40,8 @@ sealed class AppError(open val message: String) {
      * @param exception Исключение, вызвавшее ошибку (для отладки).
      */
     data class DatabaseError(val exception: Throwable) : AppError(
-        exception.message ?: "Неизвестная ошибка базы данных"
+        exception.message ?: "Неизвестная ошибка базы данных",
+        exception
     )
 
     /**
@@ -46,7 +53,8 @@ sealed class AppError(open val message: String) {
      * @param exception Исключение, вызвавшее ошибку (для отладки).
      */
     data class NetworkError(val exception: Throwable) : AppError(
-        exception.message ?: "Ошибка сетевого подключения"
+        exception.message ?: "Ошибка сетевого подключения",
+        exception
     )
 
     /**
@@ -57,6 +65,7 @@ sealed class AppError(open val message: String) {
      * @param exception Исключение, вызвавшее ошибку (для отладки).
      */
     data class UnknownError(val exception: Throwable) : AppError(
-        exception.message ?: "Неизвестная ошибка"
+        exception.message ?: "Неизвестная ошибка",
+        exception
     )
 }

@@ -122,7 +122,7 @@ class SettingsViewModel @Inject constructor(
             when (val result = exportDataService(outputStream)) {
                 is Result.Success -> _effect.emit(SettingsContract.Effect.ExportSuccess)
                 is Result.Error -> {
-                    Timber.e("Export failed: ${result.error.message}")
+                    Timber.e(result.error.cause, "Export failed")
                     _effect.emit(SettingsContract.Effect.ExportError)
                 }
             }
@@ -136,7 +136,7 @@ class SettingsViewModel @Inject constructor(
             when (val result = importDataService(inputStream)) {
                 is Result.Success -> _effect.emit(SettingsContract.Effect.ImportSuccess)
                 is Result.Error -> {
-                    Timber.e("Import failed: ${result.error.message}")
+                    Timber.e(result.error.cause, "Import failed")
                     _effect.emit(SettingsContract.Effect.ImportError)
                 }
             }

@@ -43,7 +43,7 @@ class SaveSessionService @Inject constructor(
         return when (val result = sessionRepository.addSessionAtomically(session)) {
             is Result.Success -> result
             is Result.Error -> {
-                Timber.e("Не удалось атомарно сохранить сессию: ${result.error.message}")
+                Timber.e(result.error.cause, "Не удалось атомарно сохранить сессию")
                 result
             }
         }
