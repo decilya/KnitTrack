@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.CategoryLocalizer
 import com.knittrac.app.domain.service.GetAllProjectsService
+import com.knittrac.app.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import timber.log.Timber
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +37,9 @@ object ProjectsContract {
 
     data class State(
         val projects: List<ProjectUiModel> = emptyList(),
-        val isLoading: Boolean = true
+        val isLoading: Boolean = true,
+        /** @StringRes id сообщения об ошибке. null — ошибки нет. */
+        val errorRes: Int? = null
     )
 
     sealed class Effect {
@@ -85,11 +89,25 @@ class ProjectsListViewModel @Inject constructor(
                         _state.update { it.copy(projects = uiProjects, isLoading = false) }
                     }
                     is Result.Error -> {
-                        // Даже при ошибке — снимаем isLoading, чтобы UI не висел
-                        _state.update { it.copy(isLoading = false) }
+                        Timber.e(result.error.cause, "Failed to load projects")
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                errorRes = R.string.error_load_projects
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Повторная попытка загрузки — вызывается из UI по кнопке Retry
+     * после ошибки. Сбрасывает errorRes и перезапускает подписку.
+     */
+    fun retry() {
+        _state.update { it.copy(isLoading = true, errorRes = null) }
+        loadProjects()
     }
 }

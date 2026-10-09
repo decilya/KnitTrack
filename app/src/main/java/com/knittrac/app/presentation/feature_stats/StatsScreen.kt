@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,6 +52,7 @@ fun StatsScreen(
             )
         }
     ) { padding ->
+        val errorRes = state.errorRes
         when {
             state.isLoading -> {
                 Box(
@@ -62,19 +64,17 @@ fun StatsScreen(
                     CircularProgressIndicator()
                 }
             }
-            state.error != null -> {
-                Box(
+            errorRes != null -> {
+                EmptyStateView(
+                    icon = Icons.Default.Warning,
+                    title = stringResource(errorRes),
+                    description = stringResource(R.string.error_load_stats_description),
+                    actionText = stringResource(R.string.error_retry),
+                    onActionClick = viewModel::retry,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                        .padding(padding)
+                )
             }
             state.dailyStats.isEmpty() -> {
                 EmptyStateView(

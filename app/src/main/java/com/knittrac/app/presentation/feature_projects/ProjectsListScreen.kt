@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,6 +90,7 @@ fun ProjectsListScreen(
             }
         }
     ) { paddingValues ->
+        val errorRes = state.errorRes
         when {
             state.isLoading -> {
                 Box(
@@ -99,6 +101,18 @@ fun ProjectsListScreen(
                 ) {
                     CircularProgressIndicator()
                 }
+            }
+            errorRes != null -> {
+                EmptyStateView(
+                    icon = Icons.Default.Warning,
+                    title = stringResource(errorRes),
+                    description = stringResource(R.string.error_load_projects_description),
+                    actionText = stringResource(R.string.error_retry),
+                    onActionClick = viewModel::retry,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
             }
             state.projects.isEmpty() -> {
                 EmptyStateView(

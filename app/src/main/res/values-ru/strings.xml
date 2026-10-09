@@ -60,4 +60,11 @@
     <string name="no_stats_title">Статистика пуста</string>
     <string name="no_stats_description">Завершите несколько сессий, чтобы увидеть прогресс и графики.</string>
     <string name="chart_time_by_day">Время вязания по дням (минуты)</string>
+
+    <!-- Errors -->
+    <string name="error_load_projects">Не удалось загрузить проекты</string>
+    <string name="error_load_stats">Не удалось загрузить статистику</string>
+    <string name="error_load_projects_description">Проверьте соединение и попробуйте снова</string>
+    <string name="error_load_stats_description">Проверьте соединение и попробуйте снова</string>
+    <string name="error_retry">Повторить</string>
 </resources>

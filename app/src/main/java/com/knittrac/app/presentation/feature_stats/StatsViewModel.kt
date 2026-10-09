@@ -3,10 +3,12 @@ package com.knittrac.app.presentation.feature_stats
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import timber.log.Timber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +20,8 @@ object StatsContract {
     data class State(
         val dailyStats: List<DailyStat> = emptyList(),
         val isLoading: Boolean = true,
-        val error: String? = null
+        /** @StringRes id сообщения об ошибке. null — ошибки нет. */
+        val errorRes: Int? = null
     )
 }
 
@@ -39,14 +42,28 @@ class StatsViewModel @Inject constructor(
 
     private fun loadStats() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, errorRes = null) }
             
-            val result = sessionRepository.getDailyStats(projectId)
-            if (result is Result.Success) {
-                _state.update { it.copy(dailyStats = result.data, isLoading = false) }
-            } else {
-                _state.update { it.copy(isLoading = false, error = "Не удалось загрузить статистику") }
+            when (val result = sessionRepository.getDailyStats(projectId)) {
+                is Result.Success -> _state.update {
+                    it.copy(dailyStats = result.data, isLoading = false)
+                }
+                is Result.Error -> {
+                    Timber.e(result.error.cause, "Failed to load daily stats for project $projectId")
+                    _state.update {
+                        it.copy(isLoading = false, errorRes = R.string.error_load_stats)
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Повторная попытка загрузки — вызывается из UI по кнопке Retry
+     * после ошибки. Сбрасывает errorRes и перезапускает подписку.
+     */
+    fun retry() {
+        _state.update { it.copy(isLoading = true, errorRes = null) }
+        loadStats()
     }
 }
