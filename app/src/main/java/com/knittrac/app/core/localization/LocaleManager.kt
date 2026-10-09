@@ -2,6 +2,7 @@ package com.knittrac.app.core.localization
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -148,8 +149,12 @@ class LocaleManager @Inject constructor(
     /**
      * Применяет локаль к ресурсам приложения.
      * Использует deprecated API updateConfiguration — актуально до Android 13 (T).
+     *
+     * VisibleForTesting: метод вызывается напрямую только из LocaleManagerTest.
+     * В продукте всегда идёт через ensureLanguageInitialized или setLanguage.
      */
-    private fun updateLocale(langCode: String) {
+    @VisibleForTesting
+    internal fun updateLocale(langCode: String) {
         val locale = Locale(langCode)
         Locale.setDefault(locale)
         val config = Configuration(context.resources.configuration).apply { setLocale(locale) }
