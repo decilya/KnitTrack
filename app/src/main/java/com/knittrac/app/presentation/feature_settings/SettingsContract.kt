@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_settings
 
+import com.knittrac.app.core.localization.LanguageOption
 import com.knittrac.app.domain.entity.ThemeMode
 import java.io.InputStream
 import java.io.OutputStream
@@ -22,7 +23,13 @@ object SettingsContract {
         val isExporting: Boolean = false,
         val isImporting: Boolean = false,
         /** Текущий код языка (например, "ru", "en"). */
-        val currentLanguage: String = ""
+        val currentLanguage: String = "",
+
+        /**
+         * Список поддерживаемых языков. Читается из resources,
+         * статичен в рантайме — меняется только с новым APK.
+         */
+        val supportedLanguages: List<LanguageOption> = emptyList()
     )
 
     sealed class Action {

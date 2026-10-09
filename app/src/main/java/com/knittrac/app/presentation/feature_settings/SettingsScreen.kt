@@ -193,25 +193,31 @@ fun SettingsScreen(
                 HorizontalDivider(thickness = 0.5.dp)
 
                 // --- Секция: Язык (динамический список) ---
-                SettingsSection(title = stringResource(R.string.settings_language)) {
-                    viewModel.supportedLanguages.forEach { lang ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                                .clickable { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = state.currentLanguage == lang.code,
-                                onClick = { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(lang.displayName)
+                // Показываем только если supportedLanguages непуст. При
+                // рассогласовании arrays.xml LocaleManager вернёт пустой
+                // список — тогда секция с заголовком и без содержимого
+                // не должна маячить на экране.
+                if (state.supportedLanguages.isNotEmpty()) {
+                    SettingsSection(title = stringResource(R.string.settings_language)) {
+                        state.supportedLanguages.forEach { lang ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clickable { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = state.currentLanguage == lang.code,
+                                    onClick = { viewModel.onAction(SettingsContract.Action.ChangeLanguage(lang.code)) }
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(lang.displayName)
+                            }
                         }
                     }
-                }
 
-                HorizontalDivider(thickness = 0.5.dp)
+                    HorizontalDivider(thickness = 0.5.dp)
+                }
 
                 // --- Секция: Уведомления ---
                 SettingsSection(title = stringResource(R.string.settings_notifications)) {

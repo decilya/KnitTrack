@@ -3,7 +3,6 @@ package com.knittrac.app.presentation.feature_settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.core.localization.LanguageOption
 import com.knittrac.app.core.localization.LocaleManager
 import com.knittrac.app.data.repository.SettingsRepository
 import com.knittrac.app.domain.service.ExportDataService
@@ -38,12 +37,6 @@ class SettingsViewModel @Inject constructor(
     private val importDataService: ImportDataService
 ) : ViewModel() {
 
-    /**
-     * Список поддерживаемых языков. Читается из resources,
-     * поэтому не хранится в State — это статичные данные.
-     */
-    val supportedLanguages: List<LanguageOption> = localeManager.supportedLanguages
-
     private val _state = MutableStateFlow(SettingsContract.State())
     val state: StateFlow<SettingsContract.State> = _state.asStateFlow()
 
@@ -55,6 +48,7 @@ class SettingsViewModel @Inject constructor(
     val effect: SharedFlow<SettingsContract.Effect> = _effect.asSharedFlow()
 
     init {
+        _state.update { it.copy(supportedLanguages = localeManager.supportedLanguages) }
         observeSettings()
     }
 
