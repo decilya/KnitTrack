@@ -7,7 +7,7 @@ plugins {
 }
 android {
     namespace = "com.knittrac.app"
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         applicationId = "com.knittrac.app"
         minSdk = 26
