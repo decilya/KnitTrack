@@ -7,6 +7,7 @@ import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ import javax.inject.Inject
 class TimerViewModel @Inject constructor(
     private val timerManager: TimerManager,
     private val saveSessionService: SaveSessionService,
-    private val getAllProjectsService: GetAllProjectsService
+    private val getAllProjectsService: GetAllProjectsService,
+    private val notificationPermissionChecker: NotificationPermissionChecker
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TimerContract.State())
@@ -61,6 +63,17 @@ class TimerViewModel @Inject constructor(
                     viewModelScope.launch { _effect.send(TimerContract.Effect.NavigateToProjects) }
                     return
                 }
+
+                // На API 33+ без granted POST_NOTIFICATIONS foreground-уведомление
+                // таймера не показывается. Эмитим effect, Screen запустит
+                // системный диалог. Таймер стартует независимо от решения —
+                // permission влияет только на видимость уведомления.
+                if (!notificationPermissionChecker.isGranted()) {
+                    viewModelScope.launch {
+                        _effect.send(TimerContract.Effect.RequestNotificationPermission)
+                    }
+                }
+
                 timerManager.start()
             }
             is TimerContract.Intent.Pause -> timerManager.pause()

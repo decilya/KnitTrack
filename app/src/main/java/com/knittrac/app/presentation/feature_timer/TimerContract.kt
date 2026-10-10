@@ -26,5 +26,14 @@ object TimerContract {
         data class ShowError(@androidx.annotation.StringRes val messageResId: Int) : Effect()
         object SessionSaved : Effect()
         object NavigateToProjects : Effect()
+
+        /**
+         * Эмитится перед запуском таймера, если разрешение POST_NOTIFICATIONS
+         * не granted. Screen запускает системный диалог запроса.
+         *
+         * Таймер стартует в любом случае — permission не блокирует работу,
+         * только влияет на видимость foreground-уведомления.
+         */
+        object RequestNotificationPermission : Effect()
     }
 }

@@ -1,6 +1,9 @@
 package com.knittrac.app.presentation.feature_timer
 
+import android.Manifest
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -27,6 +30,13 @@ fun TimerScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
+    // Системный диалог запроса POST_NOTIFICATIONS (Android 13+).
+    // Запускается по Effect.RequestNotificationPermission из ViewModel,
+    // когда пользователь стартует таймер без granted-разрешения.
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { /* granted или нет — таймер уже стартовал */ }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
@@ -36,6 +46,9 @@ fun TimerScreen(
                 }
                 is TimerContract.Effect.ShowError -> {
                     Toast.makeText(context, context.getString(effect.messageResId), Toast.LENGTH_SHORT).show()
+                }
+                is TimerContract.Effect.RequestNotificationPermission -> {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }
