@@ -7,6 +7,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.repository.SessionRepository
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -104,5 +105,21 @@ class StatsViewModelTest {
         assertEquals(R.string.error_load_stats, state.errorRes)
         assertEquals(false, state.isLoading)
         assertEquals(emptyList<DailyStat>(), state.dailyStats)
+    }
+
+    /**
+     * Без nav-аргумента projectId VM не делает запрос к репозиторию
+     * и сразу выставляет errorRes — UI покажет ошибку вместо пустой
+     * статистики, которая вводила бы в заблуждение.
+     */
+    @Test
+    fun `missing projectId sets errorRes without repository call`() = runTest {
+        viewModel = StatsViewModel(sessionRepository, SavedStateHandle())
+
+        val state = viewModel.state.value
+        assertEquals(R.string.error_load_stats, state.errorRes)
+        assertEquals(false, state.isLoading)
+        assertEquals(emptyList<DailyStat>(), state.dailyStats)
+        coVerify(exactly = 0) { sessionRepository.getDailyStats(any()) }
     }
 }

@@ -31,7 +31,7 @@ class StatsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val projectId: Long = savedStateHandle.get<Long>("projectId") ?: 0L
+    private val projectId: Long? = savedStateHandle.get<Long>("projectId")
 
     private val _state = MutableStateFlow(StatsContract.State())
     val state: StateFlow<StatsContract.State> = _state.asStateFlow()
@@ -41,15 +41,24 @@ class StatsViewModel @Inject constructor(
     }
 
     private fun loadStats() {
+        val id = projectId
+        if (id == null) {
+            Timber.w("StatsViewModel started without projectId")
+            _state.update {
+                it.copy(isLoading = false, errorRes = R.string.error_load_stats)
+            }
+            return
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorRes = null) }
             
-            when (val result = sessionRepository.getDailyStats(projectId)) {
+            when (val result = sessionRepository.getDailyStats(id)) {
                 is Result.Success -> _state.update {
                     it.copy(dailyStats = result.data, isLoading = false)
                 }
                 is Result.Error -> {
-                    Timber.e(result.error.cause, "Failed to load daily stats for project $projectId")
+                    Timber.e(result.error.cause, "Failed to load daily stats for project $id")
                     _state.update {
                         it.copy(isLoading = false, errorRes = R.string.error_load_stats)
                     }
