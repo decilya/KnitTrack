@@ -20,6 +20,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * Foreground-сервис для отображения уведомления с работающим таймером.
@@ -219,6 +220,26 @@ class TimerForegroundService : Service() {
             text = formatTime(0L)
         )
         startForeground(NOTIFICATION_ID, notification)
+        stopSelf()
+    }
+
+    /**
+     * Android 15 (API 35) ограничивает время работы dataSync-сервиса
+     * 6 часами в сутки. При достижении лимита система вызывает этот
+     * метод — мы обязаны остановиться в течение нескольких секунд,
+     * иначе RemoteServiceException и краш приложения.
+     *
+     * Останавливаем таймер и сервис корректно. Сессия пользователя
+     * сохраняется (elapsedTime в TimerManager не сбрасывается),
+     * её можно сохранить при следующем открытии приложения.
+     */
+    override fun onTimeout(startId: Int) {
+        Timber.w(
+            "Foreground service timeout (dataSync limit on API 35). " +
+            "Stopping gracefully, timer paused."
+        )
+        timerManager.pause()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
