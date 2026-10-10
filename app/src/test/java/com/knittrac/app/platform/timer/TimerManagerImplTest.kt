@@ -262,6 +262,62 @@ class TimerManagerImplTest {
         assertEquals(0L, timerManager.elapsedTime.value)
         assertEquals(TimerState.IDLE, timerManager.state.value)
     }
+
+    // Идемпотентность pause()
+
+    /**
+     * pause() в состоянии IDLE должен быть no-op.
+     *
+     * Без guard pause() из IDLE записывал бы TimerState.PAUSED поверх
+     * остановленного таймера — UI показывал бы «пауза» на пустой сессии.
+     */
+    @Test
+    fun `pause in IDLE does not change state`() = runTimerTest {
+        assertEquals(TimerState.IDLE, timerManager.state.value)
+
+        timerManager.pause()
+
+        assertEquals(TimerState.IDLE, timerManager.state.value)
+    }
+
+    /**
+     * Повторный pause() не должен перезаписывать lastPauseElapsed.
+     *
+     * Сценарий:
+     * - start, 5 сек работы
+     * - pause (lastPauseElapsed = 5s)
+     * - 10 сек на паузе, пользователь случайно жмёт pause() ещё раз
+     * - resume, 3 сек работы
+     *
+     * С guard (lastPauseElapsed остаётся 5s):
+     *   totalPausedDuration += 15s - 5s = 10s
+     *   elapsedTime = (15s + 3s - 10s) / 1000 = 8
+     *
+     * Без guard (lastPauseElapsed перезаписался на 10s):
+     *   totalPausedDuration += 15s - 10s = 5s
+     *   elapsedTime = (15s + 3s - 5s) / 1000 = 13 — скачок вперёд.
+     */
+    @Test
+    fun `repeated pause does not reset lastPauseElapsed`() = runTimerTest {
+        timerManager.start()
+        fakeTime.elapsedMillis += 5_000L
+        advanceTimeBy(1000L)
+
+        timerManager.pause()
+
+        // Пауза ещё 10 секунд, повторный pause() должен игнорироваться
+        fakeTime.elapsedMillis += 5_000L
+        timerManager.pause()
+        fakeTime.elapsedMillis += 5_000L
+
+        timerManager.start()
+
+        // 3 секунды работы после resume
+        fakeTime.elapsedMillis += 3_000L
+        advanceTimeBy(1000L)
+
+        assertEquals(8L, timerManager.elapsedTime.value)
+    }
 }
 
 /**

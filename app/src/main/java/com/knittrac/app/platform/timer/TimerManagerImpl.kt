@@ -86,7 +86,16 @@ class TimerManagerImpl @Inject constructor(
         }
     }
 
+    /**
+     * Ставит таймер на паузу.
+     *
+     * Идемпотентен: повторный вызов в состоянии PAUSED или IDLE
+     * игнорируется. Без guard повторный pause() перезаписывал
+     * lastPauseElapsed, и следующий start() недоучитывал паузу —
+     * elapsedTime скакал вперёд.
+     */
     override fun pause() {
+        if (_state.value != TimerState.RUNNING) return
         job?.cancel()
         _state.value = TimerState.PAUSED
         lastPauseElapsed = timeProvider.elapsedRealtime()
