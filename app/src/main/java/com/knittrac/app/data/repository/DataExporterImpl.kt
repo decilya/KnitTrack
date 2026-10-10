@@ -5,11 +5,13 @@ import com.google.gson.stream.JsonWriter
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
+import com.knittrac.app.data.dto.ExportDataDto
+import com.knittrac.app.data.dto.ProjectDto
+import com.knittrac.app.data.dto.SessionDto
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.mapper.toDomain
-import com.knittrac.app.domain.entity.Project
-import com.knittrac.app.domain.entity.Session
+import com.knittrac.app.data.mapper.toDto
 import com.knittrac.app.domain.repository.DataExporter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -46,20 +48,20 @@ class DataExporterImpl @Inject constructor(
                 }
 
                 writer.beginObject()
-                writer.name("version").value("1.0")
+                writer.name("version").value(ExportDataDto.CURRENT_VERSION)
                 writer.name("exportDate").value(System.currentTimeMillis())
 
                 // Потоковая запись проектов
                 writer.name("projects").beginArray()
                 projectDao.getAllProjects().forEach { entity ->
-                    gson.toJson(entity.toDomain(), Project::class.java, writer)
+                    gson.toJson(entity.toDomain().toDto(), ProjectDto::class.java, writer)
                 }
                 writer.endArray()
 
                 // Потоковая запись сессий
                 writer.name("sessions").beginArray()
                 sessionDao.getAllSessions().forEach { entity ->
-                    gson.toJson(entity.toDomain(), Session::class.java, writer)
+                    gson.toJson(entity.toDomain().toDto(), SessionDto::class.java, writer)
                 }
                 writer.endArray()
 

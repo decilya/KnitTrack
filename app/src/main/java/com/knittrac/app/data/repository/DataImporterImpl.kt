@@ -5,14 +5,17 @@ import com.google.gson.stream.JsonReader
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
+import com.knittrac.app.data.dto.ExportDataDto
+import com.knittrac.app.data.dto.ProjectDto
+import com.knittrac.app.data.dto.SessionDto
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.data.local.entity.SessionEntity
+import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
-import com.knittrac.app.domain.entity.Project
-import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.repository.DataImporter
+import timber.log.Timber
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -59,6 +62,17 @@ class DataImporterImpl @Inject constructor(
                 reader.beginObject()
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
+                        "version" -> {
+                            val version = reader.nextString()
+                            if (version != ExportDataDto.CURRENT_VERSION) {
+                                Timber.w(
+                                    "Backup version '%s' != current '%s'. " +
+                                    "Attempting to read as current format",
+                                    version, ExportDataDto.CURRENT_VERSION
+                                )
+                            }
+                        }
+                        "exportDate" -> reader.skipValue()
                         "projects" -> readAndInsertProjects(reader)
                         "sessions" -> readAndInsertSessions(reader)
                         else -> reader.skipValue()
@@ -79,8 +93,8 @@ class DataImporterImpl @Inject constructor(
         val batch = mutableListOf<ProjectEntity>()
         reader.beginArray()
         while (reader.hasNext()) {
-            val project = gson.fromJson<Project>(reader, Project::class.java)
-            batch.add(project.toEntity())
+            val dto = gson.fromJson<ProjectDto>(reader, ProjectDto::class.java)
+            batch.add(dto.toDomain().toEntity())
             if (batch.size >= BATCH_SIZE) {
                 projectDao.insertProjects(batch)
                 batch.clear()
@@ -97,8 +111,8 @@ class DataImporterImpl @Inject constructor(
         val batch = mutableListOf<SessionEntity>()
         reader.beginArray()
         while (reader.hasNext()) {
-            val session = gson.fromJson<Session>(reader, Session::class.java)
-            batch.add(session.toEntity())
+            val dto = gson.fromJson<SessionDto>(reader, SessionDto::class.java)
+            batch.add(dto.toDomain().toEntity())
             if (batch.size >= BATCH_SIZE) {
                 sessionDao.insertSessions(batch)
                 batch.clear()
