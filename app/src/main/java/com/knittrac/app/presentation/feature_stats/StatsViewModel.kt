@@ -23,6 +23,11 @@ object StatsContract {
         /** @StringRes id сообщения об ошибке. null — ошибки нет. */
         val errorRes: Int? = null
     )
+
+    sealed class Action {
+        /** Повторная попытка загрузки после ошибки. */
+        object Retry : Action()
+    }
 }
 
 @HiltViewModel
@@ -68,10 +73,19 @@ class StatsViewModel @Inject constructor(
     }
 
     /**
-     * Повторная попытка загрузки — вызывается из UI по кнопке Retry
-     * после ошибки. Сбрасывает errorRes и перезапускает подписку.
+     * Единая точка входа для действий UI (MVI).
      */
-    fun retry() {
+    fun onAction(action: StatsContract.Action) {
+        when (action) {
+            is StatsContract.Action.Retry -> retry()
+        }
+    }
+
+    /**
+     * Повторная попытка загрузки — вызывается через [onAction].
+     * Сбрасывает errorRes и перезапускает подписку.
+     */
+    private fun retry() {
         _state.update { it.copy(isLoading = true, errorRes = null) }
         loadStats()
     }

@@ -108,7 +108,7 @@ fun ProjectsListScreen(
                     title = stringResource(errorRes),
                     description = stringResource(R.string.error_load_projects_description),
                     actionText = stringResource(R.string.error_retry),
-                    onActionClick = viewModel::retry,
+                    onActionClick = { viewModel.onAction(ProjectsContract.Action.Retry) },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)

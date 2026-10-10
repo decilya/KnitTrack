@@ -42,6 +42,11 @@ object ProjectsContract {
         val errorRes: Int? = null
     )
 
+    sealed class Action {
+        /** Повторная попытка загрузки после ошибки. */
+        object Retry : Action()
+    }
+
     sealed class Effect {
         data class OpenTimer(val projectId: Long) : Effect()
     }
@@ -103,10 +108,19 @@ class ProjectsListViewModel @Inject constructor(
     }
 
     /**
-     * Повторная попытка загрузки — вызывается из UI по кнопке Retry
-     * после ошибки. Сбрасывает errorRes и перезапускает подписку.
+     * Единая точка входа для действий UI (MVI).
      */
-    fun retry() {
+    fun onAction(action: ProjectsContract.Action) {
+        when (action) {
+            is ProjectsContract.Action.Retry -> retry()
+        }
+    }
+
+    /**
+     * Повторная попытка загрузки — вызывается через [onAction].
+     * Сбрасывает errorRes и перезапускает подписку.
+     */
+    private fun retry() {
         _state.update { it.copy(isLoading = true, errorRes = null) }
         loadProjects()
     }

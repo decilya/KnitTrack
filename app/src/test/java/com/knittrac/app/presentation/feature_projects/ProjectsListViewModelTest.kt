@@ -111,7 +111,7 @@ class ProjectsListViewModelTest {
             flowOf(Result.Success(listOf(mockProject)))
         every { categoryLocalizer.localize(Category.KNITTING) } returns "Вязание спицами"
 
-        viewModel.retry()
+        viewModel.onAction(ProjectsContract.Action.Retry)
 
         val state = viewModel.state.value
         assertNull(state.errorRes)

@@ -70,7 +70,7 @@ fun StatsScreen(
                     title = stringResource(errorRes),
                     description = stringResource(R.string.error_load_stats_description),
                     actionText = stringResource(R.string.error_retry),
-                    onActionClick = viewModel::retry,
+                    onActionClick = { viewModel.onAction(StatsContract.Action.Retry) },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
