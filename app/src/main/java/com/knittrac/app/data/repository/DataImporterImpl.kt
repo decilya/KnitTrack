@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import androidx.room.withTransaction
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.knittrac.app.core.common.AppError
@@ -8,6 +9,7 @@ import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
+import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.local.entity.ProjectEntity
@@ -30,17 +32,22 @@ import javax.inject.Singleton
  * - Потоковое чтение: JSON не загружается в память целиком.
  * - Чанковая вставка: данные сохраняются в БД пакетами по [BATCH_SIZE] записей,
  *   что предотвращает OutOfMemoryError при импорте больших бэкапов.
+ * - Атомарность: весь импорт обёрнут в [withTransaction]. Падение на любом
+ *   чанке откатывает всю транзакцию — БД не остаётся в половинчатом
+ *   состоянии (часть бэкапа + часть старых данных).
  *
- * ВАЖНО: используется `OnConflictStrategy.REPLACE` — при импорте существующие
- * записи с теми же `id` будут перезаписаны. Это ожидаемое поведение для restore.
+ * ВАЖНО: используется OnConflictStrategy.REPLACE — при импорте существующие
+ * записи с теми же id будут перезаписаны. Это ожидаемое поведение для restore.
  *
  * Зависимости (DIP):
+ * - [AppDatabase] — общая транзакция для всего импорта.
  * - [ProjectDao], [SessionDao] — сохранение данных в Room.
  * - [Gson] — парсинг отдельных объектов из потока.
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
 @Singleton
 class DataImporterImpl @Inject constructor(
+    private val database: AppDatabase,
     private val projectDao: ProjectDao,
     private val sessionDao: SessionDao,
     private val gson: Gson,
@@ -59,26 +66,31 @@ class DataImporterImpl @Inject constructor(
                     isLenient = true
                 }
 
-                reader.beginObject()
-                while (reader.hasNext()) {
-                    when (reader.nextName()) {
-                        "version" -> {
-                            val version = reader.nextString()
-                            if (version != ExportDataDto.CURRENT_VERSION) {
-                                Timber.w(
-                                    "Backup version '%s' != current '%s'. " +
-                                    "Attempting to read as current format",
-                                    version, ExportDataDto.CURRENT_VERSION
-                                )
+                // Общая транзакция на весь импорт. Если упадёт на 5-м чанке,
+                // откатятся все предыдущие вставки — БД не останется
+                // в половинчатом состоянии.
+                database.withTransaction {
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "version" -> {
+                                val version = reader.nextString()
+                                if (version != ExportDataDto.CURRENT_VERSION) {
+                                    Timber.w(
+                                        "Backup version '%s' != current '%s'. " +
+                                        "Attempting to read as current format",
+                                        version, ExportDataDto.CURRENT_VERSION
+                                    )
+                                }
                             }
+                            "exportDate" -> reader.skipValue()
+                            "projects" -> readAndInsertProjects(reader)
+                            "sessions" -> readAndInsertSessions(reader)
+                            else -> reader.skipValue()
                         }
-                        "exportDate" -> reader.skipValue()
-                        "projects" -> readAndInsertProjects(reader)
-                        "sessions" -> readAndInsertSessions(reader)
-                        else -> reader.skipValue()
                     }
+                    reader.endObject()
                 }
-                reader.endObject()
 
                 Result.Success(Unit)
             } catch (e: Exception) {
@@ -88,6 +100,9 @@ class DataImporterImpl @Inject constructor(
 
     /**
      * Потоково читает массив проектов и вставляет их в БД чанками по [BATCH_SIZE].
+     *
+     * Вызывается внутри [withTransaction] — все вставки входят в общую
+     * транзакцию импорта.
      */
     private suspend fun readAndInsertProjects(reader: JsonReader) {
         val batch = mutableListOf<ProjectEntity>()
@@ -106,6 +121,9 @@ class DataImporterImpl @Inject constructor(
 
     /**
      * Потоково читает массив сессий и вставляет их в БД чанками по [BATCH_SIZE].
+     *
+     * Вызывается внутри [withTransaction] — все вставки входят в общую
+     * транзакцию импорта.
      */
     private suspend fun readAndInsertSessions(reader: JsonReader) {
         val batch = mutableListOf<SessionEntity>()
