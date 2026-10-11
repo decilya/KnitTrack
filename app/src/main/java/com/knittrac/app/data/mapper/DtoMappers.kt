@@ -7,7 +7,6 @@ import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.Session
-import timber.log.Timber
 
 /**
  * Мапперы Domain ↔ DTO для сериализации в JSON.
@@ -17,8 +16,7 @@ import timber.log.Timber
  * - DtoMappers — Domain ↔ JSON (формат бэкапа).
  *
  * DTO знают про Domain, Domain не знает ни про Entity, ни про DTO.
- * Value Objects разворачиваются в примитивы для стабильного JSON-формата:
- * name → String, durationSeconds → Long.
+ * Value Objects разворачиваются в примитивы для стабильного JSON-формата.
  */
 
 /**
@@ -36,15 +34,17 @@ fun Project.toDto(): ProjectDto = ProjectDto(
 )
 
 /**
- * ProjectDto → Project. Категория парсится безопасно:
- * неизвестное значение (старый бэкап, повреждённый JSON) логируется
- * через Timber.w и превращается в Category.OTHER, а не крашит импорт.
- * Имя и totalTimeSeconds проходят через VO с fallback на дефолт.
+ * ProjectDto → Project.
+ *
+ * Категория и имя восстанавливаются безопасно через VO с fallback:
+ * неизвестная категория (опечатка в JSON, старый бэкап) превращается
+ * в [Category.OTHER] через [Category.fromNameOrDefault], пустое имя —
+ * в [ProjectName.DEFAULT], отрицательное время — в [Duration.ZERO].
  */
 fun ProjectDto.toDomain(): Project = Project(
     id = id,
     name = ProjectName.createOrDefault(name),
-    category = categoryFromString(category),
+    category = Category.fromNameOrDefault(category),
     createdAt = createdAt,
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
     updatedAt = updatedAt,
@@ -79,17 +79,3 @@ fun SessionDto.toDomain(): Session = Session(
     updatedAt = updatedAt,
     syncStatus = syncStatus
 )
-
-/**
- * Безопасный парсинг имени категории.
- *
- * Не использует Category.valueOf — тот бросает IllegalArgumentException
- * при неизвестном значении. Fallback на Category.OTHER сохраняет
- * пользовательские данные (сессия/проект импортируются, просто
- * категория отображается как «Другое»).
- */
-private fun categoryFromString(value: String): Category =
-    Category.entries.firstOrNull { it.name == value } ?: run {
-        Timber.w("Unknown category in DTO: '%s', falling back to OTHER", value)
-        Category.OTHER
-    }

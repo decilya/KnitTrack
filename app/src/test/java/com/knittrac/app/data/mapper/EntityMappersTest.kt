@@ -19,14 +19,15 @@ import org.junit.Test
  * - Обратный маппинг Domain в Entity с разворотом VO в примитивы.
  * - Round-trip Entity-Domain-Entity — гарантия отсутствия потерь.
  * - Все константы [Category], включая [Category.OTHER].
+ * - Fallback на [Category.OTHER] при неизвестной строке из БД.
  */
 class EntityMappersTest {
 
-    // --- Тесты для Project ---
-
-    /** Прямой маппинг [ProjectEntity] в [Project] со всеми полями. */
+    /**
+     * Прямой маппинг [ProjectEntity] в [Project] со всеми полями.
+     */
     @Test
-    fun `ProjectEntity toDomain маппит все поля корректно`() {
+    fun projectEntityToDomain_mapsAllFields() {
         val entity = ProjectEntity(
             id = 1L,
             name = "Свитер",
@@ -46,9 +47,12 @@ class EntityMappersTest {
         assertEquals("PENDING", domain.syncStatus)
     }
 
-    /** Обратный маппинг [Project] в [ProjectEntity], VO разворачиваются в примитивы. */
+    /**
+     * Обратный маппинг [Project] в [ProjectEntity], VO разворачиваются
+     * в примитивы, enum — в строку.
+     */
     @Test
-    fun `Project toEntity маппит все поля и конвертирует Enum в String`() {
+    fun projectToEntity_mapsAllFieldsAndConvertsEnumToString() {
         val domain = Project(
             id = 2L,
             name = ProjectName.create("Шарф"),
@@ -68,9 +72,12 @@ class EntityMappersTest {
         assertEquals("SYNCED", entity.syncStatus)
     }
 
-    /** Round-trip: [ProjectEntity] в [Project] в [ProjectEntity] не теряет данные. */
+    /**
+     * Round-trip: [ProjectEntity] в [Project] в [ProjectEntity]
+     * не теряет данные.
+     */
     @Test
-    fun `Project round-trip сохраняет все поля без потерь`() {
+    fun projectRoundTrip_preservesAllFields() {
         val original = ProjectEntity(
             id = 42L,
             name = "Макраме-панно",
@@ -83,9 +90,11 @@ class EntityMappersTest {
         assertEquals(original, original.toDomain().toEntity())
     }
 
-    /** Все константы [Category] корректно проходят round-trip. */
+    /**
+     * Все константы [Category] корректно проходят round-trip.
+     */
     @Test
-    fun `все категории Category проходят round-trip корректно`() {
+    fun allCategoryValues_roundTripCorrectly() {
         Category.values().forEach { category ->
             val entity = Project(
                 id = 1L,
@@ -104,11 +113,30 @@ class EntityMappersTest {
         }
     }
 
-    // --- Тесты для Session ---
-
-    /** Прямой маппинг [SessionEntity] в [Session] со всеми полями. */
+    /**
+     * Защита от corrupted DB: неизвестная категория в БД не должна
+     * ронять приложение, а должна fallback-ить на Category.OTHER.
+     */
     @Test
-    fun `SessionEntity toDomain маппит все поля корректно`() {
+    fun projectEntityToDomain_fallsBackToOtherOnUnknownCategory() {
+        val entity = ProjectEntity(
+            id = 1L,
+            name = "Свитер",
+            category = "UNKNOWN_FUTURE_CATEGORY",
+            createdAt = 1000L,
+            updatedAt = 2000L,
+            totalTimeSeconds = 3600L,
+            syncStatus = "PENDING"
+        )
+        val domain = entity.toDomain()
+        assertEquals(Category.OTHER, domain.category)
+    }
+
+    /**
+     * Прямой маппинг [SessionEntity] в [Session] со всеми полями.
+     */
+    @Test
+    fun sessionEntityToDomain_mapsAllFields() {
         val entity = SessionEntity(
             id = 10L,
             projectId = 5L,
@@ -130,9 +158,11 @@ class EntityMappersTest {
         assertEquals("PENDING", domain.syncStatus)
     }
 
-    /** Обратный маппинг [Session] в [SessionEntity] со всеми полями. */
+    /**
+     * Обратный маппинг [Session] в [SessionEntity] со всеми полями.
+     */
     @Test
-    fun `Session toEntity маппит все поля корректно`() {
+    fun sessionToEntity_mapsAllFields() {
         val domain = Session(
             id = 20L,
             projectId = 6L,
@@ -154,9 +184,12 @@ class EntityMappersTest {
         assertEquals("SYNCED", entity.syncStatus)
     }
 
-    /** Round-trip: [SessionEntity] в [Session] в [SessionEntity] не теряет данные. */
+    /**
+     * Round-trip: [SessionEntity] в [Session] в [SessionEntity]
+     * не теряет данные.
+     */
     @Test
-    fun `Session round-trip сохраняет все поля без потерь`() {
+    fun sessionRoundTrip_preservesAllFields() {
         val original = SessionEntity(
             id = 99L,
             projectId = 77L,

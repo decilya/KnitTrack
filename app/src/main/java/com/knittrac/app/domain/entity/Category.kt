@@ -31,5 +31,20 @@ enum class Category {
     MACRAME,
 
     /** Другие виды рукоделия. */
-    OTHER
+    OTHER;
+
+    companion object {
+        /**
+         * Безопасно восстанавливает [Category] из строкового представления.
+         *
+         * Используется при чтении из БД, DTO или JSON, где данные могли быть
+         * повреждены (опечатка, миграция из будущей версии, ручное редактирование
+         * бэкапа). Вместо падения с IllegalArgumentException возвращает [OTHER].
+         *
+         * @param name Строковое имя категории.
+         * @return Соответствующая [Category] или [OTHER] при неизвестном значении.
+         */
+        fun fromNameOrDefault(name: String): Category =
+            entries.firstOrNull { it.name == name } ?: OTHER
+    }
 }

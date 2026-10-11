@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import androidx.room.withTransaction
 import com.google.gson.Gson
 import com.google.gson.stream.JsonWriter
 import com.knittrac.app.core.common.AppError
@@ -8,6 +9,7 @@ import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
+import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.mapper.toDomain
@@ -27,9 +29,15 @@ import javax.inject.Singleton
  * - Heap-память: только текущий объект + 8 КБ буфера (вместо всего файла).
  * - Нет риска OutOfMemoryError на больших бэкапах.
  *
+ * Атомарность: чтение projects и sessions обёрнуто в
+ * [AppDatabase.withTransaction] — оба SELECT видят один снапшот БД.
+ * Без этого между двумя запросами могла завершиться сессия, и в бэкапе
+ * totalTimeSeconds проекта не совпал бы с суммой duration его сессий.
+ *
  * Зависимости (DIP):
  * - [ProjectDao], [SessionDao] — извлечение данных из Room.
  * - [Gson] — сериализация отдельных объектов.
+ * - [AppDatabase] — общая транзакция для консистентного чтения.
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
 @Singleton
@@ -37,9 +45,20 @@ class DataExporterImpl @Inject constructor(
     private val projectDao: ProjectDao,
     private val sessionDao: SessionDao,
     private val gson: Gson,
+    private val appDatabase: AppDatabase,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : DataExporter {
 
+    /**
+     * Экспортирует все проекты и сессии в предоставленный поток.
+     *
+     * Поток НЕ закрывает — это ответственность вызывающей стороны.
+     * При ошибке возвращает [Result.Error], поток остаётся в неопределённом
+     * состоянии (вызывающая сторона должна закрыть его сама).
+     *
+     * @param outputStream Поток для записи.
+     * @return [Result.Success] при успехе, [Result.Error] при сбое.
+     */
     override suspend fun exportTo(outputStream: OutputStream): Result<Unit> =
         withContext(dispatcher) {
             try {
@@ -47,31 +66,35 @@ class DataExporterImpl @Inject constructor(
                     isLenient = true
                 }
 
-                writer.beginObject()
-                writer.name("version").value(ExportDataDto.CURRENT_VERSION)
-                writer.name("exportDate").value(System.currentTimeMillis())
+                // Транзакция гарантирует, что projects и sessions читаются
+                // из одного снапшота БД. I/O (JsonWriter) внутри транзакции —
+                // допустимый trade-off, чтобы не загружать всё в память.
+                appDatabase.withTransaction {
+                    writer.beginObject()
+                    writer.name("version").value(ExportDataDto.CURRENT_VERSION)
+                    writer.name("exportDate").value(System.currentTimeMillis())
 
-                // Потоковая запись проектов
-                writer.name("projects").beginArray()
-                projectDao.getAllProjects().forEach { entity ->
-                    gson.toJson(entity.toDomain().toDto(), ProjectDto::class.java, writer)
+                    // Потоковая запись проектов
+                    writer.name("projects").beginArray()
+                    projectDao.getAllProjects().forEach { entity ->
+                        gson.toJson(entity.toDomain().toDto(), ProjectDto::class.java, writer)
+                    }
+                    writer.endArray()
+
+                    // Потоковая запись сессий
+                    writer.name("sessions").beginArray()
+                    sessionDao.getAllSessions().forEach { entity ->
+                        gson.toJson(entity.toDomain().toDto(), SessionDto::class.java, writer)
+                    }
+                    writer.endArray()
+
+                    writer.endObject()
                 }
-                writer.endArray()
-
-                // Потоковая запись сессий
-                writer.name("sessions").beginArray()
-                sessionDao.getAllSessions().forEach { entity ->
-                    gson.toJson(entity.toDomain().toDto(), SessionDto::class.java, writer)
-                }
-                writer.endArray()
-
-                writer.endObject()
                 writer.flush()
 
                 Result.Success(Unit)
             } catch (e: Exception) {
                 Result.Error(AppError.DatabaseError(e))
             }
-            // Поток НЕ закрываем — это ответственность вызывающей стороны (SettingsScreen)
         }
 }

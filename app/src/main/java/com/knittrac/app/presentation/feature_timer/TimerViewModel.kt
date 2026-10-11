@@ -19,6 +19,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel экрана таймера.
+ *
+ * Отвечает за старт/паузу/сброс таймера, выбор проекта, счётчик рядов
+ * и сохранение сессии. Проверяет разрешение POST_NOTIFICATIONS перед
+ * стартом и эмитит effect, если нужно показать системный диалог.
+ */
 @HiltViewModel
 class TimerViewModel @Inject constructor(
     private val timerManager: TimerManager,
@@ -56,6 +63,9 @@ class TimerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Единая точка входа для действий UI (MVI).
+     */
     fun onIntent(intent: TimerContract.Intent) {
         when (intent) {
             is TimerContract.Intent.Start -> {
@@ -88,21 +98,29 @@ class TimerViewModel @Inject constructor(
                 viewModelScope.launch {
                     val currentState = _state.value
                     val projectId = currentState.projectId ?: return@launch
-                    
+
+                    // endTimestamp вычисляется из монотонного elapsedTime, а не из
+                    // System.currentTimeMillis(). Это защищает от NTP-сдвига или
+                    // ручного перевода часов: duration всегда положителен и точен.
+                    val endTimestamp = currentState.startTimestamp +
+                        (currentState.elapsedTime * 1000L)
+
                     val params = SaveSessionParams(
                         projectId = projectId,
                         startTimestamp = currentState.startTimestamp,
-                        endTimestamp = System.currentTimeMillis(),
+                        endTimestamp = endTimestamp,
                         rowCount = currentState.rowCount
                     )
-                    
+
                     val result = saveSessionService(params)
                     if (result is Result.Success) {
                         _effect.send(TimerContract.Effect.SessionSaved)
                         timerManager.reset()
                         _state.update { it.copy(rowCount = 0) }
                     } else {
-                        _effect.send(TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error))
+                        _effect.send(
+                            TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error)
+                        )
                     }
                 }
             }

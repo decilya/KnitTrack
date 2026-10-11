@@ -11,14 +11,17 @@ import com.knittrac.app.domain.entity.Session
 /**
  * Маппер [ProjectEntity] (Data слой) в [Project] (Domain слой).
  *
- * Категория преобразуется из String в Enum.
+ * Категория восстанавливается безопасно через [Category.fromNameOrDefault]:
+ * неизвестное значение в БД (опечатка, миграция) не роняет Flow проектов,
+ * а превращается в [Category.OTHER].
+ *
  * Название и общее время проходят через Value Objects с безопасным fallback:
- * невалидные данные из БД (пустое имя, отрицательное время) не крашат UI.
+ * пустое имя и отрицательное время не крашат UI.
  */
 fun ProjectEntity.toDomain(): Project = Project(
     id = id,
     name = ProjectName.createOrDefault(name),
-    category = Category.valueOf(category),
+    category = Category.fromNameOrDefault(category),
     createdAt = createdAt,
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
     updatedAt = updatedAt,
