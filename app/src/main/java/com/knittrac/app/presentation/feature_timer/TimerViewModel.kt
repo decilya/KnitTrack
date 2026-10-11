@@ -25,6 +25,11 @@ import javax.inject.Inject
  * Отвечает за старт/паузу/сброс таймера, выбор проекта, счётчик рядов
  * и сохранение сессии. Проверяет разрешение POST_NOTIFICATIONS перед
  * стартом и эмитит effect, если нужно показать системный диалог.
+ *
+ * Защита от double-save: флаг [TimerContract.State.isSaving] устанавливается
+ * синхронно в [onIntent] до запуска корутины. Повторный [TimerContract.Intent.SaveSession]
+ * во время активного сохранения игнорируется — иначе две параллельные
+ * корутины создали бы две сессии и дважды инкрементнули totalTimeSeconds.
  */
 @HiltViewModel
 class TimerViewModel @Inject constructor(
@@ -49,7 +54,8 @@ class TimerViewModel @Inject constructor(
                     projectId = _state.value.projectId,
                     startTimestamp = timerManager.sessionStartTime,
                     rowCount = _state.value.rowCount,
-                    projects = _state.value.projects
+                    projects = _state.value.projects,
+                    isSaving = _state.value.isSaving
                 )
             }.collect { _state.value = it }
         }
@@ -94,38 +100,56 @@ class TimerViewModel @Inject constructor(
             is TimerContract.Intent.SelectProject -> {
                 _state.update { it.copy(projectId = intent.projectId) }
             }
-            is TimerContract.Intent.SaveSession -> {
-                viewModelScope.launch {
-                    val currentState = _state.value
-                    val projectId = currentState.projectId ?: return@launch
-
-                    // endTimestamp вычисляется из монотонного elapsedTime, а не из
-                    // System.currentTimeMillis(). Это защищает от NTP-сдвига или
-                    // ручного перевода часов: duration всегда положителен и точен.
-                    val endTimestamp = currentState.startTimestamp +
-                        (currentState.elapsedTime * 1000L)
-
-                    val params = SaveSessionParams(
-                        projectId = projectId,
-                        startTimestamp = currentState.startTimestamp,
-                        endTimestamp = endTimestamp,
-                        rowCount = currentState.rowCount
-                    )
-
-                    val result = saveSessionService(params)
-                    if (result is Result.Success) {
-                        _effect.send(TimerContract.Effect.SessionSaved)
-                        timerManager.reset()
-                        _state.update { it.copy(rowCount = 0) }
-                    } else {
-                        _effect.send(
-                            TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error)
-                        )
-                    }
-                }
-            }
+            is TimerContract.Intent.SaveSession -> saveSession()
             is TimerContract.Intent.UpdateRowCount -> {
                 _state.update { it.copy(rowCount = intent.count) }
+            }
+        }
+    }
+
+    /**
+     * Сохраняет текущую сессию.
+     *
+     * Guard от двойного вызова: если [TimerContract.State.isSaving] уже true —
+     * выходим немедленно. Флаг ставится синхронно (до launch), поэтому второй
+     * вызов [onIntent] не создаёт вторую корутину. Снимается в finally, чтобы
+     * не остался висеть при ошибке сервиса.
+     */
+    private fun saveSession() {
+        if (_state.value.isSaving) return
+
+        val currentState = _state.value
+        val projectId = currentState.projectId ?: return
+
+        _state.update { it.copy(isSaving = true) }
+
+        viewModelScope.launch {
+            try {
+                // endTimestamp вычисляется из монотонного elapsedTime, а не из
+                // System.currentTimeMillis(). Это защищает от NTP-сдвига или
+                // ручного перевода часов: duration всегда положителен и точен.
+                val endTimestamp = currentState.startTimestamp +
+                    (currentState.elapsedTime * 1000L)
+
+                val params = SaveSessionParams(
+                    projectId = projectId,
+                    startTimestamp = currentState.startTimestamp,
+                    endTimestamp = endTimestamp,
+                    rowCount = currentState.rowCount
+                )
+
+                val result = saveSessionService(params)
+                if (result is Result.Success) {
+                    _effect.send(TimerContract.Effect.SessionSaved)
+                    timerManager.reset()
+                    _state.update { it.copy(rowCount = 0) }
+                } else {
+                    _effect.send(
+                        TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error)
+                    )
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
             }
         }
     }

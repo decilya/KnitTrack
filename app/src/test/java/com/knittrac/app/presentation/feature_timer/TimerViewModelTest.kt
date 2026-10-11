@@ -7,16 +7,19 @@ import com.knittrac.app.domain.service.TimerManager
 import com.knittrac.app.domain.service.TimerState
 import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -24,21 +27,16 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 /**
  * Юнит-тесты для [TimerViewModel].
  *
- * Покрывают проверку разрешения POST_NOTIFICATIONS перед стартом таймера:
- * - granted → таймер стартует, effect не эмитится;
- * - denied → таймер всё равно стартует (permission не блокирует),
- *   но эмитится [TimerContract.Effect.RequestNotificationPermission],
- *   чтобы Screen запустил системный диалог.
- *
- * TimerManager мокается как StateFlow-провайдер, чтобы combine в init
- * получил начальные значения и ViewModel корректно эмитила State.
+ * Покрывают:
+ * - проверку разрешения POST_NOTIFICATIONS перед стартом таймера;
+ * - защиту от запуска без выбранного проекта;
+ * - идемпотентность сохранения сессии (double-tap guard).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelTest {
@@ -75,11 +73,10 @@ class TimerViewModelTest {
 
     /**
      * Permission granted: таймер стартует, RequestNotificationPermission
-     * не эмитится. Проверяем через withTimeoutOrNull(50) — если effect
-     * не пришёл за виртуальные 50 мс, значит не эмитился.
+     * не эмитится.
      */
     @Test
-    fun `permission granted — start не эмитит RequestNotificationPermission`() = runTest {
+    fun permissionGranted_startDoesNotEmitPermissionRequest() = runTest {
         every { permissionChecker.isGranted() } returns true
 
         val viewModel = TimerViewModel(
@@ -107,12 +104,11 @@ class TimerViewModelTest {
     }
 
     /**
-     * Permission denied: таймер стартует (работа не блокируется),
-     * RequestNotificationPermission эмитится, чтобы Screen показал
-     * системный диалог.
+     * Permission denied: таймер всё равно стартует (permission не блокирует),
+     * но эмитится RequestNotificationPermission, чтобы Screen показал диалог.
      */
     @Test
-    fun `permission denied — start эмитит RequestNotificationPermission`() = runTest {
+    fun permissionDenied_startEmitsPermissionRequest() = runTest {
         every { permissionChecker.isGranted() } returns false
 
         val viewModel = TimerViewModel(
@@ -139,11 +135,11 @@ class TimerViewModelTest {
     }
 
     /**
-     * Без выбранного проекта Start эмитит NavigateToProjects и НЕ
-     * вызывает timerManager.start() — защита от запуска «в никуда».
+     * Без выбранного проекта Start эмитит NavigateToProjects
+     * и НЕ вызывает timerManager.start().
      */
     @Test
-    fun `start без projectId эмитит NavigateToProjects и не стартует таймер`() = runTest {
+    fun startWithoutProjectId_navigatesToProjects() = runTest {
         every { permissionChecker.isGranted() } returns true
 
         val viewModel = TimerViewModel(
@@ -160,5 +156,39 @@ class TimerViewModelTest {
 
         assertEquals(TimerContract.Effect.NavigateToProjects, effect)
         verify(exactly = 0) { timerManager.start() }
+    }
+
+    /**
+     * Double-tap SaveSession: второй вызов игнорируется, пока первый
+     * не завершён. saveSessionService вызывается ровно один раз.
+     */
+    @Test
+    fun doubleTapSaveSession_secondCallIgnored() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        every { timerManager.elapsedTime } returns MutableStateFlow(120L)
+        every { timerManager.sessionStartTime } returns 1_000L
+
+        // Заставляем сохранение "висеть" — иначе на Unconfined оно завершится
+        // мгновенно, и второй вызов пройдёт guard.
+        coEvery { saveSessionService(any()) } coAnswers {
+            delay(100)
+            Result.Success(1L)
+        }
+
+        val viewModel = TimerViewModel(
+            timerManager,
+            saveSessionService,
+            getAllProjectsService,
+            permissionChecker
+        )
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+
+        viewModel.onIntent(TimerContract.Intent.SaveSession)
+        viewModel.onIntent(TimerContract.Intent.SaveSession)
+
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { saveSessionService(any()) }
+        assertEquals(false, viewModel.state.value.isSaving)
     }
 }

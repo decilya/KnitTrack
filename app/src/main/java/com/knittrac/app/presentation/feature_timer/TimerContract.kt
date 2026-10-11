@@ -3,14 +3,28 @@ package com.knittrac.app.presentation.feature_timer
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.service.TimerState
 
+/**
+ * MVI-контракт экрана таймера.
+ *
+ * State — единый снапшот для UI. Intent — действия пользователя.
+ * Effect — одноразовые события (snackbar, навигация, запрос permission).
+ */
 object TimerContract {
+
     data class State(
         val elapsedTime: Long = 0L,
         val status: TimerState = TimerState.IDLE,
         val projectId: Long? = null,
         val startTimestamp: Long = 0L,
         val rowCount: Int = 0,
-        val projects: List<Project> = emptyList()
+        val projects: List<Project> = emptyList(),
+        /**
+         * Флаг активного сохранения сессии.
+         *
+         * Защищает от двойного тапа по кнопке Save: пока true — повторный
+         * [Intent.SaveSession] игнорируется, кнопка в UI disabled.
+         */
+        val isSaving: Boolean = false
     )
 
     sealed class Intent {

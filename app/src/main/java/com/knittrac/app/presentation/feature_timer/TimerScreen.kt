@@ -109,7 +109,10 @@ fun TimerScreen(
             }
             
             if ((state.status == TimerState.PAUSED || state.status == TimerState.IDLE) && state.elapsedTime > 0) {
-                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.SaveSession) }) {
+                Button(
+                    enabled = !state.isSaving,
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.SaveSession) }
+                ) {
                     Text(stringResource(R.string.save_session))
                 }
             }
