@@ -4,7 +4,9 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectName
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,7 +38,7 @@ class ProjectRepositoryImplTest {
     )
 
     /**
-     * Проверяет, что поток проектов корректно маппится из Entity в Domain-модель.
+     * Проверяет, что поток проектов корректно маппится из Entity в Domain.
      */
     @Test
     fun `getAllProjectsFlow should map entities to domain models`() = runTest {
@@ -48,7 +50,7 @@ class ProjectRepositoryImplTest {
 
         // Assert
         assertEquals(1, result.size)
-        assertEquals("Тестовый проект", result[0].name)
+        assertEquals("Тестовый проект", result[0].name.value)
         assertEquals(Category.KNITTING, result[0].category)
     }
 
@@ -67,12 +69,13 @@ class ProjectRepositoryImplTest {
         assertTrue(result is Result.Success)
         val list = (result as Result.Success).data
         assertEquals(1, list.size)
-        assertEquals("Тестовый проект", list[0].name)
+        assertEquals("Тестовый проект", list[0].name.value)
         coVerify { projectDao.getAllProjects() }
     }
 
     /**
-     * Проверяет, что добавление проекта корректно маппит Domain в Entity и возвращает ID.
+     * Проверяет, что добавление проекта корректно маппит Domain в Entity
+     * и возвращает ID.
      */
     @Test
     fun `addProject should map domain to entity and return id`() = runTest {
@@ -80,10 +83,10 @@ class ProjectRepositoryImplTest {
         coEvery { projectDao.insertProject(any()) } returns 42L
         val project = Project(
             id = 0L,
-            name = "Новый проект",
+            name = ProjectName.create("Новый проект"),
             category = Category.CROCHET,
             createdAt = 1_000L,
-            totalTimeSeconds = 0L,
+            totalTimeSeconds = Duration.ZERO,
             updatedAt = 1_000L,
             syncStatus = "PENDING"
         )

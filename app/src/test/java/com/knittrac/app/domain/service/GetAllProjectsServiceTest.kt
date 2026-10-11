@@ -4,7 +4,9 @@ import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.repository.ProjectRepository
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -15,14 +17,33 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Юнит-тесты для [GetAllProjectsService].
+ * Проверяют, что сервис возвращает поток [Result.Success] с маппингом
+ * Domain-проектов без изменений.
+ */
 class GetAllProjectsServiceTest : BaseTest() {
+
     private val projectRepository: ProjectRepository = mockk()
     private val service = GetAllProjectsService(projectRepository, coroutineRule.testDispatcher)
 
+    /**
+     * Проверяет, что сервис эмитит [Result.Success] со списком проектов,
+     * полученных из репозитория.
+     */
     @Test
     fun `execute returns flow of projects`() = runTest {
-        // ИСПРАВЛЕНО: добавлено .name к SyncStatus.SYNCED
-        val projects = listOf(Project(1L, "P1", Category.KNITTING, 0, 0, 0, SyncStatus.SYNCED.name))
+        val projects = listOf(
+            Project(
+                id = 1L,
+                name = ProjectName.create("P1"),
+                category = Category.KNITTING,
+                createdAt = 0L,
+                totalTimeSeconds = Duration.ZERO,
+                updatedAt = 0L,
+                syncStatus = SyncStatus.SYNCED.name
+            )
+        )
         coEvery { projectRepository.getAllProjectsFlow() } returns flowOf(projects)
         val resultList = service(Unit).toList()
         assertEquals(1, resultList.size)

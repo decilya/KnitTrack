@@ -3,6 +3,7 @@ package com.knittrac.app.data.repository
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.local.entity.SessionEntity
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,22 +28,23 @@ class SessionRepositoryImplTest {
     )
 
     /**
-     * Проверяет, что атомарное добавление сессии корректно маппит Domain в Entity 
-     * и вызывает соответствующий транзакционный метод DAO с правильными параметрами.
+     * Проверяет, что атомарное добавление сессии корректно маппит Domain
+     * в Entity и вызывает транзакционный метод DAO с правильными параметрами.
+     * Value Object [Duration] разворачивается в Long-секунды.
      */
     @Test
     fun `addSessionAtomically should call DAO transaction method and return id`() = runTest {
         // Arrange
         coEvery { sessionDao.insertSessionAndIncrementProjectTime(any(), any(), any()) } returns 100L
-        
+
         val session = Session(
             projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
-            durationSeconds = 60L, rowCount = 5
+            durationSeconds = Duration.create(60L), rowCount = 5
         )
-        
+
         // Act
         val result = repository.addSessionAtomically(session)
-        
+
         // Assert
         assertTrue(result is Result.Success)
         assertEquals(100L, (result as Result.Success).data)

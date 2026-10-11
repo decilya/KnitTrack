@@ -16,45 +16,84 @@ import javax.inject.Singleton
 
 /**
  * Реализация [SessionRepository], инкапсулирующая логику работы с [SessionDao].
- * Отвечает за преобразование Entity в Domain-модели и обработку ошибок базы данных.
+ * Отвечает за преобразование Entity в Domain-модели и обработку ошибок БД.
+ *
+ * Value Objects не покидают Domain слой — на границе с Room разворачиваются
+ * в примитивы (Long). DAO не знает про VO.
  */
 @Singleton
 class SessionRepositoryImpl @Inject constructor(
     private val sessionDao: SessionDao
 ) : SessionRepository {
 
+    /**
+     * Реактивный поток сессий проекта, отсортированных по времени начала
+     * (сначала новые). Каждая Entity маппится в [Session].
+     *
+     * @param projectId Идентификатор проекта.
+     * @return Flow списка Domain-сессий.
+     */
     override fun getSessionsByProjectIdFlow(projectId: Long): Flow<List<Session>> =
-        sessionDao.getSessionsByProjectIdFlow(projectId).map { list -> list.map { it.toDomain() } }
+        sessionDao.getSessionsByProjectIdFlow(projectId).map { list ->
+            list.map { it.toDomain() }
+        }
 
+    /**
+     * Разовый запрос сессий проекта.
+     *
+     * @param projectId Идентификатор проекта.
+     * @return [Result.Success] со списком сессий или [Result.Error]
+     *   с [AppError.DatabaseError] при сбое SQLite.
+     */
     override suspend fun getSessionsByProjectId(projectId: Long): Result<List<Session>> = try {
         Result.Success(sessionDao.getSessionsByProjectId(projectId).map { it.toDomain() })
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Разовый запрос всех сессий.
+     *
+     * @return [Result.Success] со списком сессий или [Result.Error]
+     *   с [AppError.DatabaseError] при сбое SQLite.
+     */
     override suspend fun getAllSessions(): Result<List<Session>> = try {
         Result.Success(sessionDao.getAllSessions().map { it.toDomain() })
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Разовый запрос сессий со статусом PENDING (для будущей синхронизации).
+     *
+     * @return [Result.Success] со списком сессий или [Result.Error]
+     *   с [AppError.DatabaseError] при сбое SQLite.
+     */
     override suspend fun getPendingSessions(): Result<List<Session>> = try {
         Result.Success(sessionDao.getPendingSessions().map { it.toDomain() })
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Атомарно сохраняет сессию и увеличивает общее время проекта.
+     *
+     * Делегирует транзакцию в [SessionDao.insertSessionAndIncrementProjectTime]:
+     * если что-то падает, обе операции откатываются. Длительность
+     * разворачивается из Domain VO [com.knittrac.app.domain.entity.Duration]
+     * в примитивный Long для DAO.
+     *
+     * @param session Domain-модель сессии.
+     * @return [Result.Success] с id новой сессии или [Result.Error].
+     */
     override suspend fun addSessionAtomically(session: Session): Result<Long> = try {
-        // Преобразуем Domain-модель в Entity и устанавливаем актуальные метаданные
         val entity = session.toEntity().copy(
             updatedAt = System.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        
-        // Вызываем атомарный метод DAO, который гарантирует целостность данных
         val newRowId = sessionDao.insertSessionAndIncrementProjectTime(
             session = entity,
-            durationSeconds = session.durationSeconds,
+            durationSeconds = session.durationSeconds.seconds,
             updatedAt = entity.updatedAt
         )
         Result.Success(newRowId)
@@ -62,17 +101,31 @@ class SessionRepositoryImpl @Inject constructor(
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Обновляет существующую сессию (полная замена строки по id).
+     * REPLACE работает как upsert.
+     *
+     * @param session Domain-модель сессии с актуальными полями.
+     * @return [Result.Success] или [Result.Error].
+     */
     override suspend fun updateSession(session: Session): Result<Unit> = try {
         val entity = session.toEntity().copy(
             updatedAt = System.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        sessionDao.insertSession(entity) // REPLACE сработает как upsert
+        sessionDao.insertSession(entity)
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Обновляет статус синхронизации сессии.
+     *
+     * @param sessionId Идентификатор сессии.
+     * @param status Новый статус (значение enum [SyncStatus]).
+     * @return [Result.Success] или [Result.Error].
+     */
     override suspend fun updateSyncStatus(sessionId: Long, status: String): Result<Unit> = try {
         sessionDao.updateSyncStatus(sessionId, status)
         Result.Success(Unit)
@@ -80,6 +133,12 @@ class SessionRepositoryImpl @Inject constructor(
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Агрегация статистики по дням для проекта.
+     *
+     * @param projectId Идентификатор проекта.
+     * @return [Result.Success] со списком [DailyStat] или [Result.Error].
+     */
     override suspend fun getDailyStats(projectId: Long): Result<List<DailyStat>> = try {
         Result.Success(sessionDao.getDailyStats(projectId))
     } catch (e: Exception) {

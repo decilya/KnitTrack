@@ -87,7 +87,7 @@ class ProjectsListViewModel @Inject constructor(
                         val uiProjects = result.data.map { project ->
                             ProjectsContract.ProjectUiModel(
                                 id = project.id,
-                                name = project.name,
+                                name = project.name.value,
                                 localizedCategoryName = categoryLocalizer.localize(project.category)
                             )
                         }

@@ -3,7 +3,9 @@ package com.knittrac.app.data.mapper
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.Session
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -13,16 +15,16 @@ import org.junit.Test
  *
  * Критически важно для предотвращения регрессий при изменении полей
  * в Domain-моделях или Entity-классах. Покрывает:
- * - Прямой маппинг Entity → Domain.
- * - Обратный маппинг Domain → Entity.
- * - Round-trip (Entity → Domain → Entity) — гарантия отсутствия потерь.
+ * - Прямой маппинг Entity в Domain с конверсией примитивов в Value Objects.
+ * - Обратный маппинг Domain в Entity с разворотом VO в примитивы.
+ * - Round-trip Entity-Domain-Entity — гарантия отсутствия потерь.
  * - Все константы [Category], включая [Category.OTHER].
  */
 class EntityMappersTest {
 
     // --- Тесты для Project ---
 
-    /** Прямой маппинг [ProjectEntity] → [Project] со всеми полями. */
+    /** Прямой маппинг [ProjectEntity] в [Project] со всеми полями. */
     @Test
     fun `ProjectEntity toDomain маппит все поля корректно`() {
         val entity = ProjectEntity(
@@ -36,24 +38,24 @@ class EntityMappersTest {
         )
         val domain = entity.toDomain()
         assertEquals(1L, domain.id)
-        assertEquals("Свитер", domain.name)
+        assertEquals("Свитер", domain.name.value)
         assertEquals(Category.KNITTING, domain.category)
         assertEquals(1000L, domain.createdAt)
         assertEquals(2000L, domain.updatedAt)
-        assertEquals(3600L, domain.totalTimeSeconds)
+        assertEquals(3600L, domain.totalTimeSeconds.seconds)
         assertEquals("PENDING", domain.syncStatus)
     }
 
-    /** Обратный маппинг [Project] → [ProjectEntity], включая Enum → String. */
+    /** Обратный маппинг [Project] в [ProjectEntity], VO разворачиваются в примитивы. */
     @Test
     fun `Project toEntity маппит все поля и конвертирует Enum в String`() {
         val domain = Project(
             id = 2L,
-            name = "Шарф",
+            name = ProjectName.create("Шарф"),
             category = Category.CROCHET,
             createdAt = 3000L,
             updatedAt = 4000L,
-            totalTimeSeconds = 1800L,
+            totalTimeSeconds = Duration.create(1800L),
             syncStatus = "SYNCED"
         )
         val entity = domain.toEntity()
@@ -66,7 +68,7 @@ class EntityMappersTest {
         assertEquals("SYNCED", entity.syncStatus)
     }
 
-    /** Round-trip: [ProjectEntity] → [Project] → [ProjectEntity] не теряет данные. */
+    /** Round-trip: [ProjectEntity] в [Project] в [ProjectEntity] не теряет данные. */
     @Test
     fun `Project round-trip сохраняет все поля без потерь`() {
         val original = ProjectEntity(
@@ -81,17 +83,17 @@ class EntityMappersTest {
         assertEquals(original, original.toDomain().toEntity())
     }
 
-    /** Все константы [Category] корректно проходят маппинг Domain → Entity → Domain. */
+    /** Все константы [Category] корректно проходят round-trip. */
     @Test
     fun `все категории Category проходят round-trip корректно`() {
         Category.values().forEach { category ->
             val entity = Project(
                 id = 1L,
-                name = "Тест",
+                name = ProjectName.create("Тест"),
                 category = category,
                 createdAt = 1L,
                 updatedAt = 1L,
-                totalTimeSeconds = 1L,
+                totalTimeSeconds = Duration.create(1L),
                 syncStatus = "PENDING"
             ).toEntity()
             assertEquals(
@@ -104,7 +106,7 @@ class EntityMappersTest {
 
     // --- Тесты для Session ---
 
-    /** Прямой маппинг [SessionEntity] → [Session] со всеми полями. */
+    /** Прямой маппинг [SessionEntity] в [Session] со всеми полями. */
     @Test
     fun `SessionEntity toDomain маппит все поля корректно`() {
         val entity = SessionEntity(
@@ -122,13 +124,13 @@ class EntityMappersTest {
         assertEquals(5L, domain.projectId)
         assertEquals(10000L, domain.startTimestamp)
         assertEquals(20000L, domain.endTimestamp)
-        assertEquals(10L, domain.durationSeconds)
+        assertEquals(10L, domain.durationSeconds.seconds)
         assertEquals(15, domain.rowCount)
         assertEquals(21000L, domain.updatedAt)
         assertEquals("PENDING", domain.syncStatus)
     }
 
-    /** Обратный маппинг [Session] → [SessionEntity] со всеми полями. */
+    /** Обратный маппинг [Session] в [SessionEntity] со всеми полями. */
     @Test
     fun `Session toEntity маппит все поля корректно`() {
         val domain = Session(
@@ -136,7 +138,7 @@ class EntityMappersTest {
             projectId = 6L,
             startTimestamp = 30000L,
             endTimestamp = 40000L,
-            durationSeconds = 10L,
+            durationSeconds = Duration.create(10L),
             rowCount = 20,
             updatedAt = 41000L,
             syncStatus = "SYNCED"
@@ -152,7 +154,7 @@ class EntityMappersTest {
         assertEquals("SYNCED", entity.syncStatus)
     }
 
-    /** Round-trip: [SessionEntity] → [Session] → [SessionEntity] не теряет данные. */
+    /** Round-trip: [SessionEntity] в [Session] в [SessionEntity] не теряет данные. */
     @Test
     fun `Session round-trip сохраняет все поля без потерь`() {
         val original = SessionEntity(

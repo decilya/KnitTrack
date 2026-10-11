@@ -61,7 +61,7 @@ fun TimerScreen(
         if (state.projects.isNotEmpty()) {
             val selectedProject = state.projects.find { it.id == state.projectId }
             Text(
-                text = selectedProject?.name ?: stringResource(R.string.select_project),
+                text = selectedProject?.name?.value ?: stringResource(R.string.select_project),
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(bottom = 8.dp)
             )

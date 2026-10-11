@@ -44,7 +44,7 @@ class AddProjectServiceTest {
         assertTrue(result is Result.Success)
         coVerify { 
             projectRepository.addProject(match { project ->
-                project.name == "Тестовый проект" &&
+                project.name.value == "Тестовый проект" &&
                 project.category == Category.KNITTING &&
                 project.syncStatus == SyncStatus.PENDING.name
             }) 

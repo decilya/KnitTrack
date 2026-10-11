@@ -4,7 +4,9 @@ import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.Session
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -15,26 +17,25 @@ import org.junit.Test
  *
  * Критически важно для формата бэкапа: любое изменение маппинга ломает
  * совместимость со старыми JSON-файлами. Покрывает:
- * - Прямой маппинг Domain → DTO.
- * - Обратный маппинг DTO → Domain, включая безопасный парсинг Category.
- * - Round-trip (Domain → DTO → Domain) — гарантия отсутствия потерь.
- * - Все константы [Category], включая fallback на [Category.OTHER]
- *   при неизвестном значении в JSON.
+ * - Прямой маппинг Domain в DTO с разворотом Value Objects в примитивы.
+ * - Обратный маппинг DTO в Domain с валидацией через VO.
+ * - Round-trip Domain-DTO-Domain — гарантия отсутствия потерь.
+ * - Fallback на [Category.OTHER] при неизвестном значении category.
  */
 class DtoMappersTest {
 
     // --- Тесты для Project ---
 
-    /** Прямой маппинг [Project] → [ProjectDto] со всеми полями. */
+    /** Прямой маппинг [Project] в [ProjectDto] со всеми полями. */
     @Test
     fun `Project toDto маппит все поля и конвертирует Enum в String`() {
         val domain = Project(
             id = 1L,
-            name = "Свитер",
+            name = ProjectName.create("Свитер"),
             category = Category.KNITTING,
             createdAt = 1000L,
             updatedAt = 2000L,
-            totalTimeSeconds = 3600L,
+            totalTimeSeconds = Duration.create(3600L),
             syncStatus = "PENDING"
         )
 
@@ -49,7 +50,7 @@ class DtoMappersTest {
         assertEquals("PENDING", dto.syncStatus)
     }
 
-    /** Обратный маппинг [ProjectDto] → [Project], включая String → Enum. */
+    /** Обратный маппинг [ProjectDto] в [Project], включая String в Enum и VO. */
     @Test
     fun `ProjectDto toDomain маппит все поля и конвертирует String в Enum`() {
         val dto = ProjectDto(
@@ -65,11 +66,11 @@ class DtoMappersTest {
         val domain = dto.toDomain()
 
         assertEquals(2L, domain.id)
-        assertEquals("Шарф", domain.name)
+        assertEquals("Шарф", domain.name.value)
         assertEquals(Category.CROCHET, domain.category)
         assertEquals(3000L, domain.createdAt)
         assertEquals(4000L, domain.updatedAt)
-        assertEquals(1800L, domain.totalTimeSeconds)
+        assertEquals(1800L, domain.totalTimeSeconds.seconds)
         assertEquals("SYNCED", domain.syncStatus)
     }
 
@@ -94,33 +95,33 @@ class DtoMappersTest {
         assertEquals(Category.OTHER, domain.category)
     }
 
-    /** Round-trip: [Project] → [ProjectDto] → [Project] не теряет данные. */
+    /** Round-trip: [Project] в [ProjectDto] в [Project] не теряет данные. */
     @Test
     fun `Project round-trip сохраняет все поля без потерь`() {
         val original = Project(
             id = 42L,
-            name = "Макраме-панно",
+            name = ProjectName.create("Макраме-панно"),
             category = Category.MACRAME,
             createdAt = 111L,
             updatedAt = 222L,
-            totalTimeSeconds = 333L,
+            totalTimeSeconds = Duration.create(333L),
             syncStatus = "PENDING"
         )
 
         assertEquals(original, original.toDto().toDomain())
     }
 
-    /** Все константы [Category] корректно проходят маппинг Domain → DTO → Domain. */
+    /** Все константы [Category] корректно проходят round-trip через DTO. */
     @Test
     fun `все категории Category проходят round-trip через DTO корректно`() {
         Category.entries.forEach { category ->
             val domain = Project(
                 id = 1L,
-                name = "Тест",
+                name = ProjectName.create("Тест"),
                 category = category,
                 createdAt = 1L,
                 updatedAt = 1L,
-                totalTimeSeconds = 1L,
+                totalTimeSeconds = Duration.create(1L),
                 syncStatus = "PENDING"
             )
 
@@ -134,7 +135,7 @@ class DtoMappersTest {
 
     // --- Тесты для Session ---
 
-    /** Прямой маппинг [Session] → [SessionDto] со всеми полями. */
+    /** Прямой маппинг [Session] в [SessionDto] со всеми полями. */
     @Test
     fun `Session toDto маппит все поля корректно`() {
         val domain = Session(
@@ -142,7 +143,7 @@ class DtoMappersTest {
             projectId = 5L,
             startTimestamp = 10000L,
             endTimestamp = 20000L,
-            durationSeconds = 10L,
+            durationSeconds = Duration.create(10L),
             rowCount = 15,
             updatedAt = 21000L,
             syncStatus = "PENDING"
@@ -160,7 +161,7 @@ class DtoMappersTest {
         assertEquals("PENDING", dto.syncStatus)
     }
 
-    /** Обратный маппинг [SessionDto] → [Session] со всеми полями. */
+    /** Обратный маппинг [SessionDto] в [Session] со всеми полями. */
     @Test
     fun `SessionDto toDomain маппит все поля корректно`() {
         val dto = SessionDto(
@@ -180,13 +181,13 @@ class DtoMappersTest {
         assertEquals(6L, domain.projectId)
         assertEquals(30000L, domain.startTimestamp)
         assertEquals(40000L, domain.endTimestamp)
-        assertEquals(10L, domain.durationSeconds)
+        assertEquals(10L, domain.durationSeconds.seconds)
         assertEquals(20, domain.rowCount)
         assertEquals(41000L, domain.updatedAt)
         assertEquals("SYNCED", domain.syncStatus)
     }
 
-    /** Round-trip: [Session] → [SessionDto] → [Session] не теряет данные. */
+    /** Round-trip: [Session] в [SessionDto] в [Session] не теряет данные. */
     @Test
     fun `Session round-trip сохраняет все поля без потерь`() {
         val original = Session(
@@ -194,7 +195,7 @@ class DtoMappersTest {
             projectId = 77L,
             startTimestamp = 1_000_000L,
             endTimestamp = 2_000_000L,
-            durationSeconds = 1000L,
+            durationSeconds = Duration.create(1000L),
             rowCount = 42,
             updatedAt = 2_000_001L,
             syncStatus = "PENDING"

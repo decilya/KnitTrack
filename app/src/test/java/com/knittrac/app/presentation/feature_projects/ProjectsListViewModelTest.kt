@@ -4,7 +4,9 @@ import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.CategoryLocalizer
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.service.GetAllProjectsService
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,7 +30,8 @@ import org.junit.Test
  *
  * Проверяют загрузку проектов из [GetAllProjectsService] и корректный маппинг
  * Domain-сущностей [Project] в UI-модели [ProjectsContract.ProjectUiModel]
- * с локализованным названием категории.
+ * с локализованным названием категории. Domain-модель использует VO
+ * [ProjectName] и [Duration], UI-модель — примитивы.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProjectsListViewModelTest {
@@ -50,15 +53,19 @@ class ProjectsListViewModelTest {
         Dispatchers.resetMain()
     }
 
+    /**
+     * Проверяет, что init загружает проекты и маппит их в UI-модели
+     * с локализованным названием категории.
+     */
     @Test
     fun `init should load projects and map them to UI models`() = runTest {
         // Arrange: один доменный проект и его ожидаемое отображение в UI
         val mockProject = Project(
             id = 1L,
-            name = "Тестовый проект",
+            name = ProjectName.create("Тестовый проект"),
             category = Category.KNITTING,
             createdAt = 0L,
-            totalTimeSeconds = 0L,
+            totalTimeSeconds = Duration.ZERO,
             updatedAt = 0L,
             syncStatus = "SYNCED"
         )
@@ -79,6 +86,10 @@ class ProjectsListViewModelTest {
         assertEquals(listOf(expectedUiModel), state.projects)
     }
 
+    /**
+     * Проверяет, что при ошибке сервиса State получает errorRes
+     * и isLoading снимается.
+     */
     @Test
     fun `loadProjects sets errorRes when service returns Error`() = runTest {
         val cause = RuntimeException("test db error")
@@ -93,6 +104,9 @@ class ProjectsListViewModelTest {
         assertEquals(emptyList<ProjectsContract.ProjectUiModel>(), state.projects)
     }
 
+    /**
+     * Проверяет, что retry сбрасывает errorRes и перезагружает проекты.
+     */
     @Test
     fun `retry clears errorRes and reloads projects`() = runTest {
         val cause = RuntimeException("test error")
@@ -104,8 +118,13 @@ class ProjectsListViewModelTest {
 
         // Следующий вызов вернёт успех
         val mockProject = Project(
-            id = 2L, name = "После retry", category = Category.KNITTING,
-            createdAt = 0L, totalTimeSeconds = 0L, updatedAt = 0L, syncStatus = "SYNCED"
+            id = 2L,
+            name = ProjectName.create("После retry"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            totalTimeSeconds = Duration.ZERO,
+            updatedAt = 0L,
+            syncStatus = "SYNCED"
         )
         coEvery { getAllProjectsService(Unit) } returns
             flowOf(Result.Success(listOf(mockProject)))
