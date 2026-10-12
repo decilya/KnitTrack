@@ -46,7 +46,7 @@ class AddProjectServiceTest {
             projectRepository.addProject(match { project ->
                 project.name.value == "Тестовый проект" &&
                 project.category == Category.KNITTING &&
-                project.syncStatus == SyncStatus.PENDING.name
+                project.syncStatus == SyncStatus.PENDING
             }) 
         }
     }

@@ -18,5 +18,21 @@ enum class SyncStatus {
     PENDING,
 
     /** Обнаружен конфликт версий при синхронизации (требуется разрешение конфликта). */
-    CONFLICT
+    CONFLICT;
+
+    companion object {
+        /**
+         * Безопасно восстанавливает [SyncStatus] из строкового представления.
+         *
+         * Используется при чтении из БД, DTO или JSON, где данные могли быть
+         * повреждены (опечатка, миграция из будущей версии, ручное редактирование
+         * бэкапа). Вместо падения с IllegalArgumentException возвращает [PENDING]
+         * — безопасный дефолт: неизвестный статус требует синхронизации.
+         *
+         * @param name Строковое имя статуса.
+         * @return Соответствующий [SyncStatus] или [PENDING] при неизвестном значении.
+         */
+        fun fromNameOrDefault(name: String): SyncStatus =
+            entries.firstOrNull { it.name == name } ?: PENDING
+    }
 }

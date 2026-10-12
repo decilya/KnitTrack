@@ -11,6 +11,8 @@ import com.knittrac.app.core.common.SyncStatus
  * путаницы при маппинге. durationSeconds — Value Object [Duration],
  * гарантирующий неотрицательность на уровне типа.
  *
+ * Статус синхронизации — типобезопасный enum [SyncStatus].
+ *
  * @property id Уникальный идентификатор сессии.
  * @property projectId Идентификатор проекта, к которому привязана сессия.
  * @property startTimestamp Время начала сессии (в миллисекундах).
@@ -29,5 +31,5 @@ data class Session(
     val durationSeconds: Duration,
     val rowCount: Int,
     val updatedAt: Long = System.currentTimeMillis(),
-    val syncStatus: String = SyncStatus.PENDING.name
+    val syncStatus: SyncStatus = SyncStatus.PENDING
 )

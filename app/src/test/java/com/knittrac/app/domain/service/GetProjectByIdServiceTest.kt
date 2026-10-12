@@ -40,7 +40,7 @@ class GetProjectByIdServiceTest : BaseTest() {
             createdAt = now,
             totalTimeSeconds = Duration.ZERO,
             updatedAt = now,
-            syncStatus = SyncStatus.SYNCED.name
+            syncStatus = SyncStatus.SYNCED
         )
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project)
         val result = service(1L)

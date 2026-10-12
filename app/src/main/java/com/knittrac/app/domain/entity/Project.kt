@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.entity
 
 import androidx.annotation.Keep
+import com.knittrac.app.core.common.SyncStatus
 
 /**
  * Доменная модель проекта вязания.
@@ -9,6 +10,9 @@ import androidx.annotation.Keep
  * Название и общее время — Value Objects [ProjectName] и [Duration]:
  * защищают инварианты (непустое имя, неотрицательная длительность)
  * на уровне типа, а не в рантайме.
+ *
+ * Статус синхронизации — типобезопасный enum [SyncStatus], а не строка:
+ * опечатка "PENDINGD" не скомпилируется.
  *
  * @property id Уникальный идентификатор проекта.
  * @property name Название проекта.
@@ -26,5 +30,5 @@ data class Project(
     val createdAt: Long,
     val totalTimeSeconds: Duration = Duration.ZERO,
     val updatedAt: Long,
-    val syncStatus: String
+    val syncStatus: SyncStatus
 )

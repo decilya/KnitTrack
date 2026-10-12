@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.entity.ProjectEntity
@@ -88,7 +89,7 @@ class ProjectRepositoryImplTest {
             createdAt = 1_000L,
             totalTimeSeconds = Duration.ZERO,
             updatedAt = 1_000L,
-            syncStatus = "PENDING"
+            syncStatus = SyncStatus.PENDING
         )
 
         // Act

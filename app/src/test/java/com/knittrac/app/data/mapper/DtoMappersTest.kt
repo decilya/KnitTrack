@@ -1,5 +1,6 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
@@ -36,7 +37,7 @@ class DtoMappersTest {
             createdAt = 1000L,
             updatedAt = 2000L,
             totalTimeSeconds = Duration.create(3600L),
-            syncStatus = "PENDING"
+            syncStatus = SyncStatus.PENDING
         )
 
         val dto = domain.toDto()
@@ -71,7 +72,7 @@ class DtoMappersTest {
         assertEquals(3000L, domain.createdAt)
         assertEquals(4000L, domain.updatedAt)
         assertEquals(1800L, domain.totalTimeSeconds.seconds)
-        assertEquals("SYNCED", domain.syncStatus)
+        assertEquals(SyncStatus.SYNCED, domain.syncStatus)
     }
 
     /**
@@ -105,7 +106,7 @@ class DtoMappersTest {
             createdAt = 111L,
             updatedAt = 222L,
             totalTimeSeconds = Duration.create(333L),
-            syncStatus = "PENDING"
+            syncStatus = SyncStatus.PENDING
         )
 
         assertEquals(original, original.toDto().toDomain())
@@ -122,7 +123,7 @@ class DtoMappersTest {
                 createdAt = 1L,
                 updatedAt = 1L,
                 totalTimeSeconds = Duration.create(1L),
-                syncStatus = "PENDING"
+                syncStatus = SyncStatus.PENDING
             )
 
             assertEquals(
@@ -146,7 +147,7 @@ class DtoMappersTest {
             durationSeconds = Duration.create(10L),
             rowCount = 15,
             updatedAt = 21000L,
-            syncStatus = "PENDING"
+            syncStatus = SyncStatus.PENDING
         )
 
         val dto = domain.toDto()
@@ -184,7 +185,7 @@ class DtoMappersTest {
         assertEquals(10L, domain.durationSeconds.seconds)
         assertEquals(20, domain.rowCount)
         assertEquals(41000L, domain.updatedAt)
-        assertEquals("SYNCED", domain.syncStatus)
+        assertEquals(SyncStatus.SYNCED, domain.syncStatus)
     }
 
     /** Round-trip: [Session] в [SessionDto] в [Session] не теряет данные. */
@@ -198,7 +199,7 @@ class DtoMappersTest {
             durationSeconds = Duration.create(1000L),
             rowCount = 42,
             updatedAt = 2_000_001L,
-            syncStatus = "PENDING"
+            syncStatus = SyncStatus.PENDING
         )
 
         assertEquals(original, original.toDto().toDomain())

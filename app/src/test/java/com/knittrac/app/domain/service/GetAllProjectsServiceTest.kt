@@ -41,7 +41,7 @@ class GetAllProjectsServiceTest : BaseTest() {
                 createdAt = 0L,
                 totalTimeSeconds = Duration.ZERO,
                 updatedAt = 0L,
-                syncStatus = SyncStatus.SYNCED.name
+                syncStatus = SyncStatus.SYNCED
             )
         )
         coEvery { projectRepository.getAllProjectsFlow() } returns flowOf(projects)

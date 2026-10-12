@@ -1,5 +1,6 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Category
@@ -44,7 +45,7 @@ class EntityMappersTest {
         assertEquals(1000L, domain.createdAt)
         assertEquals(2000L, domain.updatedAt)
         assertEquals(3600L, domain.totalTimeSeconds.seconds)
-        assertEquals("PENDING", domain.syncStatus)
+        assertEquals(SyncStatus.PENDING, domain.syncStatus)
     }
 
     /**
@@ -60,7 +61,7 @@ class EntityMappersTest {
             createdAt = 3000L,
             updatedAt = 4000L,
             totalTimeSeconds = Duration.create(1800L),
-            syncStatus = "SYNCED"
+            syncStatus = SyncStatus.SYNCED
         )
         val entity = domain.toEntity()
         assertEquals(2L, entity.id)
@@ -103,7 +104,7 @@ class EntityMappersTest {
                 createdAt = 1L,
                 updatedAt = 1L,
                 totalTimeSeconds = Duration.create(1L),
-                syncStatus = "PENDING"
+                syncStatus = SyncStatus.PENDING
             ).toEntity()
             assertEquals(
                 "Категория $category потерялась при round-trip",
@@ -155,7 +156,7 @@ class EntityMappersTest {
         assertEquals(10L, domain.durationSeconds.seconds)
         assertEquals(15, domain.rowCount)
         assertEquals(21000L, domain.updatedAt)
-        assertEquals("PENDING", domain.syncStatus)
+        assertEquals(SyncStatus.PENDING, domain.syncStatus)
     }
 
     /**
@@ -171,7 +172,7 @@ class EntityMappersTest {
             durationSeconds = Duration.create(10L),
             rowCount = 20,
             updatedAt = 41000L,
-            syncStatus = "SYNCED"
+            syncStatus = SyncStatus.SYNCED
         )
         val entity = domain.toEntity()
         assertEquals(20L, entity.id)

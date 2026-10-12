@@ -1,5 +1,6 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
 import com.knittrac.app.domain.entity.Category
@@ -16,12 +17,12 @@ import com.knittrac.app.domain.entity.Session
  * - DtoMappers — Domain ↔ JSON (формат бэкапа).
  *
  * DTO знают про Domain, Domain не знает ни про Entity, ни про DTO.
- * Value Objects разворачиваются в примитивы для стабильного JSON-формата.
+ * Value Objects и enum разворачиваются в примитивы для стабильного JSON.
  */
 
 /**
- * Project → ProjectDto. Category сериализуется через name,
- * чтобы JSON содержал стабильное имя enum ("KNITTING", ...).
+ * Project → ProjectDto. Category и syncStatus сериализуются через name,
+ * чтобы JSON содержал стабильные имена enum.
  */
 fun Project.toDto(): ProjectDto = ProjectDto(
     id = id,
@@ -30,16 +31,13 @@ fun Project.toDto(): ProjectDto = ProjectDto(
     createdAt = createdAt,
     totalTimeSeconds = totalTimeSeconds.seconds,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
+    syncStatus = syncStatus.name
 )
 
 /**
- * ProjectDto → Project.
- *
- * Категория и имя восстанавливаются безопасно через VO с fallback:
- * неизвестная категория (опечатка в JSON, старый бэкап) превращается
- * в [Category.OTHER] через [Category.fromNameOrDefault], пустое имя —
- * в [ProjectName.DEFAULT], отрицательное время — в [Duration.ZERO].
+ * ProjectDto → Project. Все поля парсятся безопасно с fallback:
+ * неизвестная категория → OTHER, пустое имя → DEFAULT,
+ * отрицательное время → ZERO, неизвестный syncStatus → PENDING.
  */
 fun ProjectDto.toDomain(): Project = Project(
     id = id,
@@ -48,11 +46,11 @@ fun ProjectDto.toDomain(): Project = Project(
     createdAt = createdAt,
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
+    syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )
 
 /**
- * Session → SessionDto. Duration разворачивается в Long-секунды.
+ * Session → SessionDto. Duration и syncStatus разворачиваются в примитивы.
  */
 fun Session.toDto(): SessionDto = SessionDto(
     id = id,
@@ -62,12 +60,11 @@ fun Session.toDto(): SessionDto = SessionDto(
     durationSeconds = durationSeconds.seconds,
     rowCount = rowCount,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
+    syncStatus = syncStatus.name
 )
 
 /**
- * SessionDto → Session. Длительность проходит через [Duration]
- * с fallback на [Duration.ZERO] — битые бэкапы не крашат импорт.
+ * SessionDto → Session. Длительность и статус — через безопасный fallback.
  */
 fun SessionDto.toDomain(): Session = Session(
     id = id,
@@ -77,5 +74,5 @@ fun SessionDto.toDomain(): Session = Session(
     durationSeconds = Duration.createOrNull(durationSeconds) ?: Duration.ZERO,
     rowCount = rowCount,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
+    syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )

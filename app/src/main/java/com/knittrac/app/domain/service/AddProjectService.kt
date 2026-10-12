@@ -16,8 +16,7 @@ import javax.inject.Inject
  *
  * Валидирует входное имя через Value Object [ProjectName]: пустая строка
  * или превышение длины превращаются в [Result.Error] с понятным сообщением.
- * Дополнительная защита от невалидных данных поверх UI-валидации
- * в AddProjectViewModel (defense-in-depth).
+ * Дополнительная защита поверх UI-валидации в AddProjectViewModel.
  */
 class AddProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
@@ -29,7 +28,7 @@ class AddProjectService @Inject constructor(
      *
      * @param params Параметры создания (сырое имя + категория).
      * @return [Result.Success] с id нового проекта, [Result.Error]
-     *   с [AppError.ValidationError] если имя пустое или слишком длинное,
+     *   с [AppError.ValidationError] если имя невалидно,
      *   или [AppError.DatabaseError] при сбое записи.
      */
     override suspend fun execute(params: AddProjectParams): Result<Long> {
@@ -47,7 +46,7 @@ class AddProjectService @Inject constructor(
             category = params.category,
             createdAt = now,
             updatedAt = now,
-            syncStatus = SyncStatus.PENDING.name
+            syncStatus = SyncStatus.PENDING
         )
         return projectRepository.addProject(project)
     }

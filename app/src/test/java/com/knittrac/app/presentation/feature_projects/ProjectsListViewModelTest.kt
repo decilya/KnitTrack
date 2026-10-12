@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_projects
 
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.CategoryLocalizer
@@ -67,7 +68,7 @@ class ProjectsListViewModelTest {
             createdAt = 0L,
             totalTimeSeconds = Duration.ZERO,
             updatedAt = 0L,
-            syncStatus = "SYNCED"
+            syncStatus = SyncStatus.SYNCED
         )
         val expectedUiModel = ProjectsContract.ProjectUiModel(
             id = 1L,
@@ -124,7 +125,7 @@ class ProjectsListViewModelTest {
             createdAt = 0L,
             totalTimeSeconds = Duration.ZERO,
             updatedAt = 0L,
-            syncStatus = "SYNCED"
+            syncStatus = SyncStatus.SYNCED
         )
         coEvery { getAllProjectsService(Unit) } returns
             flowOf(Result.Success(listOf(mockProject)))
