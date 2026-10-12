@@ -9,6 +9,7 @@ import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.repository.SessionRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -20,6 +21,11 @@ import javax.inject.Singleton
  *
  * UPDATE-методы проверяют rows affected: 0 строк = сессия не найдена,
  * возвращаем [AppError.NotFoundError] вместо молчаливого Success.
+ *
+ * Все catch-блоки сначала отлавливают [CancellationException] и пробрасывают
+ * её дальше: отмена корутины — не ошибка, а сигнал. Без этого
+ * viewModelScope.cancel() превращался бы в DatabaseError и ломал бы
+ * cleanup в finally-блоках.
  */
 @Singleton
 class SessionRepositoryImpl @Inject constructor(
@@ -44,6 +50,8 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun getSessionsByProjectId(projectId: Long): Result<List<Session>> = try {
         Result.Success(sessionDao.getSessionsByProjectId(projectId).map { it.toDomain() })
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -55,6 +63,8 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun getAllSessions(): Result<List<Session>> = try {
         Result.Success(sessionDao.getAllSessions().map { it.toDomain() })
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -66,6 +76,8 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun getPendingSessions(): Result<List<Session>> = try {
         Result.Success(sessionDao.getPendingSessions().map { it.toDomain() })
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -90,6 +102,8 @@ class SessionRepositoryImpl @Inject constructor(
             updatedAt = entity.updatedAt
         )
         Result.Success(newRowId)
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -122,6 +136,8 @@ class SessionRepositoryImpl @Inject constructor(
         } else {
             Result.Success(Unit)
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -141,6 +157,8 @@ class SessionRepositoryImpl @Inject constructor(
         } else {
             Result.Success(Unit)
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -152,6 +170,8 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun getDailyStats(projectId: Long): Result<List<DailyStat>> = try {
         Result.Success(sessionDao.getDailyStats(projectId))
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }

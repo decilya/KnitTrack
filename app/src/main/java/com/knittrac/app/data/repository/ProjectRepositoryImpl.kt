@@ -9,6 +9,7 @@ import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.repository.ProjectRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -21,6 +22,11 @@ import javax.inject.Singleton
  * Value Objects не покидают Domain слой — на границе с Room разворачиваются
  * в примитивы. UPDATE-методы проверяют rows affected: 0 строк = запись
  * не найдена, возвращаем [AppError.NotFoundError].
+ *
+ * Все catch-блоки сначала отлавливают [CancellationException] и пробрасывают
+ * её дальше: отмена корутины — не ошибка, а сигнал. Без этого
+ * viewModelScope.cancel() превращался бы в DatabaseError и ломал бы
+ * cleanup в finally-блоках.
  */
 @Singleton
 class ProjectRepositoryImpl @Inject constructor(
@@ -42,6 +48,8 @@ class ProjectRepositoryImpl @Inject constructor(
      */
     override suspend fun getAllProjects(): Result<List<Project>> = try {
         Result.Success(projectDao.getAllProjects().map { it.toDomain() })
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -57,6 +65,8 @@ class ProjectRepositoryImpl @Inject constructor(
         val entity = projectDao.getProjectById(id)
         if (entity != null) Result.Success(entity.toDomain())
         else Result.Error(AppError.NotFoundError("Проект id=$id не найден"))
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -73,6 +83,8 @@ class ProjectRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING.name
         )
         Result.Success(projectDao.insertProject(entity))
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -98,6 +110,8 @@ class ProjectRepositoryImpl @Inject constructor(
         } else {
             Result.Success(Unit)
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -115,6 +129,8 @@ class ProjectRepositoryImpl @Inject constructor(
     override suspend fun deleteProject(id: Long): Result<Unit> = try {
         projectDao.getProjectById(id)?.let { projectDao.deleteProject(it) }
         Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
@@ -141,6 +157,8 @@ class ProjectRepositoryImpl @Inject constructor(
         } else {
             Result.Success(Unit)
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
