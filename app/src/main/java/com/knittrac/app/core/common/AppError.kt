@@ -9,10 +9,11 @@ package com.knittrac.app.core.common
  *
  * @param message Человекочитаемое сообщение об ошибке на русском языке.
  * @param cause Исходное исключение (если есть) — для логирования стектрейса
- *              через Timber. У ValidationError всегда null, у остальных —
- *              тот Throwable, который обернули.
+ *              через Timber. У ValidationError и NotFoundError всегда null,
+ *              у остальных — тот Throwable, который обернули.
  *
  * @see ValidationError Ошибка валидации входных данных.
+ * @see NotFoundError Сущность не найдена.
  * @see DatabaseError Ошибка при работе с базой данных.
  * @see NetworkError Ошибка сетевого взаимодействия.
  * @see UnknownError Неизвестная ошибка.
@@ -30,6 +31,17 @@ sealed class AppError(
      * @param message Описание ошибки валидации.
      */
     data class ValidationError(override val message: String) : AppError(message)
+
+    /**
+     * Сущность не найдена.
+     *
+     * Возникает, когда операция UPDATE затронула 0 строк (запись с таким id
+     * не существует), либо getBy* вернул null. Семантически отличается от
+     * [ValidationError]: входные данные валидны, просто искомой сущности нет.
+     *
+     * @param message Описание: какую сущность искали.
+     */
+    data class NotFoundError(override val message: String) : AppError(message)
 
     /**
      * Ошибка при работе с базой данных Room.

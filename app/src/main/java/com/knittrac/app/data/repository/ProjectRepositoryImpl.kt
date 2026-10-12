@@ -19,7 +19,8 @@ import javax.inject.Singleton
  * Отвечает за преобразование Entity в Domain-модели и обратно.
  *
  * Value Objects не покидают Domain слой — на границе с Room разворачиваются
- * в примитивы (Long, String). DAO не знает про VO.
+ * в примитивы. UPDATE-методы проверяют rows affected: 0 строк = запись
+ * не найдена, возвращаем [AppError.NotFoundError].
  */
 @Singleton
 class ProjectRepositoryImpl @Inject constructor(
@@ -27,8 +28,7 @@ class ProjectRepositoryImpl @Inject constructor(
 ) : ProjectRepository {
 
     /**
-     * Реактивный поток всех проектов, отсортированных по дате создания
-     * (сначала новые). Каждая Entity маппится в Domain-модель [Project].
+     * Реактивный поток всех проектов, сначала новые.
      *
      * @return Flow списка Domain-проектов.
      */
@@ -38,8 +38,7 @@ class ProjectRepositoryImpl @Inject constructor(
     /**
      * Разовый запрос всех проектов.
      *
-     * @return [Result.Success] со списком проектов или [Result.Error]
-     *   с [AppError.DatabaseError] при сбое SQLite.
+     * @return [Result.Success] со списком или [Result.Error] с [AppError.DatabaseError].
      */
     override suspend fun getAllProjects(): Result<List<Project>> = try {
         Result.Success(projectDao.getAllProjects().map { it.toDomain() })
@@ -52,21 +51,18 @@ class ProjectRepositoryImpl @Inject constructor(
      *
      * @param id Идентификатор проекта.
      * @return [Result.Success] с проектом, [Result.Error] с
-     *   [AppError.ValidationError] если проект не найден,
-     *   или [AppError.DatabaseError] при сбое SQLite.
+     *   [AppError.NotFoundError] если не найден, или [AppError.DatabaseError].
      */
     override suspend fun getProjectById(id: Long): Result<Project> = try {
         val entity = projectDao.getProjectById(id)
         if (entity != null) Result.Success(entity.toDomain())
-        else Result.Error(AppError.ValidationError("Проект не найден"))
+        else Result.Error(AppError.NotFoundError("Проект id=$id не найден"))
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
     /**
-     * Добавляет новый проект. Принудительно проставляет актуальный
-     * updatedAt и PENDING-статус синхронизации независимо от того,
-     * что пришло в Domain-модели.
+     * Добавляет новый проект. Проставляет актуальный updatedAt и PENDING.
      *
      * @param project Domain-модель проекта.
      * @return [Result.Success] с id вставленной строки или [Result.Error].
@@ -83,25 +79,28 @@ class ProjectRepositoryImpl @Inject constructor(
 
     /**
      * Обновляет существующий проект (полная замена строки по id).
-     * Аналогично [addProject] проставляет updatedAt и PENDING.
      *
-     * @param project Domain-модель проекта с актуальными полями.
-     * @return [Result.Success] или [Result.Error].
+     * @param project Domain-модель с актуальными полями.
+     * @return [Result.Success] если обновлена 1 строка, [Result.Error] с
+     *   [AppError.NotFoundError] если запись не найдена, или [AppError.DatabaseError].
      */
     override suspend fun updateProject(project: Project): Result<Unit> = try {
         val entity = project.toEntity().copy(
             updatedAt = System.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        projectDao.updateProject(entity)
-        Result.Success(Unit)
+        val rows = projectDao.updateProject(entity)
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Проект id=${project.id} не найден"))
+        } else {
+            Result.Success(Unit)
+        }
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }
 
     /**
-     * Удаляет проект по id. Каскадное удаление связанных сессий
-     * выполняется на уровне БД через FK CASCADE.
+     * Удаляет проект по id. Каскад на сессии — FK CASCADE в БД.
      *
      * @param id Идентификатор проекта.
      * @return [Result.Success] или [Result.Error].
@@ -114,25 +113,27 @@ class ProjectRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Атомарно увеличивает общее время проекта.
-     *
-     * Value Object [Duration] гарантирует неотрицательность — отсекает
-     * ошибки вида `updateTotalTime(id, -100)` до вызова DAO.
+     * Атомарный инкремент total_time_seconds.
      *
      * @param projectId Идентификатор проекта.
-     * @param duration Добавляемое время.
-     * @return [Result.Success] или [Result.Error].
+     * @param duration Добавляемое время (VO [Duration] гарантирует ≥ 0).
+     * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
+     *   если проекта нет, или [AppError.DatabaseError].
      */
     override suspend fun updateTotalTime(
         projectId: Long,
         duration: Duration
     ): Result<Unit> = try {
-        projectDao.updateTotalTime(
+        val rows = projectDao.updateTotalTime(
             projectId = projectId,
             durationSeconds = duration.seconds,
             updatedAt = System.currentTimeMillis()
         )
-        Result.Success(Unit)
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+        } else {
+            Result.Success(Unit)
+        }
     } catch (e: Exception) {
         Result.Error(AppError.DatabaseError(e))
     }

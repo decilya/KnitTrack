@@ -1,7 +1,8 @@
 package com.knittrac.app.data.repository
 
-import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.domain.entity.Category
@@ -21,7 +22,8 @@ import org.junit.Test
 
 /**
  * Юнит-тесты для [ProjectRepositoryImpl].
- * Проверяют корректный маппинг Entity ↔ Domain и делегирование вызовов в DAO.
+ * Проверяют корректный маппинг Entity ↔ Domain, делегирование в DAO,
+ * а также обработку ситуации "0 rows affected" при UPDATE-операциях.
  */
 class ProjectRepositoryImplTest {
 
@@ -35,38 +37,32 @@ class ProjectRepositoryImplTest {
         createdAt = 1_000L,
         updatedAt = 2_000L,
         totalTimeSeconds = 500L,
-        syncStatus = "PENDING"
+        syncStatus = SyncStatus.PENDING.name
     )
 
     /**
-     * Проверяет, что поток проектов корректно маппится из Entity в Domain.
+     * Поток проектов корректно маппится из Entity в Domain.
      */
     @Test
-    fun `getAllProjectsFlow should map entities to domain models`() = runTest {
-        // Arrange
+    fun getAllProjectsFlow_mapsEntitiesToDomainModels() = runTest {
         every { projectDao.getAllProjectsFlow() } returns flowOf(listOf(testEntity))
 
-        // Act
         val result = repository.getAllProjectsFlow().first()
 
-        // Assert
         assertEquals(1, result.size)
         assertEquals("Тестовый проект", result[0].name.value)
         assertEquals(Category.KNITTING, result[0].category)
     }
 
     /**
-     * Проверяет успешное получение списка проектов с маппингом.
+     * Разовый запрос списка проектов с маппингом.
      */
     @Test
-    fun `getAllProjects should return success with mapped list`() = runTest {
-        // Arrange
+    fun getAllProjects_returnsSuccessWithMappedList() = runTest {
         coEvery { projectDao.getAllProjects() } returns listOf(testEntity)
 
-        // Act
         val result = repository.getAllProjects()
 
-        // Assert
         assertTrue(result is Result.Success)
         val list = (result as Result.Success).data
         assertEquals(1, list.size)
@@ -75,12 +71,10 @@ class ProjectRepositoryImplTest {
     }
 
     /**
-     * Проверяет, что добавление проекта корректно маппит Domain в Entity
-     * и возвращает ID.
+     * Добавление проекта маппит Domain в Entity и возвращает id.
      */
     @Test
-    fun `addProject should map domain to entity and return id`() = runTest {
-        // Arrange
+    fun addProject_mapsDomainToEntityAndReturnsId() = runTest {
         coEvery { projectDao.insertProject(any()) } returns 42L
         val project = Project(
             id = 0L,
@@ -92,27 +86,98 @@ class ProjectRepositoryImplTest {
             syncStatus = SyncStatus.PENDING
         )
 
-        // Act
         val result = repository.addProject(project)
 
-        // Assert
         assertTrue(result is Result.Success)
         assertEquals(42L, (result as Result.Success).data)
         coVerify { projectDao.insertProject(any()) }
     }
 
     /**
-     * Проверяет, что запрос несуществующего проекта возвращает ошибку.
+     * getProjectById возвращает NotFoundError, если записи нет.
      */
     @Test
-    fun `getProjectById should return error when not found`() = runTest {
-        // Arrange
+    fun getProjectById_returnsNotFoundErrorWhenMissing() = runTest {
         coEvery { projectDao.getProjectById(99L) } returns null
 
-        // Act
         val result = repository.getProjectById(99L)
 
-        // Assert
         assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
+
+    /**
+     * updateProject возвращает NotFoundError, если DAO вернул 0 rows
+     * (запись с таким id не существует).
+     */
+    @Test
+    fun updateProject_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
+        coEvery { projectDao.updateProject(any()) } returns 0
+        val project = Project(
+            id = 99L,
+            name = ProjectName.create("Несуществующий"),
+            category = Category.KNITTING,
+            createdAt = 1_000L,
+            totalTimeSeconds = Duration.ZERO,
+            updatedAt = 1_000L,
+            syncStatus = SyncStatus.PENDING
+        )
+
+        val result = repository.updateProject(project)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
+
+    /**
+     * updateProject возвращает Success, если DAO вернул 1 row.
+     */
+    @Test
+    fun updateProject_returnsSuccessWhenDaoReturnsOneRow() = runTest {
+        coEvery { projectDao.updateProject(any()) } returns 1
+        val project = Project(
+            id = 1L,
+            name = ProjectName.create("Существующий"),
+            category = Category.KNITTING,
+            createdAt = 1_000L,
+            totalTimeSeconds = Duration.ZERO,
+            updatedAt = 1_000L,
+            syncStatus = SyncStatus.PENDING
+        )
+
+        val result = repository.updateProject(project)
+
+        assertTrue(result is Result.Success)
+    }
+
+    /**
+     * updateTotalTime возвращает NotFoundError, если проекта с таким id нет.
+     */
+    @Test
+    fun updateTotalTime_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
+        coEvery { projectDao.updateTotalTime(any(), any(), any()) } returns 0
+
+        val result = repository.updateTotalTime(
+            projectId = 99L,
+            duration = Duration.create(60L)
+        )
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
+
+    /**
+     * updateTotalTime возвращает Success при rows = 1.
+     */
+    @Test
+    fun updateTotalTime_returnsSuccessWhenDaoReturnsOneRow() = runTest {
+        coEvery { projectDao.updateTotalTime(any(), any(), any()) } returns 1
+
+        val result = repository.updateTotalTime(
+            projectId = 1L,
+            duration = Duration.create(60L)
+        )
+
+        assertTrue(result is Result.Success)
     }
 }
