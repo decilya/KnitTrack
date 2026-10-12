@@ -81,6 +81,9 @@ interface SessionDao {
      * Используется исключительно внутри атомарной транзакции
      * [insertSessionAndIncrementProjectTime].
      *
+     * ВАЖНО: SQL hardcode 'PENDING' в sync_status. При переименовании
+     * SyncStatus.PENDING синхронно править этот @Query.
+     *
      * @return количество затронутых строк: 1 — обновлено, 0 — проекта нет.
      */
     @Query("""
@@ -113,7 +116,11 @@ interface SessionDao {
         // 1. Сохраняем сессию (REPLACE как upsert).
         val newRowId = insertSession(session)
         // 2. Атомарно обновляем время проекта.
-        updateProjectTotalTime(session.projectId, durationSeconds, updatedAt)
+        // Возвращаемый Int не игнорируем: rows == 0 значит, что проекта
+        // с таким id нет. check() бросает IllegalStateException, Room
+        // откатывает @Transaction целиком — включая insertSession.
+        val rows = updateProjectTotalTime(session.projectId, durationSeconds, updatedAt)
+        check(rows == 1) { "Проект id=${session.projectId} не найден при обновлении total_time" }
         return newRowId
     }
 }

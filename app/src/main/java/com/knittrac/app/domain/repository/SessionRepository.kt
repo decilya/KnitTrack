@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.repository
 
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.entity.Session
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +27,17 @@ interface SessionRepository {
      */
     suspend fun addSessionAtomically(session: Session): Result<Long>
     
+    /**
+     * Обновляет существующую сессию по id.
+     *
+     * Не создаёт новую строку. Для create-пути использовать
+     * [addSessionAtomically].
+     *
+     * @param session Domain-модель с актуальными полями.
+     * @return [Result.Success], [Result.Error] с NotFoundError
+     *   если сессии с таким id нет, или [Result.Error] с DatabaseError.
+     */
     suspend fun updateSession(session: Session): Result<Unit>
-    suspend fun updateSyncStatus(sessionId: Long, status: String): Result<Unit>
+    suspend fun updateSyncStatus(sessionId: Long, status: SyncStatus): Result<Unit>
     suspend fun getDailyStats(projectId: Long): Result<List<DailyStat>>
 }

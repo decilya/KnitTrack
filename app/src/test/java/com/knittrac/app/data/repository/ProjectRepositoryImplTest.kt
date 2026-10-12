@@ -148,6 +148,10 @@ class ProjectRepositoryImplTest {
         val result = repository.updateProject(project)
 
         assertTrue(result is Result.Success)
+        // Репозиторий проставляет PENDING независимо от входной модели.
+        coVerify {
+            projectDao.updateProject(match { it.syncStatus == SyncStatus.PENDING.name })
+        }
     }
 
     /**

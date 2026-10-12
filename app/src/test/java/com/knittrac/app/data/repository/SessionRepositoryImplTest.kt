@@ -95,6 +95,10 @@ class SessionRepositoryImplTest {
         val result = repository.updateSession(session)
 
         assertTrue(result is Result.Success)
+        // Репозиторий проставляет PENDING независимо от входной модели.
+        coVerify {
+            sessionDao.updateSession(match { it.syncStatus == SyncStatus.PENDING.name })
+        }
     }
 
     /**
@@ -106,7 +110,7 @@ class SessionRepositoryImplTest {
 
         val result = repository.updateSyncStatus(
             sessionId = 99L,
-            status = SyncStatus.SYNCED.name
+            status = SyncStatus.SYNCED
         )
 
         assertTrue(result is Result.Error)
@@ -122,7 +126,7 @@ class SessionRepositoryImplTest {
 
         val result = repository.updateSyncStatus(
             sessionId = 1L,
-            status = SyncStatus.SYNCED.name
+            status = SyncStatus.SYNCED
         )
 
         assertTrue(result is Result.Success)

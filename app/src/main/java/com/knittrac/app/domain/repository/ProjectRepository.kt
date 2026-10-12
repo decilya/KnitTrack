@@ -20,7 +20,12 @@ interface ProjectRepository {
     /** Получает статический список всех проектов. */
     suspend fun getAllProjects(): Result<List<Project>>
 
-    /** Получает конкретный проект по его ID. */
+    /**
+     * Получает конкретный проект по его ID.
+     *
+     * @return [Result.Success] с проектом или [Result.Error]
+     *   с [com.knittrac.app.core.common.AppError.NotFoundError], если проект не найден.
+     */
     suspend fun getProjectById(id: Long): Result<Project>
 
     /** Добавляет новый проект в хранилище. */

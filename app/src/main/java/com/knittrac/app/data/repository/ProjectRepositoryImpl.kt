@@ -80,6 +80,9 @@ class ProjectRepositoryImpl @Inject constructor(
     /**
      * Обновляет существующий проект (полная замена строки по id).
      *
+     * ВАЖНО: поля updatedAt и syncStatus входной модели игнорируются —
+     * репозиторий проставляет их сам (now() и PENDING).
+     *
      * @param project Domain-модель с актуальными полями.
      * @return [Result.Success] если обновлена 1 строка, [Result.Error] с
      *   [AppError.NotFoundError] если запись не найдена, или [AppError.DatabaseError].
@@ -101,6 +104,10 @@ class ProjectRepositoryImpl @Inject constructor(
 
     /**
      * Удаляет проект по id. Каскад на сессии — FK CASCADE в БД.
+     *
+     * Идемпотентно: если проекта с таким id уже нет, возвращается Success,
+     * а не NotFoundError. Защищает UI от гонки между нажатием «Удалить»
+     * и параллельным удалением (например, после перезагрузки списка).
      *
      * @param id Идентификатор проекта.
      * @return [Result.Success] или [Result.Error].

@@ -97,8 +97,15 @@ class SessionRepositoryImpl @Inject constructor(
     /**
      * Обновляет существующую сессию (полная замена по id).
      *
-     * Отличается от create-пути: если сессии с таким id нет — вставки не
-     * происходит, возвращаем [AppError.NotFoundError].
+     * Не создаёт новую строку. Для create-пути использовать
+     * [SessionRepository.addSessionAtomically].
+     *
+     * ВАЖНО: ранее был upsert через REPLACE — при отсутствии строки
+     * с таким id создавалась новая. Сейчас чистый UPDATE.
+     * Семантика изменилась — вызывающий код должен учитывать.
+     *
+     * ВАЖНО: поля updatedAt и syncStatus входной модели игнорируются —
+     * репозиторий проставляет их сам.
      *
      * @param session Domain-модель с актуальными полями.
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
@@ -127,8 +134,8 @@ class SessionRepositoryImpl @Inject constructor(
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
      *   или [AppError.DatabaseError].
      */
-    override suspend fun updateSyncStatus(sessionId: Long, status: String): Result<Unit> = try {
-        val rows = sessionDao.updateSyncStatus(sessionId, status)
+    override suspend fun updateSyncStatus(sessionId: Long, status: SyncStatus): Result<Unit> = try {
+        val rows = sessionDao.updateSyncStatus(sessionId, status.name)
         if (rows == 0) {
             Result.Error(AppError.NotFoundError("Сессия id=$sessionId не найдена"))
         } else {

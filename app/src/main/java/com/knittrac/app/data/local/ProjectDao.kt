@@ -48,6 +48,9 @@ interface ProjectDao {
     /**
      * Атомарный инкремент total_time_seconds + updated_at + PENDING.
      *
+     * ВАЖНО: SQL hardcode 'PENDING' в sync_status. При переименовании
+     * SyncStatus.PENDING синхронно править этот @Query.
+     *
      * @return количество затронутых строк: 1 — обновлено, 0 — id не найден.
      */
     @Query("""
