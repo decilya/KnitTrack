@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 /**
  * Реализация [SessionRepository], инкапсулирующая логику работы с [SessionDao].
@@ -53,6 +54,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getSessionsByProjectId projectId=%d failed", projectId)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -66,6 +68,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getAllSessions failed")
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -79,6 +82,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getPendingSessions failed")
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -105,6 +109,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "addSessionAtomically projectId=%d failed", session.projectId)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -139,6 +144,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "updateSession id=%d failed", session.id)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -160,6 +166,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "updateSyncStatus sessionId=%d failed", sessionId)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -173,6 +180,7 @@ class SessionRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getDailyStats projectId=%d failed", projectId)
         Result.Error(AppError.DatabaseError(e))
     }
 }

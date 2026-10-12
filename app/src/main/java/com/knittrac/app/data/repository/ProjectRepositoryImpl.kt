@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 /**
  * Реализация [ProjectRepository], инкапсулирующая логику работы с [ProjectDao].
@@ -51,6 +52,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getAllProjects failed")
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -68,6 +70,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "getProjectById id=%d failed", id)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -86,6 +89,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "addProject failed: name=%s category=%s", project.name.value, project.category)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -113,6 +117,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "updateProject id=%d failed", project.id)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -134,6 +139,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "deleteProject id=%d failed", id)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -162,6 +168,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
+        Timber.e(e, "updateTotalTime projectId=%d sec=%d failed", projectId, duration.seconds)
         Result.Error(AppError.DatabaseError(e))
     }
 }
