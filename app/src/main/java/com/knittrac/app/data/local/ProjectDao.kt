@@ -1,6 +1,7 @@
 package com.knittrac.app.data.local
 
 import androidx.room.*
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.ProjectEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -46,19 +47,34 @@ interface ProjectDao {
     suspend fun deleteProject(project: ProjectEntity)
 
     /**
+     * Удаляет проект по id без предварительного чтения.
+     * FK CASCADE на sessions выполняется на уровне БД.
+     *
+     * @return количество затронутых строк: 1 — удалено, 0 — записи не было.
+     *   rows=0 — не ошибка: удаление идемпотентно.
+     */
+    @Query("DELETE FROM projects WHERE id = :id")
+    suspend fun deleteProjectById(id: Long): Int
+
+    /**
      * Атомарный инкремент total_time_seconds + updated_at + PENDING.
      *
-     * ВАЖНО: SQL hardcode 'PENDING' в sync_status. При переименовании
-     * SyncStatus.PENDING синхронно править этот @Query.
-     *
+     * @param pendingStatus Строковое имя статуса синхронизации (обычно
+     *   SyncStatus.PENDING.name). Параметризовано, чтобы переименование
+     *   enum-константы ловилось компилятором, а не тихо уезжало в данные.
      * @return количество затронутых строк: 1 — обновлено, 0 — id не найден.
      */
     @Query("""
         UPDATE projects
         SET total_time_seconds = total_time_seconds + :durationSeconds,
             updated_at = :updatedAt,
-            sync_status = 'PENDING'
+            sync_status = :pendingStatus
         WHERE id = :projectId
     """)
-    suspend fun updateTotalTime(projectId: Long, durationSeconds: Long, updatedAt: Long): Int
+    suspend fun updateTotalTime(
+        projectId: Long,
+        durationSeconds: Long,
+        updatedAt: Long,
+        pendingStatus: String = SyncStatus.PENDING.name
+    ): Int
 }

@@ -1,6 +1,7 @@
 package com.knittrac.app.data.local
 
 import androidx.room.*
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.DailyStat
 import kotlinx.coroutines.flow.Flow
@@ -81,19 +82,24 @@ interface SessionDao {
      * Используется исключительно внутри атомарной транзакции
      * [insertSessionAndIncrementProjectTime].
      *
-     * ВАЖНО: SQL hardcode 'PENDING' в sync_status. При переименовании
-     * SyncStatus.PENDING синхронно править этот @Query.
-     *
+     * @param pendingStatus Строковое имя статуса синхронизации (обычно
+     *   SyncStatus.PENDING.name). Параметризовано, чтобы переименование
+     *   enum-константы ловилось компилятором.
      * @return количество затронутых строк: 1 — обновлено, 0 — проекта нет.
      */
     @Query("""
         UPDATE projects
         SET total_time_seconds = total_time_seconds + :durationSeconds,
             updated_at = :updatedAt,
-            sync_status = 'PENDING'
+            sync_status = :pendingStatus
         WHERE id = :projectId
     """)
-    suspend fun updateProjectTotalTime(projectId: Long, durationSeconds: Long, updatedAt: Long): Int
+    suspend fun updateProjectTotalTime(
+        projectId: Long,
+        durationSeconds: Long,
+        updatedAt: Long,
+        pendingStatus: String = SyncStatus.PENDING.name
+    ): Int
 
     /**
      * Атомарно добавляет сессию и обновляет время соответствующего проекта

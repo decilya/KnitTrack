@@ -123,11 +123,13 @@ class ProjectRepositoryImpl @Inject constructor(
      * а не NotFoundError. Защищает UI от гонки между нажатием «Удалить»
      * и параллельным удалением (например, после перезагрузки списка).
      *
+     * Одним SQL-запросом DELETE без предварительного чтения entity.
+     *
      * @param id Идентификатор проекта.
      * @return [Result.Success] или [Result.Error].
      */
     override suspend fun deleteProject(id: Long): Result<Unit> = try {
-        projectDao.getProjectById(id)?.let { projectDao.deleteProject(it) }
+        projectDao.deleteProjectById(id)
         Result.Success(Unit)
     } catch (e: CancellationException) {
         throw e
