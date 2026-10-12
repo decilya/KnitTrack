@@ -28,7 +28,7 @@ class DtoMappersTest {
 
     /** Прямой маппинг [Project] в [ProjectDto] со всеми полями. */
     @Test
-    fun `Project toDto маппит все поля и конвертирует Enum в String`() {
+    fun projectToDto_mapsAllFieldsAndConvertsEnumToString() {
         val domain = Project(
             id = 1L,
             name = ProjectName.create("Свитер"),
@@ -52,7 +52,7 @@ class DtoMappersTest {
 
     /** Обратный маппинг [ProjectDto] в [Project], включая String в Enum и VO. */
     @Test
-    fun `ProjectDto toDomain маппит все поля и конвертирует String в Enum`() {
+    fun projectDtoToDomain_mapsAllFieldsAndConvertsStringToEnum() {
         val dto = ProjectDto(
             id = 2L,
             name = "Шарф",
@@ -79,7 +79,7 @@ class DtoMappersTest {
      * должно давать fallback на [Category.OTHER], а не крашить импорт.
      */
     @Test
-    fun `ProjectDto toDomain при неизвестной category возвращает OTHER`() {
+    fun projectDtoToDomain_fallsBackToOtherOnUnknownCategory() {
         val dto = ProjectDto(
             id = 3L,
             name = "Повреждённый",
@@ -97,7 +97,7 @@ class DtoMappersTest {
 
     /** Round-trip: [Project] в [ProjectDto] в [Project] не теряет данные. */
     @Test
-    fun `Project round-trip сохраняет все поля без потерь`() {
+    fun projectRoundTrip_preservesAllFields() {
         val original = Project(
             id = 42L,
             name = ProjectName.create("Макраме-панно"),
@@ -113,7 +113,7 @@ class DtoMappersTest {
 
     /** Все константы [Category] корректно проходят round-trip через DTO. */
     @Test
-    fun `все категории Category проходят round-trip через DTO корректно`() {
+    fun allCategoriesRoundTripThroughDto_arePreserved() {
         Category.entries.forEach { category ->
             val domain = Project(
                 id = 1L,
@@ -137,7 +137,7 @@ class DtoMappersTest {
 
     /** Прямой маппинг [Session] в [SessionDto] со всеми полями. */
     @Test
-    fun `Session toDto маппит все поля корректно`() {
+    fun sessionToDto_mapsAllFields() {
         val domain = Session(
             id = 10L,
             projectId = 5L,
@@ -163,7 +163,7 @@ class DtoMappersTest {
 
     /** Обратный маппинг [SessionDto] в [Session] со всеми полями. */
     @Test
-    fun `SessionDto toDomain маппит все поля корректно`() {
+    fun sessionDtoToDomain_mapsAllFields() {
         val dto = SessionDto(
             id = 20L,
             projectId = 6L,
@@ -189,7 +189,7 @@ class DtoMappersTest {
 
     /** Round-trip: [Session] в [SessionDto] в [Session] не теряет данные. */
     @Test
-    fun `Session round-trip сохраняет все поля без потерь`() {
+    fun sessionRoundTrip_preservesAllFields() {
         val original = Session(
             id = 99L,
             projectId = 77L,
@@ -211,7 +211,7 @@ class DtoMappersTest {
      * что старые бэкапы требуют миграции.
      */
     @Test
-    fun `CURRENT_VERSION равен 1_0`() {
+    fun currentVersion_isOneZero() {
         assertEquals("1.0", ExportDataDto.CURRENT_VERSION)
     }
 
@@ -220,7 +220,7 @@ class DtoMappersTest {
      * чтобы старый бэкап без этих полей не падал с NPE.
      */
     @Test
-    fun `ExportDataDto по умолчанию содержит пустые списки`() {
+    fun exportDataDto_hasEmptyListsByDefault() {
         val dto = ExportDataDto(
             version = ExportDataDto.CURRENT_VERSION,
             exportDate = 1234567890L

@@ -90,7 +90,7 @@ class SettingsViewModelTest {
      * не дожидаясь первого эмита combine.
      */
     @Test
-    fun `init заполняет supportedLanguages из localeManager`() = runTest(testDispatcher) {
+    fun init_fillsSupportedLanguagesFromLocaleManage() = runTest(testDispatcher) {
         val langs = listOf(
             LanguageOption("ru", "Русский"),
             LanguageOption("en", "English")
@@ -108,7 +108,7 @@ class SettingsViewModelTest {
      * актуальные значения из репозитория и LocaleManager.
      */
     @Test
-    fun `init подписывается на combine и снимает isLoading`() = runTest(testDispatcher) {
+    fun init_subscribesToCombineAndClearsIsLoading() = runTest(testDispatcher) {
         every { settingsRepository.themeModeFlow } returns flowOf(ThemeMode.DARK)
         every { settingsRepository.notificationsEnabledFlow } returns flowOf(false)
         every { localeManager.getCurrentLanguageFlow() } returns flowOf("en")
@@ -129,7 +129,7 @@ class SettingsViewModelTest {
      * без эмита эффектов.
      */
     @Test
-    fun `ChangeThemeMode делегирует в settingsRepository`() = runTest(testDispatcher) {
+    fun changeThemeMode_delegatesToRepository() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
         viewModel.onAction(SettingsContract.Action.ChangeThemeMode(ThemeMode.LIGHT))
@@ -141,7 +141,7 @@ class SettingsViewModelTest {
      * ToggleNotifications делегирует в settingsRepository.setNotificationsEnabled.
      */
     @Test
-    fun `ToggleNotifications делегирует в settingsRepository`() = runTest(testDispatcher) {
+    fun toggleNotifications_delegatesToRepository() = runTest(testDispatcher) {
         val viewModel = createViewModel()
 
         viewModel.onAction(SettingsContract.Action.ToggleNotifications(false))
@@ -154,7 +154,7 @@ class SettingsViewModelTest {
      * RecreateActivity эмитится, чтобы Activity перезапустилась.
      */
     @Test
-    fun `ChangeLanguage вызывает setLanguage и эмитит RecreateActivity`() = runTest(testDispatcher) {
+    fun changeLanguage_callsSetLanguageAndEmitsRecreateActivity() = runTest(testDispatcher) {
         coEvery { localeManager.setLanguage("en") } returns Unit
 
         val viewModel = createViewModel()
@@ -173,7 +173,7 @@ class SettingsViewModelTest {
      * RecreateActivity, иначе пользователь увидел бы бесполезный restart.
      */
     @Test
-    fun `ChangeLanguage с неподдерживаемым кодом не эмитит RecreateActivity`() = runTest(testDispatcher) {
+    fun changeLanguage_doesNotEmitRecreateActivityForUnsupportedCode() = runTest(testDispatcher) {
         coEvery { localeManager.setLanguage("xx") } throws
             IllegalArgumentException("Unsupported language: xx")
 
@@ -196,7 +196,7 @@ class SettingsViewModelTest {
      * isExporting снят после завершения.
      */
     @Test
-    fun `RequestExport при успехе эмитит ExportSuccess и снимает isExporting`() = runTest(testDispatcher) {
+    fun requestExport_onSuccess_emitsExportSuccessAndClearsIsExporting() = runTest(testDispatcher) {
         val stream = mockk<OutputStream>(relaxed = true)
         coEvery { exportDataService(stream) } returns Result.Success(Unit)
 
@@ -216,7 +216,7 @@ class SettingsViewModelTest {
      * isExporting снят.
      */
     @Test
-    fun `RequestExport при ошибке эмитит ExportError`() = runTest(testDispatcher) {
+    fun requestExport_onError_emitsExportError() = runTest(testDispatcher) {
         val stream = mockk<OutputStream>(relaxed = true)
         coEvery { exportDataService(stream) } returns
             Result.Error(AppError.UnknownError(RuntimeException("export failed")))
@@ -239,7 +239,7 @@ class SettingsViewModelTest {
      * isImporting снят.
      */
     @Test
-    fun `ImportData при успехе эмитит ImportSuccess и снимает isImporting`() = runTest(testDispatcher) {
+    fun importData_onSuccess_emitsImportSuccessAndClearsIsImporting() = runTest(testDispatcher) {
         val stream = mockk<InputStream>(relaxed = true)
         coEvery { importDataService(stream) } returns Result.Success(Unit)
 
@@ -259,7 +259,7 @@ class SettingsViewModelTest {
      * isImporting снят.
      */
     @Test
-    fun `ImportData при ошибке эмитит ImportError`() = runTest(testDispatcher) {
+    fun importData_onError_emitsImportError() = runTest(testDispatcher) {
         val stream = mockk<InputStream>(relaxed = true)
         coEvery { importDataService(stream) } returns
             Result.Error(AppError.UnknownError(RuntimeException("import failed")))
