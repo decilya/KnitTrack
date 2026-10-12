@@ -26,7 +26,7 @@ import com.knittrac.app.data.local.entity.SessionEntity
         SessionEntity::class
     ],
     version = 3,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
