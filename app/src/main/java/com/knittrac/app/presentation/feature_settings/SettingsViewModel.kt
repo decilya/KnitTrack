@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.LocaleManager
-import com.knittrac.app.data.repository.SettingsRepository
+import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.service.ExportDataService
 import com.knittrac.app.domain.service.ImportDataService
 import dagger.hilt.android.lifecycle.HiltViewModel

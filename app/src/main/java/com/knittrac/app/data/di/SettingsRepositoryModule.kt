@@ -1,6 +1,6 @@
 package com.knittrac.app.data.di
 
-import com.knittrac.app.data.repository.SettingsRepository
+import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.data.repository.SettingsRepositoryImpl
 import dagger.Binds
 import dagger.Module

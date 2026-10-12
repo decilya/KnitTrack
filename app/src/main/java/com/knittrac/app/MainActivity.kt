@@ -10,7 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.knittrac.app.core.localization.LocaleManager
-import com.knittrac.app.data.repository.SettingsRepository
+import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.entity.ThemeMode
 import com.knittrac.app.presentation.navigation.AppNavHost
 import com.knittrac.app.ui.theme.KnitTracTheme

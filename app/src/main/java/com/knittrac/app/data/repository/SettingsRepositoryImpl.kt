@@ -5,24 +5,22 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.knittrac.app.core.preferences.SettingsKeys
 import com.knittrac.app.domain.entity.ThemeMode
+import com.knittrac.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Репозиторий пользовательских настроек (тема, уведомления).
+ * Реализация [SettingsRepository] на DataStore Preferences.
  *
  * Все значения хранятся в общем DataStore<Preferences>, предоставляемом
- * core/di/DataStoreModule. Тема — типобезопасный [ThemeMode], хранится как [ThemeMode.name].
+ * core/di/DataStoreModule. Тема сериализуется как [ThemeMode.name] и
+ * восстанавливается через [ThemeMode.fromString] с fallback на SYSTEM.
+ *
+ * @param dataStore Единый DataStore приложения (не создаётся локально —
+ *   иначе был бы краш "multiple DataStores active for the same file").
  */
-interface SettingsRepository {
-    val themeModeFlow: Flow<ThemeMode>
-    val notificationsEnabledFlow: Flow<Boolean>
-    suspend fun setThemeMode(mode: ThemeMode)
-    suspend fun setNotificationsEnabled(enabled: Boolean)
-}
-
 @Singleton
 class SettingsRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
