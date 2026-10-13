@@ -2,12 +2,14 @@ package com.knittrac.app
 
 import android.app.Application
 import com.knittrac.app.core.localization.LocaleManager
+import com.knittrac.app.core.logging.FileLoggingTree
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -49,6 +51,10 @@ class KnitTracApplication : Application() {
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            // В release DebugTree недоступен — plant file-logger, иначе
+            // все вызовы Timber.e превращаются в no-op.
+            Timber.plant(FileLoggingTree(File(filesDir, "logs")))
         }
 
         applicationScope.launch {
