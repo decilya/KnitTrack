@@ -171,4 +171,29 @@ class ProjectRepositoryImpl @Inject constructor(
         Timber.e(e, "updateTotalTime projectId=%d sec=%d failed", projectId, duration.seconds)
         Result.Error(AppError.DatabaseError(e))
     }
+
+    /**
+     * Обновляет статус синхронизации проекта.
+     *
+     * @param projectId Идентификатор проекта.
+     * @param status Новый статус.
+     * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
+     *   если проекта нет, или [AppError.DatabaseError].
+     */
+    override suspend fun updateSyncStatus(
+        projectId: Long,
+        status: SyncStatus
+    ): Result<Unit> = try {
+        val rows = projectDao.updateSyncStatus(projectId, status.name)
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "updateSyncStatus projectId=%d failed", projectId)
+        Result.Error(AppError.DatabaseError(e))
+    }
 }

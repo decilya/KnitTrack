@@ -42,10 +42,6 @@ interface ProjectDao {
     @Update
     suspend fun updateProject(project: ProjectEntity): Int
 
-    /** Удаление проекта. Каскад на sessions через FK CASCADE. */
-    @Delete
-    suspend fun deleteProject(project: ProjectEntity)
-
     /**
      * Удаляет проект по id без предварительного чтения.
      * FK CASCADE на sessions выполняется на уровне БД.
@@ -55,6 +51,15 @@ interface ProjectDao {
      */
     @Query("DELETE FROM projects WHERE id = :id")
     suspend fun deleteProjectById(id: Long): Int
+
+    /**
+     * Обновление статуса синхронизации проекта.
+     *
+     * @param status Строковое имя статуса (обычно SyncStatus.name).
+     * @return количество затронутых строк: 1 — обновлено, 0 — id не найден.
+     */
+    @Query("UPDATE projects SET sync_status = :status WHERE id = :projectId")
+    suspend fun updateSyncStatus(projectId: Long, status: String): Int
 
     /**
      * Атомарный инкремент total_time_seconds + updated_at + PENDING.

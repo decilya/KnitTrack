@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.repository
 
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +37,22 @@ interface ProjectRepository {
 
     /** Удаляет проект по его ID. */
     suspend fun deleteProject(id: Long): Result<Unit>
+
+    /**
+     * Обновляет статус синхронизации проекта.
+     *
+     * Симметричен [SessionRepository.updateSyncStatus]: позволяет
+     * перевести проект в SYNCED после успешного аплоада. Без этого
+     * проекта навсегда остаётся в PENDING (updateProject и updateTotalTime
+     * принудительно проставляют PENDING).
+     *
+     * @param projectId Идентификатор проекта.
+     * @param status Новый статус синхронизации.
+     * @return [Result.Success], [Result.Error] с
+     *   [com.knittrac.app.core.common.AppError.NotFoundError] если проекта нет,
+     *   или [com.knittrac.app.core.common.AppError.DatabaseError].
+     */
+    suspend fun updateSyncStatus(projectId: Long, status: SyncStatus): Result<Unit>
 
     /**
      * Атомарно обновляет общее затраченное время проекта.
