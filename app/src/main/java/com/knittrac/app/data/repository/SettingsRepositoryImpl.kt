@@ -3,13 +3,17 @@ package com.knittrac.app.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.preferences.SettingsKeys
 import com.knittrac.app.domain.entity.ThemeMode
 import com.knittrac.app.domain.repository.SettingsRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
+import java.io.IOException
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Реализация [SettingsRepository] на DataStore Preferences.
@@ -21,7 +25,6 @@ import javax.inject.Singleton
  * @param dataStore Единый DataStore приложения (не создаётся локально —
  *   иначе был бы краш "multiple DataStores active for the same file").
  */
-@Singleton
 class SettingsRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : SettingsRepository {
@@ -34,11 +37,29 @@ class SettingsRepositoryImpl @Inject constructor(
     override val notificationsEnabledFlow: Flow<Boolean> = dataStore.data
         .map { it[SettingsKeys.NOTIFICATIONS_ENABLED] ?: true }
 
-    override suspend fun setThemeMode(mode: ThemeMode) {
+    override suspend fun setThemeMode(mode: ThemeMode): Result<Unit> = try {
         dataStore.edit { it[SettingsKeys.THEME_MODE] = mode.name }
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IOException) {
+        Timber.e(e, "setThemeMode(%s) failed", mode.name)
+        Result.Error(AppError.IoError(e))
+    } catch (e: Exception) {
+        Timber.e(e, "setThemeMode(%s) unexpected error", mode.name)
+        Result.Error(AppError.UnknownError(e))
     }
 
-    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+    override suspend fun setNotificationsEnabled(enabled: Boolean): Result<Unit> = try {
         dataStore.edit { it[SettingsKeys.NOTIFICATIONS_ENABLED] = enabled }
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IOException) {
+        Timber.e(e, "setNotificationsEnabled(%b) failed", enabled)
+        Result.Error(AppError.IoError(e))
+    } catch (e: Exception) {
+        Timber.e(e, "setNotificationsEnabled(%b) unexpected error", enabled)
+        Result.Error(AppError.UnknownError(e))
     }
 }

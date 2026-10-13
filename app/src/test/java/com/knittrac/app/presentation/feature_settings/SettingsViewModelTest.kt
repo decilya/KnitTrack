@@ -37,8 +37,8 @@ import java.io.OutputStream
  * - инициализацию: supportedLanguages из LocaleManager, combine трёх потоков;
  * - MVI-действия: смена темы, переключение уведомлений, смена языка;
  * - export/import: делегирование в сервисы и эмиссия корректных эффектов;
- * - защита от неподдерживаемого языка: setLanguage бросает
- *   IllegalArgumentException, эффект RecreateActivity не эмитится.
+ * - защита от неподдерживаемого языка: setLanguage возвращает
+ *   Result.Error, эмитится ShowError вместо RecreateActivity.
  *
  * Стиль изоляции: UnconfinedTestDispatcher и Dispatchers.setMain, чтобы
  * корутины в init выполнялись синхронно и тесты были детерминированными.
@@ -68,6 +68,11 @@ class SettingsViewModelTest {
         every { settingsRepository.notificationsEnabledFlow } returns flowOf(true)
         every { localeManager.supportedLanguages } returns emptyList()
         every { localeManager.getCurrentLanguageFlow() } returns flowOf("ru")
+
+        // set* методы возвращают Result<Unit> с P1.4. Дефолтные стабы для
+        // happy-path тестов — Success; тесты с ошибкой переопределяют локально.
+        coEvery { settingsRepository.setThemeMode(any()) } returns Result.Success(Unit)
+        coEvery { settingsRepository.setNotificationsEnabled(any()) } returns Result.Success(Unit)
     }
 
     @After
@@ -155,7 +160,7 @@ class SettingsViewModelTest {
      */
     @Test
     fun changeLanguage_callsSetLanguageAndEmitsRecreateActivity() = runTest(testDispatcher) {
-        coEvery { localeManager.setLanguage("en") } returns Unit
+        coEvery { localeManager.setLanguage("en") } returns Result.Success(Unit)
 
         val viewModel = createViewModel()
 
@@ -168,14 +173,15 @@ class SettingsViewModelTest {
     }
 
     /**
-     * Неподдерживаемый язык: LocaleManager.setLanguage бросает
-     * IllegalArgumentException. ViewModel логирует ошибку, но не эмитит
-     * RecreateActivity, иначе пользователь увидел бы бесполезный restart.
+     * Неподдерживаемый язык: LocaleManager.setLanguage возвращает
+     * Result.Error. ViewModel логирует ошибку и эмитит ShowError,
+     * но НЕ RecreateActivity — иначе пользователь увидел бы
+     * бесполезный restart без смены языка.
      */
     @Test
-    fun changeLanguage_doesNotEmitRecreateActivityForUnsupportedCode() = runTest(testDispatcher) {
-        coEvery { localeManager.setLanguage("xx") } throws
-            IllegalArgumentException("Unsupported language: xx")
+    fun changeLanguage_onUnsupportedCode_emitsShowError() = runTest(testDispatcher) {
+        coEvery { localeManager.setLanguage("xx") } returns
+            Result.Error(AppError.ValidationError("Unsupported language: xx"))
 
         val viewModel = createViewModel()
 
@@ -185,7 +191,7 @@ class SettingsViewModelTest {
         viewModel.onAction(SettingsContract.Action.ChangeLanguage("xx"))
 
         val effect = effectDeferred.await()
-        assertNull("RecreateActivity не должен эмититься при ошибке смены языка", effect)
+        assertEquals(SettingsContract.Effect.ShowError, effect)
         coVerify { localeManager.setLanguage("xx") }
     }
 

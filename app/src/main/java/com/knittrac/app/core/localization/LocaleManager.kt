@@ -8,7 +8,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.knittrac.app.R
+import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import java.io.IOException
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -113,6 +117,14 @@ class LocaleManager @Inject constructor(
 
             // Всегда применяем к Configuration — на первом и последующих запусках.
             updateLocale(initial)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            // DataStore недоступен — работаем на системной локали.
+            // UI-поток getCurrentLanguageFlow() вернёт defaultLanguage.
+            Timber.e(e, "ensureLanguageInitialized: DataStore I/O failed, using system locale")
+        } catch (e: Exception) {
+            Timber.e(e, "ensureLanguageInitialized: unexpected error, using system locale")
         } finally {
             // Сбрасываем splash даже при ошибке: лучше показать UI на системном
             // языке, чем застрять на splash-экране навсегда.
@@ -135,15 +147,32 @@ class LocaleManager @Inject constructor(
     /**
      * Устанавливает язык пользователя.
      *
-     * @throws IllegalArgumentException если код языка не поддерживается.
      * @param langCode ISO 639-1 код языка.
+     * @return [Result.Success] или [Result.Error] с [AppError.ValidationError]
+     *   при неподдерживаемом коде, либо [AppError.IoError] при сбое DataStore.
      */
-    suspend fun setLanguage(langCode: String) {
-        require(supportedLanguages.any { it.code == langCode }) {
-            "Unsupported language: $langCode. Supported: ${supportedLanguages.map { it.code }}"
+    suspend fun setLanguage(langCode: String): Result<Unit> {
+        if (supportedLanguages.none { it.code == langCode }) {
+            return Result.Error(
+                AppError.ValidationError(
+                    "Unsupported language: $langCode. " +
+                    "Supported: ${supportedLanguages.map { it.code }}"
+                )
+            )
         }
-        dataStore.edit { it[languageKey] = langCode }
-        updateLocale(langCode)
+        return try {
+            dataStore.edit { it[languageKey] = langCode }
+            updateLocale(langCode)
+            Result.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            Timber.e(e, "setLanguage(%s) failed", langCode)
+            Result.Error(AppError.IoError(e))
+        } catch (e: Exception) {
+            Timber.e(e, "setLanguage(%s) unexpected error", langCode)
+            Result.Error(AppError.UnknownError(e))
+        }
     }
 
     /**

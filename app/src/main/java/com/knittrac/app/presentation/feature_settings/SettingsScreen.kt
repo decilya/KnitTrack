@@ -142,6 +142,10 @@ fun SettingsScreen(
                     // Перезапуск Activity для применения нового языка (ресурсы + LayoutDirection)
                     (context as? ComponentActivity)?.recreate()
                 }
+                SettingsContract.Effect.ShowError -> {
+                    // Общая ошибка сохранения настройки (тема, уведомления, язык)
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_error_generic))
+                }
             }
         }
     }

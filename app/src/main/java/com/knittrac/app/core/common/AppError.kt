@@ -15,6 +15,7 @@ package com.knittrac.app.core.common
  * @see ValidationError Ошибка валидации входных данных.
  * @see NotFoundError Сущность не найдена.
  * @see DatabaseError Ошибка при работе с базой данных.
+ * @see IoError Ошибка ввода-вывода (DataStore, SAF, файлы).
  * @see NetworkError Ошибка сетевого взаимодействия.
  * @see UnknownError Неизвестная ошибка.
  */
@@ -53,6 +54,21 @@ sealed class AppError(
      */
     data class DatabaseError(val exception: Throwable) : AppError(
         exception.message ?: "Неизвестная ошибка базы данных",
+        exception
+    )
+
+    /**
+     * Ошибка ввода-вывода при работе с DataStore или файловой системой.
+     *
+     * Отличается от [DatabaseError] тем, что БД в порядке, но файл не
+     * удалось прочитать/записать (диск полон, отозвано разрешение SAF,
+     * corrupted DataStore). Отличается от [NetworkError] тем, что сеть
+     * не задействована.
+     *
+     * @param exception Исключение, вызвавшее ошибку (для отладки).
+     */
+    data class IoError(val exception: Throwable) : AppError(
+        exception.message ?: "Ошибка ввода-вывода",
         exception
     )
 

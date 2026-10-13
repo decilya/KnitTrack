@@ -79,10 +79,26 @@ class SettingsViewModel @Inject constructor(
     fun onAction(action: SettingsContract.Action) {
         when (action) {
             is SettingsContract.Action.ChangeThemeMode ->
-                viewModelScope.launch { settingsRepository.setThemeMode(action.mode) }
+                viewModelScope.launch {
+                    when (val r = settingsRepository.setThemeMode(action.mode)) {
+                        is Result.Success -> Unit
+                        is Result.Error -> {
+                            Timber.e(r.error.cause, "Failed to set theme mode: %s", action.mode)
+                            _effect.emit(SettingsContract.Effect.ShowError)
+                        }
+                    }
+                }
 
             is SettingsContract.Action.ToggleNotifications ->
-                viewModelScope.launch { settingsRepository.setNotificationsEnabled(action.enabled) }
+                viewModelScope.launch {
+                    when (val r = settingsRepository.setNotificationsEnabled(action.enabled)) {
+                        is Result.Success -> Unit
+                        is Result.Error -> {
+                            Timber.e(r.error.cause, "Failed to toggle notifications: %b", action.enabled)
+                            _effect.emit(SettingsContract.Effect.ShowError)
+                        }
+                    }
+                }
 
             is SettingsContract.Action.ChangeLanguage ->
                 changeLanguage(action.code)
@@ -101,11 +117,12 @@ class SettingsViewModel @Inject constructor(
      */
     private fun changeLanguage(code: String) {
         viewModelScope.launch {
-            try {
-                localeManager.setLanguage(code)
-                _effect.emit(SettingsContract.Effect.RecreateActivity)
-            } catch (e: IllegalArgumentException) {
-                Timber.e(e, "Failed to change language to: $code")
+            when (val r = localeManager.setLanguage(code)) {
+                is Result.Success -> _effect.emit(SettingsContract.Effect.RecreateActivity)
+                is Result.Error -> {
+                    Timber.e(r.error.cause, "Failed to change language to: %s", code)
+                    _effect.emit(SettingsContract.Effect.ShowError)
+                }
             }
         }
     }

@@ -51,6 +51,7 @@
     <string name="settings_export_error">Error exporting data</string>
     <string name="settings_import_success">Data imported successfully</string>
     <string name="settings_import_error">Error importing data</string>
+    <string name="settings_error_generic">Failed to save setting</string>
 
     <!-- Statistics -->
     <string name="stats_title">Statistics</string>

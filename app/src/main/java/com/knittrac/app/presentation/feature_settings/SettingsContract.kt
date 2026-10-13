@@ -48,5 +48,7 @@ object SettingsContract {
         data object ImportError : Effect()
         /** Требуется перезапуск Activity для применения нового языка. */
         data object RecreateActivity : Effect()
+        /** Общая ошибка сохранения настройки — Snackbar с generic-текстом. */
+        data object ShowError : Effect()
     }
 }

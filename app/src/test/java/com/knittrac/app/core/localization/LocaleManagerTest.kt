@@ -1,5 +1,7 @@
 package com.knittrac.app.core.localization
 
+import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.Result
 import android.content.Context
 import android.content.res.Resources
 import androidx.datastore.core.DataStore
@@ -130,47 +132,38 @@ class LocaleManagerTest {
     }
 
     /**
-     * setLanguage с неподдерживаемым кодом должен бросить
-     * IllegalArgumentException до обращения к DataStore.
-     *
-     * try/catch вместо assertThrows: assertThrows использует
-     * runBlocking, который конфликтует с runTest scheduler.
+     * setLanguage с неподдерживаемым кодом возвращает Result.Error
+     * с AppError.ValidationError, не обращаясь к DataStore.
      */
     @Test
-    fun `setLanguage throws IllegalArgumentException on unsupported code`() = runTest {
+    fun setLanguage_returnsValidationErrorOnUnsupportedCode() = runTest {
         val manager = LocaleManager(context, dataStore)
 
-        var thrown: Throwable? = null
-        try {
-            manager.setLanguage("ja")
-        } catch (e: Throwable) {
-            thrown = e
-        }
+        val result = manager.setLanguage("ja")
 
+        assertTrue("Ожидался Result.Error, получено: $result", result is Result.Error)
+        val error = (result as Result.Error).error
         assertTrue(
-            "Ожидался IllegalArgumentException, получено: $thrown",
-            thrown is IllegalArgumentException
+            "Ожидался ValidationError, получено: $error",
+            error is AppError.ValidationError
         )
     }
 
     /**
-     * Пустой код тоже не поддерживается — require-проверка
-     * должна бросить IllegalArgumentException.
+     * Пустой код тоже не поддерживается — возвращается Result.Error
+     * с AppError.ValidationError.
      */
     @Test
-    fun `setLanguage throws IllegalArgumentException on empty code`() = runTest {
+    fun setLanguage_returnsValidationErrorOnEmptyCode() = runTest {
         val manager = LocaleManager(context, dataStore)
 
-        var thrown: Throwable? = null
-        try {
-            manager.setLanguage("")
-        } catch (e: Throwable) {
-            thrown = e
-        }
+        val result = manager.setLanguage("")
 
+        assertTrue("Ожидался Result.Error, получено: $result", result is Result.Error)
+        val error = (result as Result.Error).error
         assertTrue(
-            "Ожидался IllegalArgumentException, получено: $thrown",
-            thrown is IllegalArgumentException
+            "Ожидался ValidationError, получено: $error",
+            error is AppError.ValidationError
         )
     }
 
