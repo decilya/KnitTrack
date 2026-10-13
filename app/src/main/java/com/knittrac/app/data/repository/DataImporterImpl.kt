@@ -18,12 +18,13 @@ import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.repository.DataImporter
 import timber.log.Timber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Реализация [DataImporter] с потоковым парсингом через [JsonReader].
@@ -45,7 +46,6 @@ import javax.inject.Singleton
  * - [Gson] — парсинг отдельных объектов из потока.
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
-@Singleton
 class DataImporterImpl @Inject constructor(
     private val database: AppDatabase,
     private val projectDao: ProjectDao,
@@ -93,7 +93,13 @@ class DataImporterImpl @Inject constructor(
                 }
 
                 Result.Success(Unit)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IOException) {
+                Timber.e(e, "importFrom failed: I/O error")
+                Result.Error(AppError.IoError(e))
             } catch (e: Exception) {
+                Timber.e(e, "importFrom failed")
                 Result.Error(AppError.DatabaseError(e))
             }
         }

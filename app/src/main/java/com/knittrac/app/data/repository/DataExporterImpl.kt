@@ -15,12 +15,14 @@ import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toDto
 import com.knittrac.app.domain.repository.DataExporter
+import timber.log.Timber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Реализация [DataExporter] с потоковой сериализацией через [JsonWriter].
@@ -40,7 +42,6 @@ import javax.inject.Singleton
  * - [AppDatabase] — общая транзакция для консистентного чтения.
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
-@Singleton
 class DataExporterImpl @Inject constructor(
     private val projectDao: ProjectDao,
     private val sessionDao: SessionDao,
@@ -93,7 +94,13 @@ class DataExporterImpl @Inject constructor(
                 writer.flush()
 
                 Result.Success(Unit)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IOException) {
+                Timber.e(e, "exportTo failed: I/O error")
+                Result.Error(AppError.IoError(e))
             } catch (e: Exception) {
+                Timber.e(e, "exportTo failed")
                 Result.Error(AppError.DatabaseError(e))
             }
         }
