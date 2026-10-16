@@ -1,13 +1,12 @@
 #!/bin/bash
 # KnitTrac pre-commit hook.
-# Запускает тесты и detekt перед коммитом.
-# Активируется через: git config core.hooksPath .githooks
+# Запускает тесты и detekt через Windows gradlew.bat.
+# WSL-safe: не использует ./gradlew (bash) на drvfs /mnt/c —
+# это даёт Input/output error из-за антивируса.
 set -e
 
-if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
-    # Windows Git Bash
-    ./gradlew.bat test detekt
-else
-    # WSL / Linux / macOS
-    ./gradlew test detekt
-fi
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_WIN="$(wslpath -w "$PROJECT_DIR")"
+
+echo "[pre-commit] Running gradlew.bat test detekt..."
+cmd.exe /C "cd /D $PROJECT_WIN && gradlew.bat test detekt --console=plain"
