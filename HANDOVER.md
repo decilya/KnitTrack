@@ -1,8 +1,8 @@
 # HANDOVER — KnitTrac
 
 **Актуально на:** 16.10.2026
-**HEAD:** c6c9a7a
-**Тесты:** 132, 0 failures
+**HEAD:** f8d1d1c
+**Тесты:** 133, 0 failures
 
 ---
 
@@ -380,6 +380,8 @@ git log --oneline -3.
 
 ### P0-1. PII в логах
 
+**Статус:** ЗАКРЫТ в коммите c96017b.
+
 Файл: data/repository/ProjectRepositoryImpl.kt:92.
 
 Строка Timber.e(e, "addProject failed: name=%s category=%s", project.name.value, project.category) пишет user input в файл на диске. При allowBackup уезжает в Google autobackup.
@@ -388,11 +390,15 @@ Fix: убрать project.name.value. Плюс SettingsScreen:300,311 — убр
 
 ### P0-2. FileLoggingTree синхронный ввод-вывод
 
+**Статус:** ЗАКРЫТ в коммите 022e94f.
+
 file.appendText блокирует поток. Jank и износ eMMC.
 
 Fix: Channel<LogEntry>(UNLIMITED) плюс consumer на Dispatchers.IO, trySend из log().
 
 ### P0-3. Миграция 2 к 3 не прогонялась
+
+**Статус:** ОТКРЫТ, День 5.
 
 connectedDebugAndroidTest не запускался.
 
@@ -402,13 +408,27 @@ PowerShell от админа: Enable-WindowsOptionalFeature -Online -FeatureName
 
 ### P0-5. FGS type dataSync неверен
 
-Manifest строка 38: android:foregroundServiceType="dataSync". Play reject.
+Manifest строка 40: android:foregroundServiceType="dataSync". Play reject.
+
+**Статус:** ОТКРЫТ, День 4.
 
 Fix: specialUse с обоснованием в Play Console.
 
 ### P0-4. ProGuard — закрыт как не блокер
 
-app/proguard-rules.pro содержит правила для Gson (DTO плюс domain), Coroutines, attributes. isMinifyEnabled = true стоит. Проверить assembleRelease в Дне 4.
+app/proguard-rules.pro содержит правила для Gson (DTO плюс domain), Coroutines, attributes. isMinifyEnabled = true стоит.
+
+**Статус:** ЧАСТИЧНО ЗАКРЫТ. Остаток Дня 4: isShrinkResources = true, -keep class com.knittrac.app.data.local.entity.** { *; } (страховка поверх Room consumer-rules), прогон assembleRelease.
+
+### P0-6. @Singleton на impl-классах
+
+ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 аннотированы @Singleton.
+
+Правило 4.5.4: scope на @Binds, не на impl. RepositoryModule уже ставит @Singleton на @Binds — двойной scope.
+
+**Статус:** ОТКРЫТ, День 4.
+
+Fix: снять @Singleton с impl-классов.
 
 ---
 
@@ -433,6 +453,11 @@ app/proguard-rules.pro содержит правила для Gson (DTO плюс
 Коммит 7319705: 2d FileLoggingTree для release.
 Коммит 7f4ebf3: fix check_standards.py (в другом чате).
 Коммит c6c9a7a: День 1 detekt, pre-commit hook, git infrastructure.
+Коммит 0217cc9: HANDOVER.md в репозитории.
+Коммит b3c624a: pre-commit hook через Windows gradlew.bat (WSL-safe).
+Коммит c96017b: День 2 PII redaction и backup rules.
+Коммит 022e94f: День 3 Channel-based FileLoggingTree.
+Коммит f8d1d1c: README.md (EN) и README.ru.md (RU).
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
@@ -481,7 +506,7 @@ Rules: LongMethod 30, LargeClass 300, LongParameterList 5, ReturnCount 2, naming
 Удалены 2 unused import.
 Коммит c6c9a7a.
 
-### День 2 (3 ч). PII и backup rules
+### День 2 (3 ч). PII и backup rules. ЗАКРЫТ.
 
 ProjectRepositoryImpl:92 — убрать project.name.value.
 SettingsScreen:300,311 — убрать uri.
@@ -492,7 +517,7 @@ res/xml/backup_rules.xml и data_extraction_rules.xml.
 
 Deliverable: fix(privacy) PII redaction и backup rules.
 
-### День 3 (3 ч). FileLoggingTree в Channel
+### День 3 (3 ч). FileLoggingTree в Channel. ЗАКРЫТ.
 
 Channel<LogEntry>(UNLIMITED) плюс consumer на Dispatchers.IO.
 trySend из log(), close() при остановке.
@@ -500,14 +525,14 @@ trySend из log(), close() при остановке.
 
 Deliverable: perf(logging) Channel-based FileLoggingTree.
 
-### День 4 (3-3.5 ч). DI, architecture test, LocaleManager, release config
+### День 4 (2-2.5 ч). DI, architecture test, LocaleManager, release config
 
-Снять @Singleton с ProjectRepositoryImpl, SessionRepositoryImpl.
-AppErrorMapper: заменить NetworkError на IoError.
-LocaleManager в LocaleService. Убрать из allowlist detekt.
-Архитектурный тест DomainLayerTest.
-ProGuard: проверить assembleRelease.
-FGS type: dataSync в specialUse.
+Снять @Singleton с ProjectRepositoryImpl:32, SessionRepositoryImpl:31.
+AppErrorMapper: заменить NetworkError на IoError (см. п.9 раздела 14 — конфликт маппингов).
+LocaleManager в LocaleService: 9 файлов.
+Архитектурный тест DomainLayerTest — не существует, создать в app/src/test.
+ProGuard: isShrinkResources = true, Room entity keep, assembleRelease.
+FGS type: AndroidManifest.xml:40, dataSync в specialUse плюс property PROPERTY_SPECIAL_USE_FGS_SUBTYPE.
 
 Deliverable: refactor(di) убрать @Singleton, architecture test, release config.
 
@@ -694,22 +719,21 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: День 2 — PII и backup rules.
+Следующая сессия: День 4 — DI, architecture test, LocaleManager, release config.
 
 Первый шаг — факт-блок. Один прогон в WSL:
 
 cd /mnt/c/Users/decilya/projects/KnitTrac
 echo "---LOG---"; git log --oneline -3
 echo "---STATUS---"; git status --short
-echo "---PII-PROJECT---"; grep -n "project.name.value" app/src/main/java/com/knittrac/app/data/repository/ProjectRepositoryImpl.kt
-echo "---PII-SETTINGS---"; grep -n "uri" app/src/main/java/com/knittrac/app/presentation/feature_settings/SettingsScreen.kt
-echo "---PII-TIMER---"; sed -n "230,245p" app/src/main/java/com/knittrac/app/platform/service/TimerForegroundService.kt
-echo "---PII-SAVE-SESSION---"; sed -n "45,60p" app/src/main/java/com/knittrac/app/domain/service/SaveSessionService.kt
-echo "---MANIFEST---"; grep -n -A 3 "application" app/src/main/AndroidManifest.xml | head -20
-echo "---RES-XML---"; ls -la app/src/main/res/xml/ 2>/dev/null || echo "(нет res/xml)"
+echo "---BUILD-RELEASE---"; sed -n "/buildTypes/,/^    }/p" app/build.gradle.kts
+echo "---PROGUARD-HEAD---"; head -5 app/proguard-rules.pro
+echo "---MANIFEST-SVC---"; grep -n -A 4 "<service" app/src/main/AndroidManifest.xml
+echo "---SINGLETON-IMPL---"; grep -rn -B 1 "@Singleton" app/src/main/java/com/knittrac/app/data/repository/
+echo "---LOCALE---"; grep -rln "LocaleManager" app/src/
 echo "---END---"
 
-После вывода — День 2 собирается за один заход.
+После вывода — День 4 собирается за один заход.
 
 Без факт-блока — не начинать. Не выдумывать содержимое. Не доверять памяти.
 
@@ -717,4 +741,4 @@ echo "---END---"
 
 КОНЕЦ HANDOVER.
 
-Составлен 16.10.2026. HEAD c6c9a7a. Тесты 132, 0 failures.
+Составлен 16.10.2026. HEAD f8d1d1c. Тесты 133, 0 failures.

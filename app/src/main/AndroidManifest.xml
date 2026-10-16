@@ -37,8 +37,12 @@
 
         <service
             android:name=".platform.service.TimerForegroundService"
-            android:foregroundServiceType="dataSync"
-            android:exported="false" />
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Knitting session timer with persistent notification" />
+        </service>
 
     </application>
 </manifest>
