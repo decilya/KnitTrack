@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>LongMethod:AppDatabase.kt$AppDatabase.Companion.&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
+    <ID>LongMethod:DataExporterImpl.kt$DataExporterImpl$override suspend fun exportTo(outputStream: OutputStream): Result&lt;Unit&gt;</ID>
+    <ID>LongMethod:DataImporterImpl.kt$DataImporterImpl$override suspend fun importFrom(inputStream: InputStream): Result&lt;Unit&gt;</ID>
+    <ID>LongMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsContract.Action)</ID>
+    <ID>LongMethod:TimerViewModel.kt$TimerViewModel$private fun saveSession()</ID>
+    <ID>LongParameterList:DataExporterImpl.kt$DataExporterImpl$( private val projectDao: ProjectDao, private val sessionDao: SessionDao, private val gson: Gson, private val appDatabase: AppDatabase, @IoDispatcher private val dispatcher: CoroutineDispatcher )</ID>
+    <ID>LongParameterList:DataImporterImpl.kt$DataImporterImpl$( private val database: AppDatabase, private val projectDao: ProjectDao, private val sessionDao: SessionDao, private val gson: Gson, @IoDispatcher private val dispatcher: CoroutineDispatcher )</ID>
+    <ID>LongParameterList:EmptyStateView.kt$( icon: ImageVector, title: String, description: String, modifier: Modifier = Modifier, actionText: String? = null, onActionClick: (() -&gt; Unit)? = null )</ID>
+    <ID>WildcardImport:StatsScreen.kt$import co.yml.charts.ui.linechart.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

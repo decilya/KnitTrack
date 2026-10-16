@@ -1,0 +1,89 @@
+# ============================================================
+# KnitTrac detekt configuration.
+# ============================================================
+# Базовая версия (День 1). Строгие правила будут добавляться
+# по мере закрытия техдолга. Baseline фиксирует существующие
+# нарушения; новые блокируют сборку.
+# ============================================================
+
+complexity:
+  LongMethod:
+    active: true
+    threshold: 30
+    ignoreAnnotated: ['Composable']
+  LargeClass:
+    active: true
+    threshold: 300
+  LongParameterList:
+    active: true
+    functionThreshold: 5
+    constructorThreshold: 5
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+    threshold: 15
+  NestedBlockDepth:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  ForbiddenComment:
+    active: false
+  WildcardImport:
+    active: true
+    excludeImports:
+      - 'androidx.room.*'
+      - 'androidx.compose.*'
+      - 'kotlinx.coroutines.flow.*'
+      - 'kotlinx.coroutines.*'
+  MaxLineLength:
+    active: false
+  UnusedPrivateMember:
+    active: true
+  UnusedImports:
+    active: true
+  ReturnCount:
+    active: true
+
+naming:
+  ClassNaming:
+    active: true
+    classPattern: '[A-Z][a-zA-Z0-9]*'
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable', 'Test']
+  VariableNaming:
+    active: true
+  ConstructorParameterNaming:
+    active: true
+  TopLevelPropertyNaming:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
+
+potential-bugs:
+  IgnoredReturnValue:
+    active: false
+  UnsafeCallOnNullableType:
+    active: true
+  LateinitUsage:
+    active: false
+
+empty-blocks:
+  EmptyCatchBlock:
+    active: false
+  EmptyFunctionBlock:
+    active: false
+
+coroutines:
+  GlobalCoroutineUsage:
+    active: true
+  RedundantSuspendModifier:
+    active: false
+

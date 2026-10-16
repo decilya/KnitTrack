@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Gradle build outputs (все модули)
+**/build/
+
+# Backup files
+README.old.txt
+
+# Signing
+*.jks
+*.keystore
+
+# Logs
+logs/
+

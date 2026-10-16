@@ -4,6 +4,7 @@ plugins {
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     id("com.google.dagger.hilt.android") version "2.50"
     id("kotlin-parcelize")
+    id("io.gitlab.arturbosch.detekt")
 }
 android {
     namespace = "com.knittrac.app"
@@ -43,6 +44,12 @@ android {
 }
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+detekt {
+    allRules = false
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 dependencies {
     // Navigation
