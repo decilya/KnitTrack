@@ -1,7 +1,7 @@
 package com.knittrac.app
 
 import android.app.Application
-import com.knittrac.app.core.localization.LocaleManager
+import com.knittrac.app.core.localization.LocaleService
 import com.knittrac.app.core.logging.FileLoggingTree
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -26,13 +26,13 @@ import javax.inject.Inject
  *
  * Гарантия корректного первого кадра обеспечивается на уровне UI:
  * [com.knittrac.app.MainActivity] удерживает splash-экран, пока
- * [LocaleManager.isInitialized] не станет true.
+ * [LocaleService.isInitialized] не станет true.
  */
 @HiltAndroidApp
 class KnitTracApplication : Application() {
 
     @Inject
-    lateinit var localeManager: LocaleManager
+    lateinit var localeService: LocaleService
 
     /**
      * Долгоживущий scope приложения. Не отменяется — живёт весь жизненный цикл
@@ -59,7 +59,7 @@ class KnitTracApplication : Application() {
 
         applicationScope.launch {
             try {
-                localeManager.ensureLanguageInitialized()
+                localeService.ensureLanguageInitialized()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize locale, using system default")
             }

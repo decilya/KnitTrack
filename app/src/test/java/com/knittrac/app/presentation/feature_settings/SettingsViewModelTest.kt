@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_settings
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.LanguageOption
-import com.knittrac.app.core.localization.LocaleManager
+import com.knittrac.app.core.localization.LocaleService
 import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.entity.ThemeMode
 import com.knittrac.app.domain.service.ExportDataService
@@ -33,7 +33,7 @@ import java.io.OutputStream
  * Юнит-тесты для [SettingsViewModel].
  *
  * Покрывают:
- * - инициализацию: supportedLanguages из LocaleManager, combine трёх потоков;
+ * - инициализацию: supportedLanguages из LocaleService, combine трёх потоков;
  * - MVI-действия: смена темы, переключение уведомлений, смена языка;
  * - export/import: делегирование в сервисы и эмиссия корректных эффектов;
  * - защита от неподдерживаемого языка: setLanguage возвращает
@@ -48,7 +48,7 @@ class SettingsViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var settingsRepository: SettingsRepository
-    private lateinit var localeManager: LocaleManager
+    private lateinit var localeService: LocaleService
     private lateinit var exportDataService: ExportDataService
     private lateinit var importDataService: ImportDataService
 
@@ -57,16 +57,16 @@ class SettingsViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         settingsRepository = mockk(relaxed = true)
-        localeManager = mockk(relaxed = true)
+        localeService = mockk(relaxed = true)
         exportDataService = mockk(relaxed = true)
         importDataService = mockk(relaxed = true)
 
         // Стабы для init-блока ViewModel: combine сразу получает начальные
-        // значения, supportedLanguages не пустой вызов к реальному LocaleManager.
+        // значения, supportedLanguages не пустой вызов к реальному LocaleService.
         every { settingsRepository.themeModeFlow } returns flowOf(ThemeMode.SYSTEM)
         every { settingsRepository.notificationsEnabledFlow } returns flowOf(true)
-        every { localeManager.supportedLanguages } returns emptyList()
-        every { localeManager.getCurrentLanguageFlow() } returns flowOf("ru")
+        every { localeService.supportedLanguages } returns emptyList()
+        every { localeService.getCurrentLanguageFlow() } returns flowOf("ru")
 
         // set* методы возвращают Result<Unit> с P1.4. Дефолтные стабы для
         // happy-path тестов — Success; тесты с ошибкой переопределяют локально.
@@ -82,7 +82,7 @@ class SettingsViewModelTest {
     private fun createViewModel(): SettingsViewModel =
         SettingsViewModel(
             settingsRepository = settingsRepository,
-            localeManager = localeManager,
+            localeService = localeService,
             exportDataService = exportDataService,
             importDataService = importDataService
         )
@@ -90,7 +90,7 @@ class SettingsViewModelTest {
     // --- init ---
 
     /**
-     * init должен перенести supportedLanguages из LocaleManager в State,
+     * init должен перенести supportedLanguages из LocaleService в State,
      * не дожидаясь первого эмита combine.
      */
     @Test
@@ -99,7 +99,7 @@ class SettingsViewModelTest {
             LanguageOption("ru", "Русский"),
             LanguageOption("en", "English")
         )
-        every { localeManager.supportedLanguages } returns langs
+        every { localeService.supportedLanguages } returns langs
 
         val viewModel = createViewModel()
 
@@ -109,13 +109,13 @@ class SettingsViewModelTest {
     /**
      * init подписывается на combine трёх потоков: тема, уведомления, язык.
      * После первого эмита isLoading снимается, а State содержит
-     * актуальные значения из репозитория и LocaleManager.
+     * актуальные значения из репозитория и LocaleService.
      */
     @Test
     fun init_subscribesToCombineAndClearsIsLoading() = runTest(testDispatcher) {
         every { settingsRepository.themeModeFlow } returns flowOf(ThemeMode.DARK)
         every { settingsRepository.notificationsEnabledFlow } returns flowOf(false)
-        every { localeManager.getCurrentLanguageFlow() } returns flowOf("en")
+        every { localeService.getCurrentLanguageFlow() } returns flowOf("en")
 
         val viewModel = createViewModel()
 
@@ -154,12 +154,12 @@ class SettingsViewModelTest {
     }
 
     /**
-     * Успешная смена языка: localeManager.setLanguage вызван,
+     * Успешная смена языка: localeService.setLanguage вызван,
      * RecreateActivity эмитится, чтобы Activity перезапустилась.
      */
     @Test
     fun changeLanguage_callsSetLanguageAndEmitsRecreateActivity() = runTest(testDispatcher) {
-        coEvery { localeManager.setLanguage("en") } returns Result.Success(Unit)
+        coEvery { localeService.setLanguage("en") } returns Result.Success(Unit)
 
         val viewModel = createViewModel()
 
@@ -168,18 +168,18 @@ class SettingsViewModelTest {
 
         val effect = effectDeferred.await()
         assertEquals(SettingsContract.Effect.RecreateActivity, effect)
-        coVerify { localeManager.setLanguage("en") }
+        coVerify { localeService.setLanguage("en") }
     }
 
     /**
-     * Неподдерживаемый язык: LocaleManager.setLanguage возвращает
+     * Неподдерживаемый язык: LocaleService.setLanguage возвращает
      * Result.Error. ViewModel логирует ошибку и эмитит ShowError,
      * но НЕ RecreateActivity — иначе пользователь увидел бы
      * бесполезный restart без смены языка.
      */
     @Test
     fun changeLanguage_onUnsupportedCode_emitsShowError() = runTest(testDispatcher) {
-        coEvery { localeManager.setLanguage("xx") } returns
+        coEvery { localeService.setLanguage("xx") } returns
             Result.Error(AppError.ValidationError("Unsupported language: xx"))
 
         val viewModel = createViewModel()
@@ -191,7 +191,7 @@ class SettingsViewModelTest {
 
         val effect = effectDeferred.await()
         assertEquals(SettingsContract.Effect.ShowError, effect)
-        coVerify { localeManager.setLanguage("xx") }
+        coVerify { localeService.setLanguage("xx") }
     }
 
     // --- Export ---

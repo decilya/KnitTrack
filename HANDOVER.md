@@ -84,7 +84,7 @@ EventDispatcher — _effect.emit.
 
 ### 4.6. Пакеты
 
-core — Result, AppError, TimeProvider, LocaleManager, SyncStatus, logging, localization, common.
+core — Result, AppError, TimeProvider, LocaleService, SyncStatus, logging, localization, common.
 data — dto, local, mapper, repository, di.
 domain — entity, repository, service.
 platform — timer, service, notification, di.
@@ -159,7 +159,7 @@ Hilt — единственный контейнер.
 При конфликте Android-идиома побеждает.
 
 Запреты:
-- Нет Manager (исключение LocaleManager до Дня 4).
+- Нет Manager (исключение LocaleService до Дня 4).
 - Нет Helper, Utils, Handler.
 - Нет ServiceProvider в коде приложения.
 - Нет Provider между Service и Repository.
@@ -437,7 +437,7 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 8. ProjectName.DEFAULT = "Без названия" — русская строка в Domain.
 9. AppErrorMapper — НЕ мёртвый. Используется в BaseUseCase.kt и BaseFlowUseCase.kt. Плюс конфликт: мапит IOException к NetworkError, а в 2b-1 добавлен IoError и применён в репозиториях. Два маппинга одного исключения.
 10. DataExporter и DataImporter без тестов.
-11. LanguageOption в core/localization вместо domain/entity.
+11. LanguageOption в core/localization вместо domain/entity. LocaleManager переименован в LocaleService (refactor(locale), День 4).
 12. Session.updatedAt default в конструкторе.
 13. SaveSessionService:53 — русский текст в логе.
 
@@ -456,6 +456,9 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Коммит c96017b: День 2 PII redaction и backup rules.
 Коммит 022e94f: День 3 Channel-based FileLoggingTree.
 Коммит f8d1d1c: README.md (EN) и README.ru.md (RU).
+Коммит 5aadf5e: День 4 release-readiness (isShrinkResources, Room keep, FGS specialUse).
+Коммит a7163f0: День 4 снятие @Singleton с impl-репозиториев.
+Коммит <этот>: День 4 LocaleManager в LocaleService.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
@@ -523,11 +526,11 @@ trySend из log(), close() при остановке.
 
 Deliverable: perf(logging) Channel-based FileLoggingTree.
 
-### День 4 (2-2.5 ч). DI, architecture test, LocaleManager, release config
+### День 4 (2-2.5 ч). DI, architecture test, LocaleService, release config
 
 Снять @Singleton с ProjectRepositoryImpl:32, SessionRepositoryImpl:31.
 AppErrorMapper: заменить NetworkError на IoError (см. п.9 раздела 14 — конфликт маппингов).
-LocaleManager в LocaleService: 9 файлов.
+LocaleService в LocaleService: 9 файлов.
 Архитектурный тест DomainLayerTest — не существует, создать в app/src/test.
 ProGuard: isShrinkResources = true, Room entity keep, assembleRelease.
 FGS type: AndroidManifest.xml:40, dataSync в specialUse плюс property PROPERTY_SPECIAL_USE_FGS_SUBTYPE.
@@ -573,7 +576,7 @@ FileLoggingTree блокирует: да — нет.
 Миграция 2 к 3 прогнана: нет — да.
 @Singleton на impl: 2 — 0.
 AppErrorMapper: есть конфликт — устранён.
-LocaleManager: Manager — LocaleService.
+LocaleService: Manager — LocaleService.
 coding-standards.md: 535 — 0, разбит.
 Detekt: нет — есть, готово.
 Pre-commit hook: нет — есть, готово.
@@ -679,7 +682,7 @@ app/src/main/java/com/knittrac/app:
 
 KnitTracApplication.kt.
 MainActivity.kt.
-core — base (BaseUseCase, BaseFlowUseCase), common (AppError, Result, SyncStatus, AppErrorMapper), di (DataStoreModule, DispatchersModule), localization (LocaleManager, CategoryLocalizer), logging (FileLoggingTree).
+core — base (BaseUseCase, BaseFlowUseCase), common (AppError, Result, SyncStatus, AppErrorMapper), di (DataStoreModule, DispatchersModule), localization (LocaleService, CategoryLocalizer), logging (FileLoggingTree).
 data — dto, local (entity, dao, AppDatabase), mapper, repository, di.
 domain — entity, repository, service.
 platform — timer (SystemTimeProvider), service (TimerForegroundService), notification, di.
@@ -717,7 +720,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: День 4 — DI, architecture test, LocaleManager, release config.
+Следующая сессия: День 4 — DI, architecture test, LocaleService, release config.
 
 Первый шаг — факт-блок. Один прогон в WSL:
 
@@ -728,7 +731,7 @@ echo "---BUILD-RELEASE---"; sed -n "/buildTypes/,/^    }/p" app/build.gradle.kts
 echo "---PROGUARD-HEAD---"; head -5 app/proguard-rules.pro
 echo "---MANIFEST-SVC---"; grep -n -A 4 "<service" app/src/main/AndroidManifest.xml
 echo "---SINGLETON-IMPL---"; grep -rn -B 1 "@Singleton" app/src/main/java/com/knittrac/app/data/repository/
-echo "---LOCALE---"; grep -rln "LocaleManager" app/src/
+echo "---LOCALE---"; grep -rln "LocaleService" app/src/
 echo "---END---"
 
 После вывода — День 4 собирается за один заход.

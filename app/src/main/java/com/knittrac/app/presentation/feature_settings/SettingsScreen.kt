@@ -198,7 +198,7 @@ fun SettingsScreen(
 
                 // --- Секция: Язык (динамический список) ---
                 // Показываем только если supportedLanguages непуст. При
-                // рассогласовании arrays.xml LocaleManager вернёт пустой
+                // рассогласовании arrays.xml LocaleService вернёт пустой
                 // список — тогда секция с заголовком и без содержимого
                 // не должна маячить на экране.
                 if (state.supportedLanguages.isNotEmpty()) {

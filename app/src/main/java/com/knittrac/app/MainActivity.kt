@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.knittrac.app.core.localization.LocaleManager
+import com.knittrac.app.core.localization.LocaleService
 import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.entity.ThemeMode
 import com.knittrac.app.presentation.navigation.AppNavHost
@@ -23,7 +23,7 @@ import javax.inject.Inject
  * Использует SplashScreen API (androidx.core:core-splashscreen):
  * - [installSplashScreen] вызывается ДО super.onCreate — требование API.
  * - [setKeepOnScreenCondition] удерживает splash, пока
- *   [LocaleManager.isInitialized] == false. Это позволяет убрать
+ *   [LocaleService.isInitialized] == false. Это позволяет убрать
  *   runBlocking из Application.onCreate и избежать jank на старте.
  *
  * Подписка на [SettingsRepository.themeModeFlow]:
@@ -36,7 +36,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var localeManager: LocaleManager
+    lateinit var localeService: LocaleService
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition {
-            !localeManager.isInitialized.value
+            !localeService.isInitialized.value
         }
 
         setContent {

@@ -26,7 +26,7 @@ import org.junit.Test
 import java.util.Locale
 
 /**
- * Юнит-тесты для [LocaleManager].
+ * Юнит-тесты для [LocaleService].
  *
  * Покрывают:
  * - стартовое состояние флага isInitialized;
@@ -46,7 +46,7 @@ import java.util.Locale
  * Locale.setDefault мутирует глобальное JVM-состояние — оригинал
  * сохраняется в setUp и восстанавливается в tearDown.
  */
-class LocaleManagerTest {
+class LocaleServiceTest {
 
     private lateinit var context: Context
     private lateinit var resources: Resources
@@ -82,7 +82,7 @@ class LocaleManagerTest {
      */
     @Test
     fun `isInitialized starts as false`() {
-        val manager = LocaleManager(context, dataStore)
+        val manager = LocaleService(context, dataStore)
 
         assertFalse(manager.isInitialized.value)
     }
@@ -93,7 +93,7 @@ class LocaleManagerTest {
      */
     @Test
     fun `FALLBACK_LANGUAGE is en`() {
-        assertEquals("en", LocaleManager.FALLBACK_LANGUAGE)
+        assertEquals("en", LocaleService.FALLBACK_LANGUAGE)
     }
 
     /**
@@ -108,7 +108,7 @@ class LocaleManagerTest {
         every { resources.getStringArray(R.array.supported_language_names) } returns
             arrayOf("English", "Русский")
 
-        val manager = LocaleManager(context, dataStore)
+        val manager = LocaleService(context, dataStore)
 
         assertTrue(manager.supportedLanguages.isEmpty())
     }
@@ -125,7 +125,7 @@ class LocaleManagerTest {
         every { resources.getStringArray(R.array.supported_language_codes) } returns codes
         every { resources.getStringArray(R.array.supported_language_names) } returns names
 
-        val manager = LocaleManager(context, dataStore)
+        val manager = LocaleService(context, dataStore)
 
         val expected = codes.zip(names) { c, n -> LanguageOption(c, n) }.toList()
         assertEquals(expected, manager.supportedLanguages)
@@ -137,7 +137,7 @@ class LocaleManagerTest {
      */
     @Test
     fun setLanguage_returnsValidationErrorOnUnsupportedCode() = runTest {
-        val manager = LocaleManager(context, dataStore)
+        val manager = LocaleService(context, dataStore)
 
         val result = manager.setLanguage("ja")
 
@@ -155,7 +155,7 @@ class LocaleManagerTest {
      */
     @Test
     fun setLanguage_returnsValidationErrorOnEmptyCode() = runTest {
-        val manager = LocaleManager(context, dataStore)
+        val manager = LocaleService(context, dataStore)
 
         val result = manager.setLanguage("")
 
@@ -173,7 +173,7 @@ class LocaleManagerTest {
      */
     @Test
     fun `ensureLanguageInitialized sets isInitialized to true on success`() = runTest {
-        val manager = spyk(LocaleManager(context, dataStore))
+        val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } returns Unit
 
         manager.ensureLanguageInitialized()
@@ -188,7 +188,7 @@ class LocaleManagerTest {
      */
     @Test
     fun `ensureLanguageInitialized sets isInitialized to true even on error`() = runTest {
-        val manager = spyk(LocaleManager(context, dataStore))
+        val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } throws RuntimeException("test error")
 
         try {
@@ -207,7 +207,7 @@ class LocaleManagerTest {
      */
     @Test
     fun `ensureLanguageInitialized saves default language when none stored`() = runTest {
-        val manager = spyk(LocaleManager(context, dataStore))
+        val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } returns Unit
 
         manager.ensureLanguageInitialized()
@@ -226,7 +226,7 @@ class LocaleManagerTest {
         // Предварительно сохраняем язык — имитация второго запуска.
         dataStore.edit { it[languageKey] = "en" }
 
-        val manager = spyk(LocaleManager(context, dataStore))
+        val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } returns Unit
 
         manager.ensureLanguageInitialized()

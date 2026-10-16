@@ -33,7 +33,7 @@ import javax.inject.Singleton
 data class LanguageOption(val code: String, val displayName: String)
 
 /**
- * Менеджер локализации приложения.
+ * Сервис локализации приложения.
  *
  * Особенности:
  * - Список поддерживаемых языков читается из res/values/arrays.xml,
@@ -49,7 +49,7 @@ data class LanguageOption(val code: String, val displayName: String)
  * @param dataStore Общий DataStore, предоставляемый DataStoreModule.
  */
 @Singleton
-class LocaleManager @Inject constructor(
+class LocaleService @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dataStore: DataStore<Preferences>
 ) {
@@ -179,7 +179,7 @@ class LocaleManager @Inject constructor(
      * Применяет локаль к ресурсам приложения.
      * Использует deprecated API updateConfiguration — актуально до Android 13 (T).
      *
-     * VisibleForTesting: метод вызывается напрямую только из LocaleManagerTest.
+     * VisibleForTesting: метод вызывается напрямую только из LocaleServiceTest.
      * В продукте всегда идёт через ensureLanguageInitialized или setLanguage.
      */
     @VisibleForTesting

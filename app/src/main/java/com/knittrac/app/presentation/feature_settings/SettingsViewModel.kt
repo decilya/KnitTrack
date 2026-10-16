@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.core.localization.LocaleManager
+import com.knittrac.app.core.localization.LocaleService
 import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.service.ExportDataService
 import com.knittrac.app.domain.service.ImportDataService
@@ -32,7 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val localeManager: LocaleManager,
+    private val localeService: LocaleService,
     private val exportDataService: ExportDataService,
     private val importDataService: ImportDataService
 ) : ViewModel() {
@@ -48,7 +48,7 @@ class SettingsViewModel @Inject constructor(
     val effect: SharedFlow<SettingsContract.Effect> = _effect.asSharedFlow()
 
     init {
-        _state.update { it.copy(supportedLanguages = localeManager.supportedLanguages) }
+        _state.update { it.copy(supportedLanguages = localeService.supportedLanguages) }
         observeSettings()
     }
 
@@ -61,7 +61,7 @@ class SettingsViewModel @Inject constructor(
             combine(
                 settingsRepository.themeModeFlow,
                 settingsRepository.notificationsEnabledFlow,
-                localeManager.getCurrentLanguageFlow()
+                localeService.getCurrentLanguageFlow()
             ) { theme, enabled, lang -> Triple(theme, enabled, lang) }
                 .collect { (theme, enabled, lang) ->
                     _state.update {
@@ -117,7 +117,7 @@ class SettingsViewModel @Inject constructor(
      */
     private fun changeLanguage(code: String) {
         viewModelScope.launch {
-            when (val r = localeManager.setLanguage(code)) {
+            when (val r = localeService.setLanguage(code)) {
                 is Result.Success -> _effect.emit(SettingsContract.Effect.RecreateActivity)
                 is Result.Error -> {
                     Timber.e(r.error.cause, "Failed to change language to: %s", code)
