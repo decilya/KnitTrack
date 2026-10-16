@@ -1,7 +1,6 @@
 # HANDOVER — KnitTrac
 
 **Актуально на:** 16.10.2026
-**HEAD:** 6526f9c
 **Тесты:** 134, 0 failures
 
 ---
@@ -460,7 +459,8 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Коммит a7163f0: День 4 снятие @Singleton с impl-репозиториев.
 Коммит aae6e41: День 4 LocaleManager в LocaleService.
 Коммит 6526f9c: docs(handover) fix placeholder в разделе 15.
-Коммит Дня 4 (этот): DomainLayerTest.
+Коммит c484f15: test(architecture) DomainLayerTest + День 4 закрыт.
+Коммит 0166d70: docs(handover) fix 21.5.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 

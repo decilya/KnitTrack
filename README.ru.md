@@ -89,7 +89,7 @@ adb не в PATH. Эмулятор запускать через Android Studio,
 
 ## Тесты
 
-133 unit-теста (JUnit 4 + MockK).
+134 unit-теста (JUnit 4 + MockK).
 
     .\gradlew.bat clean test
 

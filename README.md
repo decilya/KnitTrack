@@ -93,7 +93,7 @@ A detailed standard (Clean Architecture, DDD, SOLID, Symfony-inspired layout, Cl
 
 ## Testing
 
-133 unit tests (JUnit 4 + MockK).
+134 unit tests (JUnit 4 + MockK).
 
     .\gradlew.bat clean test
 
