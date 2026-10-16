@@ -220,7 +220,7 @@ def write_new(path, content, label): если файл существует — 
 
 Свойства: expected падает до записи. write_new падает, если файл существует. Кириллица корректно в UTF-8.
 
-Проверка после записи: head/tail, KDoc-парность через grep -o, grep -c _EOF равно 0, grep -c PYEOF равно 0.
+Проверка после записи (для созданного или изменённого .kt-файла): head/tail, KDoc-парность через grep -o, отсутствие маркера завершения heredoc внутри файла.
 
 ---
 
@@ -452,31 +452,35 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 ## 15. ЗАКРЫТО В СЕССИЯХ
 
-Полная история — `git log --oneline`. Сводка сгруппирована по сессиям;
-"последний коммит сессии" указан для `git show`/`git diff` — не для
-перечисления всех хэшей.
+Полная история — `git log --oneline`. Сводка по сессиям; диапазоны
+`<A>..<B>` пригодны для `git log <A>..<B>` в терминале. Одиночный
+хэш — сессия из одного коммита.
 
-Подготовка (спринты 2b-1...2d) — 7319705:
+Подготовка (спринты 2b-1...2d, docs-работа, fix check_standards) — 2f91e72..7f4ebf3:
 - 2b-1: Result-API Settings/Locale, IoError, ShowError.
 - 2b-2: IoError и CancellationException в exporter/importer.
 - 2c: ProjectRepository.updateSyncStatus, чистка DAO.
 - 2d: FileLoggingTree для release.
-- fix check_standards.py (в другом чате).
+- docs(roadmap) — scope v1.0 (be47221).
+- docs(readme) — замена черновика (d4f407b).
+- docs(architecture) — манифест coding-standards.md (5c57644).
+- docs(standards) — coding-standards.md v4.0 + валидатор (13a0384).
+- fix check_standards.py (7f4ebf3).
 
-День 1 — c6c9a7a, b3c624a:
+День 1 (detekt, hook, git infrastructure) — c6c9a7a..b3c624a:
 - detekt 1.23.7, config/detekt/detekt.yml, baseline.
 - pre-commit hook через Windows gradlew.bat (WSL-safe).
 - .gitattributes, HANDOVER.md в репозитории.
 
-День 2 — c96017b:
+День 2 (PII, backup rules) — c96017b:
 - PII redaction: ProjectRepositoryImpl, SettingsScreen, SaveSessionService.
 - backup_rules.xml, data_extraction_rules.xml, манифест.
 
-День 3 — 022e94f:
+День 3 (FileLoggingTree) — 022e94f:
 - Channel-based FileLoggingTree, consumer на Dispatchers.IO.
 - log_doesNotBlockCaller — реальный регрессионный тест.
 
-День 4 — f53e728:
+День 4 (release, DI, locale, DomainLayerTest, docs-fixes) — 5aadf5e..6a9c737:
 - release-readiness: isShrinkResources, Room entity keep, FGS specialUse.
 - Снятие @Singleton с impl-репозиториев.
 - LocaleManager -> LocaleService (9 файлов, git mv).
