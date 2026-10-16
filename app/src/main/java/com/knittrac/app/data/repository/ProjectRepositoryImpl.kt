@@ -89,7 +89,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "addProject failed: name=%s category=%s", project.name.value, project.category)
+        Timber.e(e, "addProject failed: category=%s", project.category)
         Result.Error(AppError.DatabaseError(e))
     }
 

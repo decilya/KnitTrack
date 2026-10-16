@@ -297,7 +297,7 @@ private fun SettingsSection(
 private fun openOutputStreamSafe(context: Context, uri: Uri): OutputStream? = try {
     context.contentResolver.openOutputStream(uri)
 } catch (e: Exception) {
-    Timber.e(e, "Failed to open output stream for uri: $uri")
+    Timber.e(e, "Failed to open output stream")
     null
 }
 
@@ -308,7 +308,7 @@ private fun openOutputStreamSafe(context: Context, uri: Uri): OutputStream? = tr
 private fun openInputStreamSafe(context: Context, uri: Uri): InputStream? = try {
     context.contentResolver.openInputStream(uri)
 } catch (e: Exception) {
-    Timber.e(e, "Failed to open input stream for uri: $uri")
+    Timber.e(e, "Failed to open input stream")
     null
 }
 

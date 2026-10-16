@@ -1,19 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Правила backup и device-transfer для Android 12+ (API 31+).
+   Подключается через android:dataExtractionRules в AndroidManifest.
+
+   Логи исключаются из cloud-backup и device-transfer по той же
+   причине, что и в backup_rules.xml: они не user data и не должны
+   попадать в Google Drive или при переносе между устройствами.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="logs" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="logs" />
     </device-transfer>
-    -->
 </data-extraction-rules>
