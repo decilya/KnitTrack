@@ -458,7 +458,7 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Коммит f8d1d1c: README.md (EN) и README.ru.md (RU).
 Коммит 5aadf5e: День 4 release-readiness (isShrinkResources, Room keep, FGS specialUse).
 Коммит a7163f0: День 4 снятие @Singleton с impl-репозиториев.
-Коммит <этот>: День 4 LocaleManager в LocaleService.
+Коммит Дня 4: LocaleManager в LocaleService.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
