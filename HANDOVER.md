@@ -17,6 +17,14 @@
 
 **Ограничение:** у ИИ нет доступа к файловой системе. Все команды запрашиваются у пользователя.
 
+**Перед чтением — узнать актуальное состояние.** В шапке нет HEAD-хэша:
+коммит не может содержать собственный хэш. Актуальный HEAD и рабочее
+дерево — в git:
+
+    cd /mnt/c/Users/decilya/projects/KnitTrac
+    git log --oneline -1
+    git status --short
+
 ---
 
 ## 1. ПРОЕКТ
@@ -444,23 +452,38 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 ## 15. ЗАКРЫТО В СЕССИЯХ
 
-Коммит 2f91e72: 2b-1 Result-API Settings/Locale, IoError, ShowError.
-Коммит 5d960b3: 2b-2 IoError и CancellationException в exporter/importer.
-Коммит 41d4bcc: 2c ProjectRepository.updateSyncStatus, чистка DAO.
-Коммит 7319705: 2d FileLoggingTree для release.
-Коммит 7f4ebf3: fix check_standards.py (в другом чате).
-Коммит c6c9a7a: День 1 detekt, pre-commit hook, git infrastructure.
-Коммит 0217cc9: HANDOVER.md в репозитории.
-Коммит b3c624a: pre-commit hook через Windows gradlew.bat (WSL-safe).
-Коммит c96017b: День 2 PII redaction и backup rules.
-Коммит 022e94f: День 3 Channel-based FileLoggingTree.
-Коммит f8d1d1c: README.md (EN) и README.ru.md (RU).
-Коммит 5aadf5e: День 4 release-readiness (isShrinkResources, Room keep, FGS specialUse).
-Коммит a7163f0: День 4 снятие @Singleton с impl-репозиториев.
-Коммит aae6e41: День 4 LocaleManager в LocaleService.
-Коммит 6526f9c: docs(handover) fix placeholder в разделе 15.
-Коммит c484f15: test(architecture) DomainLayerTest + День 4 закрыт.
-Коммит 0166d70: docs(handover) fix 21.5.
+Полная история — `git log --oneline`. Сводка сгруппирована по сессиям;
+"последний коммит сессии" указан для `git show`/`git diff` — не для
+перечисления всех хэшей.
+
+Подготовка (спринты 2b-1...2d) — 7319705:
+- 2b-1: Result-API Settings/Locale, IoError, ShowError.
+- 2b-2: IoError и CancellationException в exporter/importer.
+- 2c: ProjectRepository.updateSyncStatus, чистка DAO.
+- 2d: FileLoggingTree для release.
+- fix check_standards.py (в другом чате).
+
+День 1 — c6c9a7a, b3c624a:
+- detekt 1.23.7, config/detekt/detekt.yml, baseline.
+- pre-commit hook через Windows gradlew.bat (WSL-safe).
+- .gitattributes, HANDOVER.md в репозитории.
+
+День 2 — c96017b:
+- PII redaction: ProjectRepositoryImpl, SettingsScreen, SaveSessionService.
+- backup_rules.xml, data_extraction_rules.xml, манифест.
+
+День 3 — 022e94f:
+- Channel-based FileLoggingTree, consumer на Dispatchers.IO.
+- log_doesNotBlockCaller — реальный регрессионный тест.
+
+День 4 — f53e728:
+- release-readiness: isShrinkResources, Room entity keep, FGS specialUse.
+- Снятие @Singleton с impl-репозиториев.
+- LocaleManager -> LocaleService (9 файлов, git mv).
+- DomainLayerTest (архитектурный тест domain/).
+- README.md (EN), README.ru.md (RU).
+- Документация: fix placeholder в разделе 15, fix 21.5,
+  синхронизация расхождений после Дня 4.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
