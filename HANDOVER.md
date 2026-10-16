@@ -1,8 +1,8 @@
 # HANDOVER — KnitTrac
 
 **Актуально на:** 16.10.2026
-**HEAD:** f8d1d1c
-**Тесты:** 133, 0 failures
+**HEAD:** 6526f9c
+**Тесты:** 134, 0 failures
 
 ---
 
@@ -408,9 +408,9 @@ PowerShell от админа: Enable-WindowsOptionalFeature -Online -FeatureName
 
 ### P0-5. FGS type dataSync неверен
 
-Manifest строка 40: android:foregroundServiceType="dataSync". Play reject.
+Manifest строка 40 (была): android:foregroundServiceType="dataSync".
 
-**Статус:** ОТКРЫТ, День 4.
+**Статус:** ЗАКРЫТ (chore(build) 5aadf5e). dataSync → specialUse, property PROPERTY_SPECIAL_USE_FGS_SUBTYPE добавлен. Обоснование в Play Console — задача TECHDEBT (День 6).
 
 Fix: specialUse с обоснованием в Play Console.
 
@@ -418,7 +418,7 @@ Fix: specialUse с обоснованием в Play Console.
 
 app/proguard-rules.pro содержит правила для Gson (DTO плюс domain), Coroutines, attributes. isMinifyEnabled = true стоит.
 
-**Статус:** ЧАСТИЧНО ЗАКРЫТ. Остаток Дня 4: isShrinkResources = true, -keep class com.knittrac.app.data.local.entity.** { *; } (страховка поверх Room consumer-rules), прогон assembleRelease.
+**Статус:** ЗАКРЫТ (chore(build) 5aadf5e). isShrinkResources = true, -keep class com.knittrac.app.data.local.entity.** { *; } добавлены. assembleRelease успешен (5m 21s, R8 + resource shrink без ошибок).
 
 ### P0-6. @Singleton на impl-классах
 
@@ -458,7 +458,9 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Коммит f8d1d1c: README.md (EN) и README.ru.md (RU).
 Коммит 5aadf5e: День 4 release-readiness (isShrinkResources, Room keep, FGS specialUse).
 Коммит a7163f0: День 4 снятие @Singleton с impl-репозиториев.
-Коммит Дня 4: LocaleManager в LocaleService.
+Коммит aae6e41: День 4 LocaleManager в LocaleService.
+Коммит 6526f9c: docs(handover) fix placeholder в разделе 15.
+Коммит Дня 4 (этот): DomainLayerTest.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
