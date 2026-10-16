@@ -422,13 +422,11 @@ app/proguard-rules.pro содержит правила для Gson (DTO плюс
 
 ### P0-6. @Singleton на impl-классах
 
-ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 аннотированы @Singleton.
+ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были аннотированы @Singleton.
 
-Правило 4.5.4: scope на @Binds, не на impl. RepositoryModule уже ставит @Singleton на @Binds — двойной scope.
+Правило 4.5.4: scope на @Binds, не на impl. RepositoryModule уже ставил @Singleton на @Binds — двойной scope.
 
-**Статус:** ОТКРЫТ, День 4.
-
-Fix: снять @Singleton с impl-классов.
+**Статус:** ЗАКРЫТ (refactor(di), 16.10.2026). @Singleton и import javax.inject.Singleton сняты с обоих impl-классов. Скоуп остался только на @Binds в RepositoryModule.
 
 ---
 

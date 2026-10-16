@@ -13,7 +13,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import javax.inject.Singleton
 import timber.log.Timber
 
 /**
@@ -28,7 +27,6 @@ import timber.log.Timber
  * viewModelScope.cancel() превращался бы в DatabaseError и ломал бы
  * cleanup в finally-блоках.
  */
-@Singleton
 class SessionRepositoryImpl @Inject constructor(
     private val sessionDao: SessionDao
 ) : SessionRepository {
