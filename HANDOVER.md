@@ -597,7 +597,7 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Ревизия техдолга (после закрытия P2/P3):
 - Добавлены 2 открытых P2 в TECHDEBT.md: Timber в release, ProjectName.DEFAULT.
 - ProjectRepository.updateSyncStatus НЕ является техдолгом: реализован (ProjectRepositoryImpl.kt:183) и покрыт 2 тестами (ProjectRepositoryImplTest.kt:178, 194).
-- P0-3 (Migration2To3Test на устройстве) по-прежнему отложен.
+- P0-3 (Migration2To3Test на устройстве) — **Принятый риск**. Эмулятор не работает (AMD GPU/WSL2 конфликт), прогнан только compile-time (assembleDebugAndroidTest).
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
 
