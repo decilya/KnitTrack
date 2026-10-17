@@ -29,6 +29,7 @@
 - KDoc на русском к классам и публичным методам. Без markdown (**).
 - Имена классов: `*Service`, `*Repository`, `*RepositoryImpl`, `*Dao`, `*Entity`, `*Dto`, `*ViewModel`, `*Screen`.
 - Запрещены суффиксы `Manager`, `Helper`, `Utils`, `Handler`.
+- Платформенные Android-сервисы (`android.app.Service`, `ForegroundService`) именуются `*AndroidService` или `*Fgs`, чтобы не путать с доменными `*Service`.
 - System.currentTimeMillis() запрещен вне `TimeProvider`.
 
 ## 6. Запреты

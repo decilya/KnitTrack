@@ -589,6 +589,11 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 Неделя 2, День 8 — Правило God Class:
 - В STANDARDS.md добавлен раздел 7 «Размеры и God Class» (3 оси диагностики, правило разделения вместо Parameter Object).
 
+Неделя 2, День 9 — закрытие P2/P3 из код-ревью:
+- STANDARDS.md раздел 5: правило *AndroidService / *Fgs для платформенных сервисов.
+- TimerViewModel.kt: комментарий про elapsedTime переформулирован без литерала System.currentTimeMillis.
+- FakeTimeProvider: поля @Volatile (видимость между потоками теста).
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

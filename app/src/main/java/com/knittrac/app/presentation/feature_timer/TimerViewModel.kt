@@ -126,8 +126,8 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // endTimestamp вычисляется из монотонного elapsedTime, а не из
-                // System.currentTimeMillis(). Это защищает от NTP-сдвига или
-                // ручного перевода часов: duration всегда положителен и точен.
+                // wall clock. Это защищает от NTP-сдвига или ручного перевода
+                // часов: duration всегда положителен и точен.
                 val endTimestamp = currentState.startTimestamp +
                     (currentState.elapsedTime * 1000L)
 
