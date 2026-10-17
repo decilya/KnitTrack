@@ -132,3 +132,11 @@ The project is a solo effort at the moment. Issues and pull requests are welcome
 ## License
 
 TBD.
+
+
+## Документация
+- [Философия проекта](docs/architecture/PHILOSOPHY.md)
+- [Стандарты](docs/architecture/STANDARDS.md)
+- [Техдолг](docs/architecture/TECHDEBT.md)
+- [Процесс разработки](docs/architecture/CONTRIBUTING.md)
+- [План разработки](ROADMAP.md)

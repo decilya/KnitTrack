@@ -542,6 +542,11 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Код MIGRATION_2_3 и Migration2To3Test проверены вручную, ошибок нет.
 - Запуск connectedDebugAndroidTest отложен из-за отсутствия устройства (в TECHDEBT).
 
+День 7 — README по папкам, ретроспектива:
+- Созданы 10 README.md для ключевых пакетов (core, domain, data, presentation и т.д.).
+- Обновлен корневой README.md (добавлены ссылки на документацию).
+- TECHDEBT.md дополнен точными путями из код-ревью (System.currentTimeMillis, Manager-суффиксы).
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
@@ -641,7 +646,7 @@ Fallback: WHPX не ставится — TECHDEBT, перенос.
 
 Deliverable: docs(architecture) ревизия v5.0.
 
-### День 7 (3 ч). README по папкам, ретроспектива
+### День 7 (3 ч). README по папкам, ретроспектива. ЗАКРЫТ.
 
 README по 10 папкам, 5 строк каждый.
 Корневой README — ссылки на PHILOSOPHY, STANDARDS, CONTRIBUTING, ROADMAP.
@@ -805,7 +810,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: День 7 — README по папкам, ретроспектива.
+Следующая сессия: Неделя 2. Исправление TECHDEBT (TimeProvider, Manager-суффиксы) и новые фичи.
 
 Первый шаг — факт-блок. Один прогон в WSL:
 
