@@ -594,7 +594,10 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - TimerViewModel.kt: комментарий про elapsedTime переформулирован без литерала System.currentTimeMillis.
 - FakeTimeProvider: поля @Volatile (видимость между потоками теста).
 
-Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
+Ревизия техдолга (после закрытия P2/P3):
+- Добавлены 2 открытых P2 в TECHDEBT.md: Timber в release, ProjectName.DEFAULT.
+- ProjectRepository.updateSyncStatus НЕ является техдолгом: реализован (ProjectRepositoryImpl.kt:183) и покрыт 2 тестами (ProjectRepositoryImplTest.kt:178, 194).
+- P0-3 (Migration2To3Test на устройстве) по-прежнему отложен.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
 
