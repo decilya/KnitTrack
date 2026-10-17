@@ -538,6 +538,10 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Скрипт check_standards.py в архиве.
 - ROADMAP.md: добавлен Gateway.
 
+День 5 — Статический анализ миграции 2->3:
+- Код MIGRATION_2_3 и Migration2To3Test проверены вручную, ошибок нет.
+- Запуск connectedDebugAndroidTest отложен из-за отсутствия устройства (в TECHDEBT).
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
@@ -801,7 +805,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: День 4 — DI, architecture test, LocaleService, release config.
+Следующая сессия: День 7 — README по папкам, ретроспектива.
 
 Первый шаг — факт-блок. Один прогон в WSL:
 
