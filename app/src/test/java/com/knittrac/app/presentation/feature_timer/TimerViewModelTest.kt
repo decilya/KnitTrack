@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_timer
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.SaveSessionService
-import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.domain.service.TimerState
 import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import io.mockk.coEvery
@@ -43,7 +43,7 @@ class TimerViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var timerManager: TimerManager
+    private lateinit var timerManager: TimerService
     private lateinit var saveSessionService: SaveSessionService
     private lateinit var getAllProjectsService: GetAllProjectsService
     private lateinit var permissionChecker: NotificationPermissionChecker

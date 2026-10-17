@@ -1,5 +1,5 @@
 package com.knittrac.app.platform.ads
-interface AdManager {
+interface AdService {
     fun initialize()
     fun showBanner()
     fun hideBanner()

@@ -3,7 +3,7 @@ import com.knittrac.app.core.common.Result
 import javax.inject.Inject
 import javax.inject.Singleton
 @Singleton
-class NoOpPaymentManager @Inject constructor() : PaymentManager {
+class NoOpPaymentService @Inject constructor() : PaymentService {
     override fun isReady(): Boolean = true
     override suspend fun purchaseSubscription(productId: String): Result<Unit> = Result.Success(Unit)
     override fun checkSubscriptionStatus(): Boolean = false

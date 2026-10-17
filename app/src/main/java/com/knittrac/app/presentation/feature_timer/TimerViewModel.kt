@@ -6,7 +6,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
-import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -33,7 +33,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class TimerViewModel @Inject constructor(
-    private val timerManager: TimerManager,
+    private val timerManager: TimerService,
     private val saveSessionService: SaveSessionService,
     private val getAllProjectsService: GetAllProjectsService,
     private val notificationPermissionChecker: NotificationPermissionChecker

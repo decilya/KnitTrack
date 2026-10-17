@@ -553,6 +553,12 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Убран default System.currentTimeMillis() из Session.kt.
 - Время во всем проекте теперь управляется через TimeProvider (0 прямых вызовов в коде).
 
+Неделя 2, День 2 — Рефакторинг Manager-классов:
+- TimerManager -> TimerService.
+- AdManager -> AdService.
+- PaymentManager -> PaymentService (NoOpPaymentService).
+- Все упоминания в DI, тестах и UI обновлены.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

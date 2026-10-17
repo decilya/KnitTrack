@@ -9,7 +9,7 @@ import javax.inject.Singleton
  * Будет реализован на поздних этапах.
  */
 @Singleton
-class AdManagerImpl @Inject constructor(
+class AdServiceImpl @Inject constructor(
     private val context: Context
 ) {
     // Временные заглушки методов

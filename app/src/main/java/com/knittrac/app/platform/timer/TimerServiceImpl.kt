@@ -2,7 +2,7 @@ package com.knittrac.app.platform.timer
 
 import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.di.IoDispatcher
-import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.domain.service.TimerState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Реализация [TimerManager] с корректной работой при NTP-синхронизации.
+ * Реализация [TimerService] с корректной работой при NTP-синхронизации.
  *
  * Расчёт elapsedTime базируется на [TimeProvider.elapsedRealtime] —
  * монотонном времени, которое не идёт назад при переводе часов,
@@ -25,10 +25,10 @@ import javax.inject.Singleton
  * сохраняется отдельно в [sessionStartTime] для записи в БД.
  */
 @Singleton
-class TimerManagerImpl @Inject constructor(
+class TimerServiceImpl @Inject constructor(
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val timeProvider: TimeProvider
-) : TimerManager {
+) : TimerService {
 
     private val _elapsedTime = MutableStateFlow(0L)
     override val elapsedTime: StateFlow<Long> = _elapsedTime

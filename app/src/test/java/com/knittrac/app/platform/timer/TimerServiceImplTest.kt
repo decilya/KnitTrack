@@ -12,11 +12,11 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Юнит-тесты для [TimerManagerImpl].
+ * Юнит-тесты для [TimerServiceImpl].
  *
  * Особенность работы с бесконечным таймером:
  *
- * [TimerManagerImpl.start] запускает корутину вида
+ * [TimerServiceImpl.start] запускает корутину вида
  * while (isActive) { ...; delay(1000L) } — бесконечный цикл,
  * который никогда не завершается сам по себе.
  *
@@ -32,7 +32,7 @@ import org.junit.Test
  *    завершится никогда.
  *
  * Решение — использовать advanceTimeBy(1000L) (выполняет задачи только в текущей
- * виртуальной точке) и обязательно вызывать [TimerManagerImpl.reset]
+ * виртуальной точке) и обязательно вызывать [TimerServiceImpl.reset]
  * в finally, чтобы отменить job до выхода из runTest.
  *
  * Зачем FakeTimeProvider:
@@ -43,16 +43,16 @@ import org.junit.Test
  * пояса. [FakeTimeProvider] позволяет управлять обоими часами вручную.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class TimerManagerImplTest {
+class TimerServiceImplTest {
 
-    private lateinit var timerManager: TimerManagerImpl
+    private lateinit var timerManager: TimerServiceImpl
     private lateinit var fakeTime: FakeTimeProvider
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
         fakeTime = FakeTimeProvider()
-        timerManager = TimerManagerImpl(testDispatcher, fakeTime)
+        timerManager = TimerServiceImpl(testDispatcher, fakeTime)
     }
 
     /**
@@ -325,7 +325,7 @@ class TimerManagerImplTest {
  *
  * Зачем два независимых поля:
  *
- * [TimerManagerImpl] использует два разных типа времени:
+ * [TimerServiceImpl] использует два разных типа времени:
  * - [wallMillis] — аналог System.currentTimeMillis() для sessionStartTime.
  * - [elapsedMillis] — аналог SystemClock.elapsedRealtime() для elapsedTime.
  *

@@ -2,8 +2,8 @@ package com.knittrac.app.platform.di
 
 import com.knittrac.app.platform.notification.AndroidNotificationPermissionChecker
 import com.knittrac.app.platform.notification.NotificationPermissionChecker
-import com.knittrac.app.platform.payments.NoOpPaymentManager
-import com.knittrac.app.platform.payments.PaymentManager
+import com.knittrac.app.platform.payments.NoOpPaymentService
+import com.knittrac.app.platform.payments.PaymentService
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,7 +19,7 @@ abstract class PlatformModules {
 
     @Binds
     @Singleton
-    abstract fun bindPaymentManager(impl: NoOpPaymentManager): PaymentManager
+    abstract fun bindPaymentService(impl: NoOpPaymentService): PaymentService
 
     @Binds
     @Singleton

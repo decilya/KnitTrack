@@ -1,9 +1,9 @@
 package com.knittrac.app.platform.di
 
 import com.knittrac.app.core.common.TimeProvider
-import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.platform.timer.SystemTimeProvider
-import com.knittrac.app.platform.timer.TimerManagerImpl
+import com.knittrac.app.platform.timer.TimerServiceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,5 +24,5 @@ abstract class TimerModule {
 
     @Binds
     @Singleton
-    abstract fun bindTimerManager(timerManagerImpl: TimerManagerImpl): TimerManager
+    abstract fun bindTimerService(timerManagerImpl: TimerServiceImpl): TimerService
 }

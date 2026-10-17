@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.knittrac.app.MainActivity
 import com.knittrac.app.R
 import com.knittrac.app.core.di.IoDispatcher
-import com.knittrac.app.domain.service.TimerManager
+import com.knittrac.app.domain.service.TimerService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -56,7 +56,7 @@ import timber.log.Timber
  *
  * ## Что сервис НЕ делает
  *
- * - Не хранит состояние таймера — это ответственность [TimerManager].
+ * - Не хранит состояние таймера — это ответственность [TimerService].
  * - Не пересчитывает elapsedTime — подписывается на готовый StateFlow.
  * - Не пишет в БД — этим занимается SaveSessionService по явному действию.
  */
@@ -64,17 +64,17 @@ import timber.log.Timber
 class TimerForegroundService : Service() {
 
     /**
-     * Менеджер таймера — источник [TimerManager.elapsedTime].
+     * Менеджер таймера — источник [TimerService.elapsedTime].
      * Инжектится Hilt через @AndroidEntryPoint (конструкторная инъекция
      * для Android Service не поддерживается).
      */
-    @Inject lateinit var timerManager: TimerManager
+    @Inject lateinit var timerManager: TimerService
 
     /**
      * IO-диспетчер для фоновых операций сервиса.
      *
      * Используется в serviceScope, потому что коллекция
-     * [TimerManager.elapsedTime] и обновление уведомления — потенциально
+     * [TimerService.elapsedTime] и обновление уведомления — потенциально
      * блокирующие операции (binder IPC, работа с NotificationManager).
      * На Main-диспетчере это могло бы дёргать UI.
      */
@@ -230,7 +230,7 @@ class TimerForegroundService : Service() {
      * иначе RemoteServiceException и краш приложения.
      *
      * Останавливаем таймер и сервис корректно. Сессия пользователя
-     * сохраняется (elapsedTime в TimerManager не сбрасывается),
+     * сохраняется (elapsedTime в TimerService не сбрасывается),
      * её можно сохранить при следующем открытии приложения.
      */
     override fun onTimeout(startId: Int) {
@@ -247,7 +247,7 @@ class TimerForegroundService : Service() {
      * Вызывается при уничтожении сервиса.
      *
      * Отменяем serviceScope, чтобы:
-     * - Прекратилась коллекция [TimerManager.elapsedTime] (иначе утечка).
+     * - Прекратилась коллекция [TimerService.elapsedTime] (иначе утечка).
      * - Отменились все запущенные корутины.
      * - Освободились связанные ресурсы.
      */
@@ -314,7 +314,7 @@ class TimerForegroundService : Service() {
     /**
      * Форматирует секунды в строку «HH:MM:SS» для уведомления.
      *
-     * @param seconds Количество секунд (из [TimerManager.elapsedTime]).
+     * @param seconds Количество секунд (из [TimerService.elapsedTime]).
      * @return Строка вида «01:23:45».
      *
      * Использует [java.util.Locale.US] явно, чтобы избежать проблем с
