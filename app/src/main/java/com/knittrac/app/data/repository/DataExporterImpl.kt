@@ -1,7 +1,6 @@
 package com.knittrac.app.data.repository
 
 import androidx.room.withTransaction
-import com.google.gson.Gson
 import com.google.gson.stream.JsonWriter
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -9,9 +8,6 @@ import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
-import com.knittrac.app.data.local.AppDatabase
-import com.knittrac.app.data.local.ProjectDao
-import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toDto
 import com.knittrac.app.domain.repository.DataExporter
@@ -37,16 +33,11 @@ import javax.inject.Inject
  * totalTimeSeconds проекта не совпал бы с суммой duration его сессий.
  *
  * Зависимости (DIP):
- * - [ProjectDao], [SessionDao] — извлечение данных из Room.
- * - [Gson] — сериализация отдельных объектов.
- * - [AppDatabase] — общая транзакция для консистентного чтения.
+ * - [deps] — Parameter Object (DataExportDependencies): DAO, Gson, БД и TimeProvider.
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
 class DataExporterImpl @Inject constructor(
-    private val projectDao: ProjectDao,
-    private val sessionDao: SessionDao,
-    private val gson: Gson,
-    private val appDatabase: AppDatabase,
+    private val deps: DataExportDependencies,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : DataExporter {
 
@@ -70,22 +61,22 @@ class DataExporterImpl @Inject constructor(
                 // Транзакция гарантирует, что projects и sessions читаются
                 // из одного снапшота БД. I/O (JsonWriter) внутри транзакции —
                 // допустимый trade-off, чтобы не загружать всё в память.
-                appDatabase.withTransaction {
+                deps.appDatabase.withTransaction {
                     writer.beginObject()
                     writer.name("version").value(ExportDataDto.CURRENT_VERSION)
-                    writer.name("exportDate").value(System.currentTimeMillis())
+                    writer.name("exportDate").value(deps.timeProvider.currentTimeMillis())
 
                     // Потоковая запись проектов
                     writer.name("projects").beginArray()
-                    projectDao.getAllProjects().forEach { entity ->
-                        gson.toJson(entity.toDomain().toDto(), ProjectDto::class.java, writer)
+                    deps.projectDao.getAllProjects().forEach { entity ->
+                        deps.gson.toJson(entity.toDomain().toDto(), ProjectDto::class.java, writer)
                     }
                     writer.endArray()
 
                     // Потоковая запись сессий
                     writer.name("sessions").beginArray()
-                    sessionDao.getAllSessions().forEach { entity ->
-                        gson.toJson(entity.toDomain().toDto(), SessionDto::class.java, writer)
+                    deps.sessionDao.getAllSessions().forEach { entity ->
+                        deps.gson.toJson(entity.toDomain().toDto(), SessionDto::class.java, writer)
                     }
                     writer.endArray()
 

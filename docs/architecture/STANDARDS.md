@@ -21,6 +21,7 @@
 
 ## 4. DI
 - `@Singleton` только на `@Binds` в модулях. На impl-классах `@Singleton` запрещен.
+- **LongParameterList:** Если конструктор превышает 5 параметров, группировать зависимости в Parameter Object (класс с суффиксом `*Dependencies`). Подавлять правило Detekt через `@Suppress` запрещено.
 - Внедрение только через конструктор (`@Inject constructor`).
 - DataStore delegate ровно один.
 
