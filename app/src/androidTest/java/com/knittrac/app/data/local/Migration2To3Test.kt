@@ -82,7 +82,7 @@ class Migration2To3Test {
             c.moveToFirst()
             assertEquals(
                 "Пустое имя должно стать fallback",
-                "Без названия",
+                "Untitled",
                 c.getString(0),
             )
         }

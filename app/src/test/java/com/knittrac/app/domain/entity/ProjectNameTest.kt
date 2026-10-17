@@ -128,7 +128,7 @@ class ProjectNameTest {
      */
     @Test
     fun `DEFAULT has fallback value Bez nazvaniya`() {
-        assertEquals("Без названия", ProjectName.DEFAULT.value)
+        assertEquals("Untitled", ProjectName.DEFAULT.value)
     }
 
     /**

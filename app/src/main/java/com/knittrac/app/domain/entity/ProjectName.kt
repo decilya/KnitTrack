@@ -23,7 +23,7 @@ value class ProjectName private constructor(val value: String) {
         const val MAX_LENGTH: Int = 100
 
         /** Fallback для миграции пустых значений и битых бэкапов. */
-        val DEFAULT: ProjectName = ProjectName("Без названия")
+        val DEFAULT: ProjectName = ProjectName("Untitled")
 
         /**
          * Создаёт [ProjectName] из строки, применяя trim.

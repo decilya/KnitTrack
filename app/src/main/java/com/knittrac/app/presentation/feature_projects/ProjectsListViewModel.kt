@@ -32,6 +32,7 @@ object ProjectsContract {
     data class ProjectUiModel(
         val id: Long,
         val name: String,
+        val isUntitled: Boolean,
         val localizedCategoryName: String
     )
 
@@ -88,6 +89,7 @@ class ProjectsListViewModel @Inject constructor(
                             ProjectsContract.ProjectUiModel(
                                 id = project.id,
                                 name = project.name.value,
+                                isUntitled = project.name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
                                 localizedCategoryName = categoryLocalizer.localize(project.category)
                             )
                         }

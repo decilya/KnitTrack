@@ -66,7 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Санитизация старых данных перед CHECK
                 db.execSQL(
-                    "UPDATE projects SET name = 'Без названия' " +
+                    "UPDATE projects SET name = 'Untitled' " +
                     "WHERE length(trim(name)) = 0"
                 )
                 db.execSQL(

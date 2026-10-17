@@ -73,6 +73,7 @@ class ProjectsListViewModelTest {
         val expectedUiModel = ProjectsContract.ProjectUiModel(
             id = 1L,
             name = "Тестовый проект",
+            isUntitled = false,
             localizedCategoryName = "Вязание спицами"
         )
 

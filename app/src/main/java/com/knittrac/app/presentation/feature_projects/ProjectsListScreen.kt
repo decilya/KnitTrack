@@ -166,8 +166,13 @@ private fun ProjectCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
+            val displayName = if (project.isUntitled) {
+                androidx.compose.ui.res.stringResource(com.knittrac.app.R.string.project_untitled)
+            } else {
+                project.name
+            }
             Text(
-                text = project.name,
+                text = displayName,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
