@@ -1,6 +1,7 @@
 package com.knittrac.app.core.base
 
 import com.knittrac.app.core.common.AppErrorMapper
+import kotlinx.coroutines.CancellationException
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
@@ -69,6 +70,9 @@ abstract class BaseUseCase<in Params, out T>(
         try {
             // Выполняем основную бизнес-логику
             execute(params)
+        } catch (e: CancellationException) {
+            // Пробрасываем отмену корутины (правило structured concurrency)
+            throw e
         } catch (e: Exception) {
             // Перехватываем любые непредвиденные исключения и преобразуем
             // их в доменную ошибку для единообразной обработки

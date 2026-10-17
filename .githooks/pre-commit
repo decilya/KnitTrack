@@ -10,3 +10,8 @@ PROJECT_WIN="$(wslpath -w "$PROJECT_DIR")"
 
 echo "[pre-commit] Running gradlew.bat test detekt..."
 cmd.exe /C "cd /D $PROJECT_WIN && gradlew.bat test detekt --console=plain"
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[pre-commit] Build failed. Commit aborted."
+    exit 1
+fi

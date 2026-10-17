@@ -98,6 +98,10 @@ class DataImporterImpl @Inject constructor(
             } catch (e: IOException) {
                 Timber.e(e, "importFrom failed: I/O error")
                 Result.Error(AppError.IoError(e))
+            } catch (e: IllegalStateException) {
+                // Gson выбрасывает IllegalStateException на структурно неверном JSON
+                Timber.e(e, "importFrom failed: malformed JSON")
+                Result.Error(AppError.IoError(e))
             } catch (e: Exception) {
                 Timber.e(e, "importFrom failed")
                 Result.Error(AppError.DatabaseError(e))

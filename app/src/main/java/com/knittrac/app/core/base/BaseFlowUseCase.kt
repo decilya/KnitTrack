@@ -1,6 +1,7 @@
 package com.knittrac.app.core.base
 
 import com.knittrac.app.core.common.AppErrorMapper
+import kotlinx.coroutines.CancellationException
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
@@ -33,6 +34,9 @@ abstract class BaseFlowUseCase<in Params, out T>(
         // правильно вывел тип Flow как Flow<Result<T>>, а не Flow<Result.Success<T>>.
         // Без этого блок catch не сможет эмитить Result.Error.
         .map<T, Result<T>> { data -> Result.Success(data) }
-        .catch { e -> emit(Result.Error(AppErrorMapper.map(e))) }
+        .catch { e ->
+            if (e is CancellationException) throw e
+            emit(Result.Error(AppErrorMapper.map(e)))
+        }
         .flowOn(dispatcher)
 }

@@ -10,6 +10,7 @@ complexity:
   LongMethod:
     active: true
     threshold: 30
+    ignoreAnnotated: ['Test']
     ignoreAnnotated: ['Composable']
   LargeClass:
     active: true

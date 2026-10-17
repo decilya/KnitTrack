@@ -568,6 +568,13 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Покрыт сценарий успешной сериализации/десериализации JSON и обработки битого JSON.
 - Для мока транзакции Room использован mockkStatic и secondArg.
 
+Неделя 2, День 5 — Исправление P0 из код-ревью:
+- BaseUseCase и BaseFlowUseCase теперь пробрасывают CancellationException (structured concurrency).
+- NetworkError возвращен с @Deprecated для Фазы 3.
+- DataImporterImpl мапит IllegalStateException (битый JSON) в IoError.
+- pre-commit hook теперь блокирует коммит при падении сборки (exit 1).
+- Detekt LongMethod игнорирует тесты.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

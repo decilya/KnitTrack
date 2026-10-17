@@ -67,6 +67,12 @@ sealed class AppError(
      *
      * @param exception Исключение, вызвавшее ошибку (для отладки).
      */
+    @Deprecated("Будет использоваться на Фазе 3 для сетевых ошибок (Firebase)")
+    data class NetworkError(val exception: Throwable) : AppError(
+        message = "Ошибка сети",
+        cause = exception
+    )
+
     data class IoError(val exception: Throwable) : AppError(
         exception.message ?: "Ошибка ввода-вывода",
         exception
