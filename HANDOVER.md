@@ -575,6 +575,10 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - pre-commit hook теперь блокирует коммит при падении сборки (exit 1).
 - Detekt LongMethod игнорирует тесты.
 
+Неделя 2, День 6 — Симметрия DI:
+- Создан DataImportDependencies (Parameter Object).
+- DataImporterImpl сокращен до 2 параметров.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

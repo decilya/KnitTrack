@@ -47,10 +47,7 @@ import javax.inject.Inject
  * - [dispatcher] — I/O-диспетчер, инжектится через [@IoDispatcher].
  */
 class DataImporterImpl @Inject constructor(
-    private val database: AppDatabase,
-    private val projectDao: ProjectDao,
-    private val sessionDao: SessionDao,
-    private val gson: Gson,
+    private val deps: DataImportDependencies,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : DataImporter {
 
@@ -69,7 +66,7 @@ class DataImporterImpl @Inject constructor(
                 // Общая транзакция на весь импорт. Если упадёт на 5-м чанке,
                 // откатятся все предыдущие вставки — БД не останется
                 // в половинчатом состоянии.
-                database.withTransaction {
+                deps.database.withTransaction {
                     reader.beginObject()
                     while (reader.hasNext()) {
                         when (reader.nextName()) {
@@ -118,15 +115,15 @@ class DataImporterImpl @Inject constructor(
         val batch = mutableListOf<ProjectEntity>()
         reader.beginArray()
         while (reader.hasNext()) {
-            val dto = gson.fromJson<ProjectDto>(reader, ProjectDto::class.java)
+            val dto = deps.gson.fromJson<ProjectDto>(reader, ProjectDto::class.java)
             batch.add(dto.toDomain().toEntity())
             if (batch.size >= BATCH_SIZE) {
-                projectDao.insertProjects(batch)
+                deps.projectDao.insertProjects(batch)
                 batch.clear()
             }
         }
         reader.endArray()
-        if (batch.isNotEmpty()) projectDao.insertProjects(batch)
+        if (batch.isNotEmpty()) deps.projectDao.insertProjects(batch)
     }
 
     /**
@@ -139,14 +136,14 @@ class DataImporterImpl @Inject constructor(
         val batch = mutableListOf<SessionEntity>()
         reader.beginArray()
         while (reader.hasNext()) {
-            val dto = gson.fromJson<SessionDto>(reader, SessionDto::class.java)
+            val dto = deps.gson.fromJson<SessionDto>(reader, SessionDto::class.java)
             batch.add(dto.toDomain().toEntity())
             if (batch.size >= BATCH_SIZE) {
-                sessionDao.insertSessions(batch)
+                deps.sessionDao.insertSessions(batch)
                 batch.clear()
             }
         }
         reader.endArray()
-        if (batch.isNotEmpty()) sessionDao.insertSessions(batch)
+        if (batch.isNotEmpty()) deps.sessionDao.insertSessions(batch)
     }
 }

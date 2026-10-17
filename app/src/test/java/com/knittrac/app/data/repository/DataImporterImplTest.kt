@@ -33,6 +33,7 @@ class DataImporterImplTest {
     private lateinit var appDatabase: AppDatabase
     private lateinit var projectDao: ProjectDao
     private lateinit var sessionDao: SessionDao
+    private lateinit var deps: DataImportDependencies
     private lateinit var importer: DataImporterImpl
 
     @Before
@@ -42,7 +43,8 @@ class DataImporterImplTest {
         sessionDao = mockk(relaxed = true)
         val gson = Gson()
 
-        importer = DataImporterImpl(appDatabase, projectDao, sessionDao, gson, UnconfinedTestDispatcher())
+        deps = DataImportDependencies(appDatabase, projectDao, sessionDao, gson)
+        importer = DataImporterImpl(deps, UnconfinedTestDispatcher())
 
         // ВАЖНО: мокаем статический extension-метод Room
         mockkStatic("androidx.room.RoomDatabaseKt")
