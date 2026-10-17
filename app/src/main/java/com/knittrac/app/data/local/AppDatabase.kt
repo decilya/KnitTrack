@@ -25,7 +25,7 @@ import com.knittrac.app.data.local.entity.SessionEntity
         ProjectEntity::class,
         SessionEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -62,6 +62,17 @@ abstract class AppDatabase : RoomDatabase() {
          * ВАЖНО: структура новых таблиц ДОЛЖНА точно совпадать с тем,
          * что генерирует Room из @Entity (кроме CHECK, который Room не видит).
          */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE projects ADD COLUMN total_rows INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE projects ADD COLUMN target_row_count INTEGER")
+                db.execSQL(
+                    "UPDATE projects SET total_rows = " +
+                    "(SELECT COALESCE(SUM(row_count), 0) FROM sessions WHERE project_id = projects.id)"
+                )
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Санитизация старых данных перед CHECK
@@ -151,7 +162,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "knittrac_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
 
                 INSTANCE = instance

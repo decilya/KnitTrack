@@ -29,6 +29,14 @@ data class Project(
     val category: Category,
     val createdAt: Long,
     val totalTimeSeconds: Duration = Duration.ZERO,
+    val totalRows: Int = 0,
+    val targetRowCount: Int? = null,
     val updatedAt: Long,
     val syncStatus: SyncStatus
-)
+) {
+    init {
+        require(targetRowCount == null || targetRowCount >= 0) {
+            "targetRowCount не может быть отрицательным"
+        }
+    }
+}

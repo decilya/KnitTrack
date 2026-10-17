@@ -72,13 +72,15 @@ interface ProjectDao {
     @Query("""
         UPDATE projects
         SET total_time_seconds = total_time_seconds + :durationSeconds,
+            total_rows = total_rows + :rows,
             updated_at = :updatedAt,
             sync_status = :pendingStatus
         WHERE id = :projectId
     """)
-    suspend fun updateTotalTime(
+    suspend fun incrementProjectTotals(
         projectId: Long,
         durationSeconds: Long,
+        rows: Int,
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int

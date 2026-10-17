@@ -34,6 +34,12 @@ data class ProjectDto(
     @SerializedName("totalTimeSeconds")
     val totalTimeSeconds: Long = 0L,
 
+    @SerializedName("totalRows")
+    val totalRows: Int = 0,
+
+    @SerializedName("targetRowCount")
+    val targetRowCount: Int? = null,
+
     @SerializedName("updatedAt")
     val updatedAt: Long,
 

@@ -29,6 +29,12 @@ data class ProjectEntity(
     @ColumnInfo(name = "total_time_seconds")
     val totalTimeSeconds: Long,
     
+    @ColumnInfo(name = "total_rows", defaultValue = "0")
+    val totalRows: Int = 0,
+
+    @ColumnInfo(name = "target_row_count")
+    val targetRowCount: Int? = null,
+
     @ColumnInfo(name = "sync_status")
     val syncStatus: String
 )

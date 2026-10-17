@@ -61,5 +61,7 @@ interface ProjectRepository {
      * @param duration Добавляемое время (Value Object [Duration]).
      * @return [Result.Success] или [Result.Error].
      */
+    @Deprecated("Используй updateProjectTotals(rows = 0)")
     suspend fun updateTotalTime(projectId: Long, duration: Duration): Result<Unit>
+    suspend fun updateProjectTotals(projectId: Long, duration: Duration, rows: Int): Result<Unit>
 }

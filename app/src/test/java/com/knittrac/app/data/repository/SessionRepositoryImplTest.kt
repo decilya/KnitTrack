@@ -40,7 +40,7 @@ class SessionRepositoryImplTest {
     @Test
     fun addSessionAtomically_callsDaoTransactionMethodAndReturnsId() = runTest {
         coEvery {
-            sessionDao.insertSessionAndIncrementProjectTime(any(), any(), any())
+            sessionDao.insertSessionAndIncrementProjectTotals(any(), any(), any())
         } returns 100L
 
         val session = Session(
@@ -53,7 +53,7 @@ class SessionRepositoryImplTest {
         assertTrue(result is Result.Success)
         assertEquals(100L, (result as Result.Success).data)
         coVerify {
-            sessionDao.insertSessionAndIncrementProjectTime(any(), 60L, any())
+            sessionDao.insertSessionAndIncrementProjectTotals(any(), 60L, any())
         }
     }
 

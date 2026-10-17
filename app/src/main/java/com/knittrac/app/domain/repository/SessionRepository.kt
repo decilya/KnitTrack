@@ -39,5 +39,6 @@ interface SessionRepository {
      */
     suspend fun updateSession(session: Session): Result<Unit>
     suspend fun updateSyncStatus(sessionId: Long, status: SyncStatus): Result<Unit>
+    suspend fun deleteSessionAndDecrementProjectTotals(sessionId: Long): Result<Unit>
     suspend fun getDailyStats(projectId: Long): Result<List<DailyStat>>
 }

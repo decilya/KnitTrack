@@ -160,12 +160,13 @@ class ProjectRepositoryImplTest {
      * updateTotalTime возвращает NotFoundError, если проекта с таким id нет.
      */
     @Test
-    fun updateTotalTime_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
-        coEvery { projectDao.updateTotalTime(any(), any(), any()) } returns 0
+    fun updateProjectTotals_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
+        coEvery { projectDao.incrementProjectTotals(any(), any(), any(), any()) } returns 0
 
-        val result = repository.updateTotalTime(
+        val result = repository.updateProjectTotals(
             projectId = 99L,
-            duration = Duration.create(60L)
+            duration = Duration.create(60L),
+            rows = 0
         )
 
         assertTrue(result is Result.Error)
@@ -176,12 +177,13 @@ class ProjectRepositoryImplTest {
      * updateTotalTime возвращает Success при rows = 1.
      */
     @Test
-    fun updateTotalTime_returnsSuccessWhenDaoReturnsOneRow() = runTest {
-        coEvery { projectDao.updateTotalTime(any(), any(), any()) } returns 1
+    fun updateProjectTotals_returnsSuccessWhenDaoReturnsOneRow() = runTest {
+        coEvery { projectDao.incrementProjectTotals(any(), any(), any(), any()) } returns 1
 
-        val result = repository.updateTotalTime(
+        val result = repository.updateProjectTotals(
             projectId = 1L,
-            duration = Duration.create(60L)
+            duration = Duration.create(60L),
+            rows = 0
         )
 
         assertTrue(result is Result.Success)

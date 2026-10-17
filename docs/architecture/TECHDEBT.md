@@ -9,3 +9,5 @@
 | TimerService / TimerForegroundService | Коллизия имен (Service) | Не различаются доменный и Android-сервис | В стандарты добавить *AndroidService для платформенных |
 | ProjectName.DEFAULT = "Без названия" | UI-строка на русском в Domain | Fallback для пустого имени при переносе в strings.xml не успели | Вынести текст в strings.xml, DEFAULT сделать нейтральным (пустое значение + sentinel для UI) |
 | Package name | `com.knittrac.app` (через «c») не совпадает с брендом KnitTrack (через «k») | Историческое имя | Переименовать через Android Studio перед публикацией в Google Play (Фаза 9) |
+| Migration 2->3 | Не покрыта тестами (instrumented удален) | Нет 2.json | Восстановить при наличии реального устройства |
+| ProjectDto | Добавлены поля totalRows/targetRowCount | Обратная совместимость | Версионирование DTO при синхронизации с бэкендом |

@@ -53,6 +53,28 @@ interface SessionDao {
     @Query("SELECT * FROM sessions")
     suspend fun getAllSessions(): List<SessionEntity>
 
+    @Query("SELECT * FROM sessions WHERE id = :id")
+    suspend fun getSessionById(id: Long): SessionEntity?
+
+    @Query("DELETE FROM sessions WHERE id = :id")
+    suspend fun deleteSessionById(id: Long): Int
+
+    @Query("""
+        UPDATE projects
+        SET total_time_seconds = MAX(0, total_time_seconds - :durationSeconds),
+            total_rows = MAX(0, total_rows - :rows),
+            updated_at = :updatedAt,
+            sync_status = :pendingStatus
+        WHERE id = :projectId
+    """)
+    suspend fun decrementProjectTotals(
+        projectId: Long,
+        durationSeconds: Long,
+        rows: Int,
+        updatedAt: Long,
+        pendingStatus: String = SyncStatus.PENDING.name
+    ): Int
+
     /** Разовый запрос сессий со статусом PENDING. */
     @Query("SELECT * FROM sessions WHERE sync_status = 'PENDING'")
     suspend fun getPendingSessions(): List<SessionEntity>
@@ -90,13 +112,15 @@ interface SessionDao {
     @Query("""
         UPDATE projects
         SET total_time_seconds = total_time_seconds + :durationSeconds,
+            total_rows = total_rows + :rows,
             updated_at = :updatedAt,
             sync_status = :pendingStatus
         WHERE id = :projectId
     """)
-    suspend fun updateProjectTotalTime(
+    suspend fun incrementProjectTotals(
         projectId: Long,
         durationSeconds: Long,
+        rows: Int,
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int
@@ -114,19 +138,34 @@ interface SessionDao {
      * @return id новой строки сессии.
      */
     @Transaction
-    suspend fun insertSessionAndIncrementProjectTime(
+    suspend fun insertSessionAndIncrementProjectTotals(
         session: SessionEntity,
         durationSeconds: Long,
         updatedAt: Long
     ): Long {
-        // 1. Сохраняем сессию (REPLACE как upsert).
         val newRowId = insertSession(session)
-        // 2. Атомарно обновляем время проекта.
-        // Возвращаемый Int не игнорируем: rows == 0 значит, что проекта
-        // с таким id нет. check() бросает IllegalStateException, Room
-        // откатывает @Transaction целиком — включая insertSession.
-        val rows = updateProjectTotalTime(session.projectId, durationSeconds, updatedAt)
-        check(rows == 1) { "Проект id=${session.projectId} не найден при обновлении total_time" }
+        val rows = incrementProjectTotals(session.projectId, durationSeconds, session.rowCount, updatedAt)
+        if (rows != 1) throw IllegalStateException("Проект id=${session.projectId} не найден")
         return newRowId
+    }
+
+    @Transaction
+    suspend fun deleteSessionAndDecrementProjectTotals(
+        sessionId: Long,
+        updatedAt: Long
+    ) {
+        val session = getSessionById(sessionId)
+            ?: throw NoSuchElementException("Сессия id=$sessionId не найдена")
+
+        val rows = deleteSessionById(sessionId)
+        if (rows != 1) throw IllegalStateException("Сессия id=$sessionId не удалилась")
+
+        val projectRows = decrementProjectTotals(
+            projectId = session.projectId,
+            durationSeconds = session.durationSeconds,
+            rows = session.rowCount,
+            updatedAt = updatedAt
+        )
+        if (projectRows != 1) throw IllegalStateException("Проект id=${session.projectId} не найден при декременте")
     }
 }

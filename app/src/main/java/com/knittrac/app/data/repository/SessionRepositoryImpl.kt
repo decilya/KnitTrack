@@ -100,7 +100,7 @@ class SessionRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        val newRowId = sessionDao.insertSessionAndIncrementProjectTime(
+        val newRowId = sessionDao.insertSessionAndIncrementProjectTotals(
             session = entity,
             durationSeconds = session.durationSeconds.seconds,
             updatedAt = entity.updatedAt
@@ -167,6 +167,22 @@ class SessionRepositoryImpl @Inject constructor(
         throw e
     } catch (e: Exception) {
         Timber.e(e, "updateSyncStatus sessionId=%d failed", sessionId)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    /**
+     * Атомарно удаляет сессию и декрементирует тоталы проекта.
+     */
+    override suspend fun deleteSessionAndDecrementProjectTotals(sessionId: Long): Result<Unit> = try {
+        sessionDao.deleteSessionAndDecrementProjectTotals(
+            sessionId = sessionId,
+            updatedAt = timeProvider.currentTimeMillis()
+        )
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "deleteSessionAndDecrementProjectTotals id=%d failed", sessionId)
         Result.Error(AppError.DatabaseError(e))
     }
 

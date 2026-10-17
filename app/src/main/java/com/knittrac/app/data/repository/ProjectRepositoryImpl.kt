@@ -151,16 +151,22 @@ class ProjectRepositoryImpl @Inject constructor(
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
      *   если проекта нет, или [AppError.DatabaseError].
      */
-    override suspend fun updateTotalTime(
+    @Deprecated("Используй updateProjectTotals(rows = 0)")
+    override suspend fun updateTotalTime(projectId: Long, duration: Duration): Result<Unit> =
+        updateProjectTotals(projectId, duration, 0)
+
+    override suspend fun updateProjectTotals(
         projectId: Long,
-        duration: Duration
+        duration: Duration,
+        rows: Int
     ): Result<Unit> = try {
-        val rows = projectDao.updateTotalTime(
+        val affected = projectDao.incrementProjectTotals(
             projectId = projectId,
             durationSeconds = duration.seconds,
+            rows = rows,
             updatedAt = timeProvider.currentTimeMillis()
         )
-        if (rows == 0) {
+        if (affected == 0) {
             Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
         } else {
             Result.Success(Unit)
@@ -168,7 +174,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateTotalTime projectId=%d sec=%d failed", projectId, duration.seconds)
+        Timber.e(e, "updateProjectTotals projectId=%d sec=%d failed", projectId, duration.seconds)
         Result.Error(AppError.DatabaseError(e))
     }
 
