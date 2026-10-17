@@ -563,6 +563,11 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - IOException теперь мапится в IoError (дисковые операции).
 - NetworkError удален как мертвый код (вернется на Фазе 3 с Firebase).
 
+Неделя 2, День 4 — Тесты экспорта/импорта:
+- Написаны Unit-тесты для DataExporterImpl и DataImporterImpl (3 теста).
+- Покрыт сценарий успешной сериализации/десериализации JSON и обработки битого JSON.
+- Для мока транзакции Room использован mockkStatic и secondArg.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
