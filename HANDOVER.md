@@ -559,6 +559,10 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - PaymentManager -> PaymentService (NoOpPaymentService).
 - Все упоминания в DI, тестах и UI обновлены.
 
+Неделя 2, День 3 — AppErrorMapper:
+- IOException теперь мапится в IoError (дисковые операции).
+- NetworkError удален как мертвый код (вернется на Фазе 3 с Firebase).
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

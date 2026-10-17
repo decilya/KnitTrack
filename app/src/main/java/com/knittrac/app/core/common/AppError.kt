@@ -80,10 +80,6 @@ sealed class AppError(
      *
      * @param exception Исключение, вызвавшее ошибку (для отладки).
      */
-    data class NetworkError(val exception: Throwable) : AppError(
-        exception.message ?: "Ошибка сетевого подключения",
-        exception
-    )
 
     /**
      * Неизвестная ошибка, не подпадающая под другие категории.

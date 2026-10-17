@@ -17,7 +17,7 @@ object AppErrorMapper {
      * 
      * Метод анализирует тип переданного исключения и возвращает наиболее
      * подходящий подкласс [AppError]:
-     * - [IOException] → [AppError.NetworkError]
+     * - [IOException] → [AppError.IoError]
      * - [IllegalArgumentException] → [AppError.ValidationError]
      * - Все остальные → [AppError.UnknownError]
      * 
@@ -25,8 +25,8 @@ object AppErrorMapper {
      * @return Экземпляр [AppError], соответствующий типу исключения.
      */
     fun map(e: Throwable): AppError = when (e) {
-        // Ошибки ввода-вывода обычно связаны с сетевыми проблемами
-        is IOException -> AppError.NetworkError(e)
+        // Ошибки ввода-вывода (диск, файлы, DataStore)
+        is IOException -> AppError.IoError(e)
 
         // Ошибки аргументов — это ошибки валидации данных
         is IllegalArgumentException -> AppError.ValidationError(
