@@ -3,6 +3,7 @@ package com.knittrac.app.data.repository
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.domain.entity.Category
@@ -28,7 +29,8 @@ import org.junit.Test
 class ProjectRepositoryImplTest {
 
     private val projectDao: ProjectDao = mockk()
-    private val repository = ProjectRepositoryImpl(projectDao)
+    private val timeProvider = FakeTimeProvider()
+    private val repository = ProjectRepositoryImpl(projectDao, timeProvider)
 
     private val testEntity = ProjectEntity(
         id = 1L,

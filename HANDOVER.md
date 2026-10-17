@@ -547,6 +547,10 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Обновлен корневой README.md (добавлены ссылки на документацию).
 - TECHDEBT.md дополнен точными путями из код-ревью (System.currentTimeMillis, Manager-суффиксы).
 
+Неделя 2, День 1 — TimeProvider:
+- Создан FakeTimeProvider для тестов.
+- AddProjectService и ProjectRepositoryImpl переведены на TimeProvider.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
@@ -810,7 +814,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: Неделя 2. Исправление TECHDEBT (TimeProvider, Manager-суффиксы) и новые фичи.
+Следующая сессия: Неделя 2, День 2 — рефакторинг суффиксов Manager (TimerManagerImpl -> TimerService).
 
 Первый шаг — факт-блок. Один прогон в WSL:
 

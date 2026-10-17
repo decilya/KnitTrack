@@ -4,6 +4,7 @@ import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
@@ -20,7 +21,8 @@ import javax.inject.Inject
  */
 class AddProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
-    @param:IoDispatcher private val dispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
+    private val timeProvider: TimeProvider
 ) : BaseUseCase<AddProjectParams, Long>(dispatcher) {
 
     /**
@@ -40,7 +42,7 @@ class AddProjectService @Inject constructor(
                 )
             )
 
-        val now = System.currentTimeMillis()
+        val now = timeProvider.currentTimeMillis()
         val project = Project(
             name = name,
             category = params.category,

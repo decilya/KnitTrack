@@ -3,9 +3,7 @@
 ## Текущий техдолг
 | Файл / Место | Проблема | Почему так | План исправления |
 |---|---|---|---|
-| AddProjectService.kt:43 | System.currentTimeMillis | Быстрая реализация | Заменить на TimeProvider |
 | Session.kt:33 | System.currentTimeMillis (default) | Удобство | Убрать default |
-| ProjectRepositoryImpl.kt (3 места) | System.currentTimeMillis | Быстрая реализация | Внедрить TimeProvider |
 | SessionRepositoryImpl.kt (2 места) | System.currentTimeMillis | Быстрая реализация | Внедрить TimeProvider |
 | DataExporterImpl.kt:76 | System.currentTimeMillis | Для метки времени бэкапа | Внедрить TimeProvider |
 | AppErrorMapper.kt | Мапит IOException в NetworkError | Устарел, добавили IoError | Заменить NetworkError на IoError |

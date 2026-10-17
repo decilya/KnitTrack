@@ -2,6 +2,7 @@ package com.knittrac.app.domain.service
 
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.repository.ProjectRepository
 import io.mockk.coEvery
@@ -17,13 +18,16 @@ class AddProjectServiceTest {
 
     private lateinit var projectRepository: ProjectRepository
     private lateinit var addProjectService: AddProjectService
+    private lateinit var timeProvider: FakeTimeProvider
 
     @Before
     fun setUp() {
         projectRepository = mockk()
+        timeProvider = FakeTimeProvider()
         addProjectService = AddProjectService(
             projectRepository = projectRepository,
-            dispatcher = Dispatchers.Unconfined
+            dispatcher = Dispatchers.Unconfined,
+            timeProvider = timeProvider
         )
     }
 

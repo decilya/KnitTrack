@@ -3,6 +3,7 @@ package com.knittrac.app.data.repository
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
@@ -29,7 +30,8 @@ import timber.log.Timber
  * cleanup в finally-блоках.
  */
 class ProjectRepositoryImpl @Inject constructor(
-    private val projectDao: ProjectDao
+    private val projectDao: ProjectDao,
+    private val timeProvider: TimeProvider
 ) : ProjectRepository {
 
     /**
@@ -80,7 +82,7 @@ class ProjectRepositoryImpl @Inject constructor(
      */
     override suspend fun addProject(project: Project): Result<Long> = try {
         val entity = project.toEntity().copy(
-            updatedAt = System.currentTimeMillis(),
+            updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
         Result.Success(projectDao.insertProject(entity))
@@ -103,7 +105,7 @@ class ProjectRepositoryImpl @Inject constructor(
      */
     override suspend fun updateProject(project: Project): Result<Unit> = try {
         val entity = project.toEntity().copy(
-            updatedAt = System.currentTimeMillis(),
+            updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
         val rows = projectDao.updateProject(entity)
@@ -156,7 +158,7 @@ class ProjectRepositoryImpl @Inject constructor(
         val rows = projectDao.updateTotalTime(
             projectId = projectId,
             durationSeconds = duration.seconds,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = timeProvider.currentTimeMillis()
         )
         if (rows == 0) {
             Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
