@@ -3,8 +3,6 @@
 ## Текущий техдолг
 | Файл / Место | Проблема | Почему так | План исправления |
 |---|---|---|---|
-| Session.kt:33 | System.currentTimeMillis (default) | Удобство | Убрать default |
-| SessionRepositoryImpl.kt (2 места) | System.currentTimeMillis | Быстрая реализация | Внедрить TimeProvider |
 | DataExporterImpl.kt:76 | System.currentTimeMillis | Для метки времени бэкапа | Внедрить TimeProvider |
 | AppErrorMapper.kt | Мапит IOException в NetworkError | Устарел, добавили IoError | Заменить NetworkError на IoError |
 | TimerManagerImpl.kt | Суффикс Manager | Историческое имя | Переименовать в TimerService |

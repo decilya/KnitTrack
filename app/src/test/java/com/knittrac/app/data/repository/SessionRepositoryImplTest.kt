@@ -3,6 +3,7 @@ package com.knittrac.app.data.repository
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Duration
@@ -23,7 +24,8 @@ import org.junit.Test
 class SessionRepositoryImplTest {
 
     private val sessionDao: SessionDao = mockk()
-    private val repository = SessionRepositoryImpl(sessionDao)
+    private val timeProvider = FakeTimeProvider()
+    private val repository = SessionRepositoryImpl(sessionDao, timeProvider)
 
     private val testEntity = SessionEntity(
         id = 1L, projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
@@ -43,7 +45,7 @@ class SessionRepositoryImplTest {
 
         val session = Session(
             projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
-            durationSeconds = Duration.create(60L), rowCount = 5
+            durationSeconds = Duration.create(60L), rowCount = 5, updatedAt = 1_000L
         )
 
         val result = repository.addSessionAtomically(session)
@@ -68,7 +70,8 @@ class SessionRepositoryImplTest {
             startTimestamp = 1_000L,
             endTimestamp = 61_000L,
             durationSeconds = Duration.create(60L),
-            rowCount = 5
+            rowCount = 5,
+            updatedAt = 1_000L
         )
 
         val result = repository.updateSession(session)
@@ -89,7 +92,8 @@ class SessionRepositoryImplTest {
             startTimestamp = 1_000L,
             endTimestamp = 61_000L,
             durationSeconds = Duration.create(60L),
-            rowCount = 5
+            rowCount = 5,
+            updatedAt = 1_000L
         )
 
         val result = repository.updateSession(session)

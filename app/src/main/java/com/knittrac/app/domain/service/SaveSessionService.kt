@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.service
 
 import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
@@ -19,7 +20,8 @@ import javax.inject.Inject
  * [Duration], гарантирующий неотрицательность на уровне типа.
  */
 class SaveSessionService @Inject constructor(
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val timeProvider: TimeProvider
 ) {
     /**
      * Сохраняет сессию и атомарно обновляет время проекта.
@@ -43,7 +45,8 @@ class SaveSessionService @Inject constructor(
             startTimestamp = params.startTimestamp,
             endTimestamp = params.endTimestamp,
             durationSeconds = duration,
-            rowCount = params.rowCount
+            rowCount = params.rowCount,
+            updatedAt = timeProvider.currentTimeMillis()
         )
 
         // 3. Атомарное сохранение. При сбое транзакция откатится целиком.

@@ -3,6 +3,7 @@ package com.knittrac.app.data.repository
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.data.local.SessionDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
@@ -28,7 +29,8 @@ import timber.log.Timber
  * cleanup в finally-блоках.
  */
 class SessionRepositoryImpl @Inject constructor(
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val timeProvider: TimeProvider
 ) : SessionRepository {
 
     /**
@@ -95,7 +97,7 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun addSessionAtomically(session: Session): Result<Long> = try {
         val entity = session.toEntity().copy(
-            updatedAt = System.currentTimeMillis(),
+            updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
         val newRowId = sessionDao.insertSessionAndIncrementProjectTime(
@@ -130,7 +132,7 @@ class SessionRepositoryImpl @Inject constructor(
      */
     override suspend fun updateSession(session: Session): Result<Unit> = try {
         val entity = session.toEntity().copy(
-            updatedAt = System.currentTimeMillis(),
+            updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
         val rows = sessionDao.updateSession(entity)

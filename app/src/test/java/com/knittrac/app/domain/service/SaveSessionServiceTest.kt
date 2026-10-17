@@ -2,6 +2,7 @@ package com.knittrac.app.domain.service
 
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.domain.repository.SessionRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +19,8 @@ import org.junit.Test
 class SaveSessionServiceTest {
 
     private val sessionRepository: SessionRepository = mockk()
-    private val service = SaveSessionService(sessionRepository)
+    private val timeProvider = FakeTimeProvider()
+    private val service = SaveSessionService(sessionRepository, timeProvider)
 
     /**
      * Проверяет, что сессия с нулевой или отрицательной длительностью отвергается на этапе валидации.

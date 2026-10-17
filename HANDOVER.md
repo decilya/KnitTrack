@@ -549,7 +549,8 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 Неделя 2, День 1 — TimeProvider:
 - Создан FakeTimeProvider для тестов.
-- AddProjectService и ProjectRepositoryImpl переведены на TimeProvider.
+- AddProjectService, ProjectRepositoryImpl, SaveSessionService и SessionRepositoryImpl переведены на TimeProvider.
+- Убран default System.currentTimeMillis() из Session.kt.
 
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
