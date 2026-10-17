@@ -104,3 +104,9 @@ Bug fixing, Play Console, closed testing, production.
 - Тесты до релиза: >= 210.
 - Crash-free rate: >= 99.5%.
 - Data loss: 0.
+
+
+### Gateway — план появления
+- Gateway (обёртка над внешней системой) появится на Фазе 3 (Firestore Sync).
+- До этого момента SyncService не пишется, модель синхронизации не фиксируется.
+- Gateway живет в `domain/gateway` (интерфейс) и `data/gateway` (реализация).

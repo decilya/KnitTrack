@@ -532,6 +532,12 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Документация: fix placeholder в разделе 15, fix 21.5,
   синхронизация расхождений после Дня 4.
 
+День 6 — разбиение стандартов, Provider-модель, TECHDEBT.md:
+- Созданы STANDARDS.md, TECHDEBT.md, CONTRIBUTING.md.
+- coding-standards.md переименован в PHILOSOPHY.md.
+- Скрипт check_standards.py в архиве.
+- ROADMAP.md: добавлен Gateway.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.
@@ -609,7 +615,7 @@ FGS type: AndroidManifest.xml:40, dataSync в specialUse плюс property PROPE
 
 Deliverable: refactor(di) убрать @Singleton, architecture test, release config.
 
-### День 5 (3 ч). WHPX и миграция 2 к 3
+### День 5 (3 ч). WHPX и миграция 2 к 3. ОТЛОЖЕН (нет USB/эмулятора).
 
 PowerShell от админа: Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -All.
 Reboot. Эмулятор Pixel 6 API 33.
@@ -619,7 +625,7 @@ Deliverable: test(db) прогон Migration2To3Test.
 
 Fallback: WHPX не ставится — TECHDEBT, перенос.
 
-### День 6 (4-5 ч). Разбиение стандартов, Provider-модель
+### День 6 (4-5 ч). Разбиение стандартов, Provider-модель. ЗАКРЫТ.
 
 Шаг 1 (1.5 ч). Раздел 4 coding-standards.md — модель Provider.
 
