@@ -579,6 +579,13 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - Создан DataImportDependencies (Parameter Object).
 - DataImporterImpl сокращен до 2 параметров.
 
+Неделя 2, День 7 — Разделение God Classes:
+- Создан интерфейс BackupRepository (domain) и BackupRepositoryImpl (data).
+- DataExporterImpl и DataImporterImpl теперь отвечают только за JSON.
+- Удалены DataExportDependencies и DataImportDependencies (лишняя абстракция).
+- Удален mockkStatic — тесты мокают BackupRepository напрямую.
+- Удалены UnusedImports по Detekt.
+
 Закоммичено: ROADMAP.md, README.md (UTF-8), docs/architecture/coding-standards.md (535 строк, будет разбит в Дне 6), config/detekt/detekt.yml, config/detekt/baseline.xml, .gitattributes, .githooks/pre-commit, HANDOVER.md.
 
 Мусорный 8f601dc откачен через git reset --hard и git push --force-with-lease.

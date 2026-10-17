@@ -5,6 +5,8 @@ import com.knittrac.app.data.repository.DataImporterImpl
 import com.knittrac.app.data.repository.ProjectRepositoryImpl
 import com.knittrac.app.data.repository.SessionRepositoryImpl
 import com.knittrac.app.domain.repository.DataExporter
+import com.knittrac.app.domain.repository.BackupRepository
+import com.knittrac.app.data.repository.BackupRepositoryImpl
 import com.knittrac.app.domain.repository.DataImporter
 import com.knittrac.app.domain.repository.ProjectRepository
 import com.knittrac.app.domain.repository.SessionRepository
@@ -35,6 +37,11 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSessionRepository(impl: SessionRepositoryImpl): SessionRepository
+
+    /** Связывает [BackupRepository] с реализацией. */
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
 
     /** Связывает [DataExporter] с реализацией. */
     @Binds
