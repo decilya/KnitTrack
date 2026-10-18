@@ -54,6 +54,7 @@ class TimerViewModel @Inject constructor(
                     projectId = _state.value.projectId,
                     startTimestamp = timerManager.sessionStartTime,
                     rowCount = _state.value.rowCount,
+                    targetRowCount = _state.value.targetRowCount,
                     projects = _state.value.projects,
                     isSaving = _state.value.isSaving
                 )
@@ -63,7 +64,13 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             getAllProjectsService(Unit).collect { result ->
                 if (result is Result.Success) {
-                    _state.update { it.copy(projects = result.data) }
+                    _state.update { currentState ->
+                        val selected = result.data.find { it.id == currentState.projectId }
+                        currentState.copy(
+                            projects = result.data,
+                            targetRowCount = selected?.targetRowCount
+                        )
+                    }
                 }
             }
         }
@@ -74,36 +81,65 @@ class TimerViewModel @Inject constructor(
      */
     fun onIntent(intent: TimerContract.Intent) {
         when (intent) {
-            is TimerContract.Intent.Start -> {
-                if (_state.value.projectId == null) {
-                    viewModelScope.launch { _effect.send(TimerContract.Effect.NavigateToProjects) }
-                    return
-                }
-
-                // На API 33+ без granted POST_NOTIFICATIONS foreground-уведомление
-                // таймера не показывается. Эмитим effect, Screen запустит
-                // системный диалог. Таймер стартует независимо от решения —
-                // permission влияет только на видимость уведомления.
-                if (!notificationPermissionChecker.isGranted()) {
-                    viewModelScope.launch {
-                        _effect.send(TimerContract.Effect.RequestNotificationPermission)
-                    }
-                }
-
-                timerManager.start()
-            }
+            is TimerContract.Intent.Start -> handleStart()
             is TimerContract.Intent.Pause -> timerManager.pause()
             is TimerContract.Intent.Reset -> {
                 timerManager.reset()
                 _state.update { it.copy(rowCount = 0) }
             }
-            is TimerContract.Intent.SelectProject -> {
-                _state.update { it.copy(projectId = intent.projectId) }
-            }
+            is TimerContract.Intent.SelectProject -> handleSelectProject(intent)
             is TimerContract.Intent.SaveSession -> saveSession()
-            is TimerContract.Intent.UpdateRowCount -> {
-                _state.update { it.copy(rowCount = intent.count) }
+            is TimerContract.Intent.UpdateRowCount,
+            is TimerContract.Intent.IncrementRow,
+            is TimerContract.Intent.DecrementRow -> handleRowCounterIntent(intent)
+        }
+    }
+
+    /**
+     * Запуск таймера с проверкой выбранного проекта и разрешения
+     * на foreground-уведомления.
+     */
+    private fun handleStart() {
+        if (_state.value.projectId == null) {
+            viewModelScope.launch { _effect.send(TimerContract.Effect.NavigateToProjects) }
+            return
+        }
+
+        // На API 33+ без granted POST_NOTIFICATIONS foreground-уведомление
+        // таймера не показывается. Эмитим effect, Screen запустит
+        // системный диалог. Таймер стартует независимо от решения —
+        // permission влияет только на видимость уведомления.
+        if (!notificationPermissionChecker.isGranted()) {
+            viewModelScope.launch {
+                _effect.send(TimerContract.Effect.RequestNotificationPermission)
             }
+        }
+
+        timerManager.start()
+    }
+
+    /**
+     * Выбор проекта и синхронизация целевого количества рядов в State.
+     */
+    private fun handleSelectProject(intent: TimerContract.Intent.SelectProject) {
+        val selectedProject = _state.value.projects.find { it.id == intent.projectId }
+        _state.update {
+            it.copy(projectId = intent.projectId, targetRowCount = selectedProject?.targetRowCount)
+        }
+    }
+
+    /**
+     * Обработка трёх действий над счётчиком рядов.
+     */
+    private fun handleRowCounterIntent(intent: TimerContract.Intent) {
+        when (intent) {
+            is TimerContract.Intent.UpdateRowCount ->
+                _state.update { it.copy(rowCount = intent.count) }
+            is TimerContract.Intent.IncrementRow ->
+                _state.update { it.copy(rowCount = it.rowCount + 1) }
+            is TimerContract.Intent.DecrementRow ->
+                _state.update { it.copy(rowCount = (it.rowCount - 1).coerceAtLeast(0)) }
+            else -> Unit
         }
     }
 

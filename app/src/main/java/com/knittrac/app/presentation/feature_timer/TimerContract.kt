@@ -17,6 +17,7 @@ object TimerContract {
         val projectId: Long? = null,
         val startTimestamp: Long = 0L,
         val rowCount: Int = 0,
+        val targetRowCount: Int? = null,
         val projects: List<Project> = emptyList(),
         /**
          * Флаг активного сохранения сессии.
@@ -34,6 +35,8 @@ object TimerContract {
         data class SelectProject(val projectId: Long) : Intent()
         object SaveSession : Intent()
         data class UpdateRowCount(val count: Int) : Intent()
+        object IncrementRow : Intent()
+        object DecrementRow : Intent()
     }
 
     sealed class Effect {

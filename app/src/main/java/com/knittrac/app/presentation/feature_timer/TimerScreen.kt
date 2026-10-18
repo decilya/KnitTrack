@@ -5,7 +5,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +15,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
@@ -78,16 +78,63 @@ fun TimerScreen(
             modifier = Modifier.padding(vertical = 32.dp)
         )
 
-        OutlinedTextField(
-            value = if (state.rowCount == 0) "" else state.rowCount.toString(),
-            onValueChange = { 
-                val count = it.toIntOrNull() ?: 0
-                viewModel.onIntent(TimerContract.Intent.UpdateRowCount(count))
-            },
-            label = { Text(stringResource(R.string.row_count)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
+        // Счётчик рядов
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+        ) {
+            Text(
+                text = state.rowCount.toString(),
+                style = MaterialTheme.typography.displayMedium
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+            ) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.onIntent(TimerContract.Intent.DecrementRow)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Decrease row count"
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(32.dp))
+
+                FloatingActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.onIntent(TimerContract.Intent.IncrementRow)
+                    },
+                    modifier = Modifier.size(96.dp)
+                ) {
+                    Text(
+                        text = "+1",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+            }
+
+            val target = state.targetRowCount
+            if (target != null && target > 0) {
+                val progress = state.rowCount.toFloat() / target
+                LinearProgressIndicator(
+                    progress = { progress.coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp)
+                )
+                Text(
+                    text = "${state.rowCount} / $target",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
 
         Row(
             modifier = Modifier.padding(top = 32.dp),
