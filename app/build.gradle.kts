@@ -36,6 +36,7 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        getByName("test").assets.srcDir("$projectDir/schemas")
     }
     testOptions {
         unitTests {
@@ -78,10 +79,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("co.yml:ycharts:2.1.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.11.1")
-    testImplementation("androidx.test:core-ktx:1.5.0")
-    testImplementation("androidx.room:room-testing:2.6.1")
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("androidx.test:core-ktx:1.5.0")
     testImplementation("androidx.room:room-testing:2.6.1")
