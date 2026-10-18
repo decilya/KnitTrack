@@ -59,7 +59,7 @@ class ProjectsListViewModelTest {
      * с локализованным названием категории.
      */
     @Test
-    fun `init should load projects and map them to UI models`() = runTest {
+    fun init_loadsProjectsAndMapsToUiModels() = runTest {
         // Arrange: один доменный проект и его ожидаемое отображение в UI
         val mockProject = Project(
             id = 1L,
@@ -67,6 +67,8 @@ class ProjectsListViewModelTest {
             category = Category.KNITTING,
             createdAt = 0L,
             totalTimeSeconds = Duration.ZERO,
+            totalRows = 50,
+            targetRowCount = 120,
             updatedAt = 0L,
             syncStatus = SyncStatus.SYNCED
         )
@@ -74,7 +76,9 @@ class ProjectsListViewModelTest {
             id = 1L,
             name = "Тестовый проект",
             isUntitled = false,
-            localizedCategoryName = "Вязание спицами"
+            localizedCategoryName = "Вязание спицами",
+            totalRows = 50,
+            targetRowCount = 120
         )
 
         coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(mockProject)))
@@ -93,7 +97,7 @@ class ProjectsListViewModelTest {
      * и isLoading снимается.
      */
     @Test
-    fun `loadProjects sets errorRes when service returns Error`() = runTest {
+    fun loadProjects_setsErrorResWhenServiceReturnsError() = runTest {
         val cause = RuntimeException("test db error")
         coEvery { getAllProjectsService(Unit) } returns
             flowOf(Result.Error(com.knittrac.app.core.common.AppError.UnknownError(cause)))
@@ -110,7 +114,7 @@ class ProjectsListViewModelTest {
      * Проверяет, что retry сбрасывает errorRes и перезагружает проекты.
      */
     @Test
-    fun `retry clears errorRes and reloads projects`() = runTest {
+    fun retry_clearsErrorResAndReloadsProjects() = runTest {
         val cause = RuntimeException("test error")
         coEvery { getAllProjectsService(Unit) } returns
             flowOf(Result.Error(com.knittrac.app.core.common.AppError.UnknownError(cause)))
@@ -138,5 +142,28 @@ class ProjectsListViewModelTest {
         assertNull(state.errorRes)
         assertEquals(1, state.projects.size)
         coVerify(atLeast = 2) { getAllProjectsService(Unit) }
+    }
+
+    @Test
+    fun init_mapsNullTargetRowCountForProjectsWithoutTarget() = runTest {
+        val mockProject = Project(
+            id = 3L,
+            name = ProjectName.create("Без цели"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            totalTimeSeconds = Duration.ZERO,
+            totalRows = 30,
+            targetRowCount = null,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.SYNCED
+        )
+        coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(mockProject)))
+        every { categoryLocalizer.localize(Category.KNITTING) } returns "Вязание спицами"
+
+        viewModel = ProjectsListViewModel(getAllProjectsService, categoryLocalizer)
+
+        val uiModel = viewModel.state.value.projects.single()
+        assertEquals(30, uiModel.totalRows)
+        assertNull(uiModel.targetRowCount)
     }
 }

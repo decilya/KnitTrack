@@ -647,6 +647,12 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - app_name = "KnitTrack" (бренд, значение совпадает с EN).
 - TD-1 (RU-локализация 1/30) закрыт.
 
+Неделя 3, шаг 3.1d — прогресс проекта в списке (feat(projects)):
+- ProjectsContract.ProjectUiModel += totalRows: Int = 0, targetRowCount: Int? = null.
+- ProjectsListViewModel: маппинг project.totalRows и project.targetRowCount.
+- ProjectsListScreen (ProjectCard): если target > 0 -> Text(project_rows_progress) + LinearProgressIndicator; иначе если totalRows > 0 -> Text(project_rows_count).
+- ProjectsListViewModelTest: backticks -> camelCase, expectedUiModel += totalRows/targetRowCount, mockProject += те же поля, новый тест init_mapsNullTargetRowCountForProjectsWithoutTarget.
+
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
 Попытка ввести стандарты в другом чате: docs/architecture/coding-standards.md v4.0 (535 строк) и scripts/check_standards.py (regex-валидатор).
@@ -870,7 +876,7 @@ domain — entity, repository, service.
 platform — timer (SystemTimeProvider), service (TimerForegroundService), notification, di.
 presentation — feature_projects, feature_settings, feature_stats, feature_timer, common.
 
-app/src/test — 145 тестов (290 прогонов: debug + release).
+app/src/test — 146 тестов (292 прогона: debug + release).
 
 app/proguard-rules.pro — Gson, Coroutines, attributes (не пуст).
 
@@ -902,18 +908,16 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Закрыто: 3.1c (feat(add-project), 145 тестов) + i18n (56/56 строк, TD-1).
-Следующий шаг — 3.1d: ProjectsListScreen прогресс проекта
-("45 рядов" / "45 из 120 рядов" при заданной цели).
+Закрыто: 3.1c, i18n (56/56), 3.1d (прогресс в списке, 146 тестов).
+Счётчик рядов закрыт end-to-end: цель задаётся при создании, счётчик на
+таймере, прогресс в списке проектов.
 
-Разведка по фактам: ProjectsListViewModel.kt, ProjectsListScreen.kt,
-ProjectsListViewModelTest.kt — все три уже прочитаны, патч готов.
-Ключи R.string.project_rows_count / project_rows_progress уже в XML.
-
-Fix-очередь (не сейчас, отдельный docs(...) в конце сессии):
-P0 AND-4 (rowCount в SavedStateHandle), P1 KOT-1 (ShowError generic),
-P1 AND-3 (contentDescription хардкод), P1 AND-1/6/7, P2 все остальные
-— в TECHDEBT.md.
+Следующий шаг — на выбор:
+1. 3.2 — StatisticsScreen (Неделя 4): DailyStat += totalRows,
+   SessionDao.getDailyStats += SUM(row_count), LazyColumn +
+   LinearProgressIndicator (без Canvas, без библиотек — §12 v1.8).
+2. Fix-очередь (TECHDEBT.md): P0 AND-4 (rowCount в SavedStateHandle),
+   P1 KOT-1 (ShowError generic), AND-1/3/6/7.
 
 Не выдумывать содержимое. Не доверять памяти.
 

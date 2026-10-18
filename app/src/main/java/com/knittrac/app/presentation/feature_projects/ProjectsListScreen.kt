@@ -180,6 +180,24 @@ private fun ProjectCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            val target = project.targetRowCount
+            if (target != null && target > 0) {
+                Text(
+                    text = stringResource(R.string.project_rows_progress, project.totalRows, target),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                LinearProgressIndicator(
+                    progress = { (project.totalRows.toFloat() / target).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                )
+            } else if (project.totalRows > 0) {
+                Text(
+                    text = stringResource(R.string.project_rows_count, project.totalRows),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }

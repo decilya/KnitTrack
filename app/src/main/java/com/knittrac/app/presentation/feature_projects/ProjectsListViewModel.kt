@@ -33,7 +33,9 @@ object ProjectsContract {
         val id: Long,
         val name: String,
         val isUntitled: Boolean,
-        val localizedCategoryName: String
+        val localizedCategoryName: String,
+        val totalRows: Int = 0,
+        val targetRowCount: Int? = null
     )
 
     data class State(
@@ -85,14 +87,7 @@ class ProjectsListViewModel @Inject constructor(
             getAllProjectsService(Unit).collect { result ->
                 when (result) {
                     is Result.Success -> {
-                        val uiProjects = result.data.map { project ->
-                            ProjectsContract.ProjectUiModel(
-                                id = project.id,
-                                name = project.name.value,
-                                isUntitled = project.name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
-                                localizedCategoryName = categoryLocalizer.localize(project.category)
-                            )
-                        }
+                        val uiProjects = result.data.map { it.toUiModel() }
                         _state.update { it.copy(projects = uiProjects, isLoading = false) }
                     }
                     is Result.Error -> {
@@ -126,4 +121,17 @@ class ProjectsListViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true, errorRes = null) }
         loadProjects()
     }
+
+    /**
+     * Маппит Domain-сущность [com.knittrac.app.domain.entity.Project] в UI-модель.
+     */
+    private fun com.knittrac.app.domain.entity.Project.toUiModel(): ProjectsContract.ProjectUiModel =
+        ProjectsContract.ProjectUiModel(
+            id = id,
+            name = name.value,
+            isUntitled = name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
+            localizedCategoryName = categoryLocalizer.localize(category),
+            totalRows = totalRows,
+            targetRowCount = targetRowCount
+        )
 }
