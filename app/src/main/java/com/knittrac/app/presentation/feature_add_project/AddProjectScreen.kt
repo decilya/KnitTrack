@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_add_project
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -9,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
@@ -97,12 +99,30 @@ fun AddProjectScreen(
                 }
             }
             
+            OutlinedTextField(
+                value = state.targetRowCount?.toString() ?: "",
+                onValueChange = { input ->
+                    if (input.isBlank()) {
+                        viewModel.onIntent(AddProjectContract.Intent.UpdateTargetRowCount(null))
+                    } else {
+                        input.toIntOrNull()?.let {
+                            viewModel.onIntent(AddProjectContract.Intent.UpdateTargetRowCount(it))
+                        }
+                    }
+                },
+                label = { Text(stringResource(R.string.target_row_count)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.targetRowCountError != null,
+                supportingText = state.targetRowCountError?.let { { Text(it) } }
+            )
+            
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = { viewModel.onIntent(AddProjectContract.Intent.SaveProject) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = state.projectName.isNotBlank() && state.selectedCategory != null
+                enabled = state.projectName.isNotBlank() && state.selectedCategory != null && state.targetRowCountError == null
             ) {
                 Text(stringResource(R.string.save))
             }

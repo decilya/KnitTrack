@@ -7,7 +7,8 @@ import com.knittrac.app.domain.entity.Category
  */
 data class AddProjectParams(
     val name: String,
-    val category: Category
+    val category: Category,
+    val targetRowCount: Int? = null
 )
 
 /**

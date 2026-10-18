@@ -6,6 +6,7 @@
     <string name="action_back">Back</string>
     <string name="action_stats">Statistics</string>
     <string name="save">Save</string>
+    <string name="target_row_count">Target rows (optional)</string>
     <string name="start">Start</string>
     <string name="pause">Pause</string>
     <string name="reset">Reset</string>

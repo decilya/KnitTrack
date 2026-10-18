@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="project_untitled">Без названия</string>
+    <string name="target_row_count">Целевое количество рядов (опционально)</string>
 </resources>

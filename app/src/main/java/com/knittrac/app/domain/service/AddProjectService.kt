@@ -42,14 +42,38 @@ class AddProjectService @Inject constructor(
                 )
             )
 
-        val now = timeProvider.currentTimeMillis()
-        val project = Project(
-            name = name,
-            category = params.category,
-            createdAt = now,
-            updatedAt = now,
-            syncStatus = SyncStatus.PENDING
-        )
-        return projectRepository.addProject(project)
+        return when (val projectResult = buildProject(name, params)) {
+            is Result.Success -> projectRepository.addProject(projectResult.data)
+            is Result.Error -> projectResult
+        }
+    }
+
+    /**
+     * Создаёт [Project] из валидированного имени и параметров.
+     *
+     * Возвращает [Result.Error] с [AppError.ValidationError], если инвариант
+     * [Project] нарушен (targetRowCount < 0). Сообщение из IllegalArgumentException
+     * сохраняется в ValidationError, чтобы не терять причину.
+     *
+     * Логирование здесь отсутствует: Domain не знает про Timber
+     * (см. HANDOVER 4.5.1). Диагностика неожиданных IllegalArgumentException
+     * выполняется в тестах через конкретный тип ошибки.
+     */
+    private fun buildProject(name: ProjectName, params: AddProjectParams): Result<Project> {
+        return try {
+            val now = timeProvider.currentTimeMillis()
+            Result.Success(
+                Project(
+                    name = name,
+                    category = params.category,
+                    createdAt = now,
+                    updatedAt = now,
+                    syncStatus = SyncStatus.PENDING,
+                    targetRowCount = params.targetRowCount
+                )
+            )
+        } catch (e: IllegalArgumentException) {
+            Result.Error(AppError.ValidationError(e.message ?: "Ошибка валидации проекта"))
+        }
     }
 }

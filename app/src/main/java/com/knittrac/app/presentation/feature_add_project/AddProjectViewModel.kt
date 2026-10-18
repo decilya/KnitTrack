@@ -22,12 +22,15 @@ object AddProjectContract {
         val selectedCategory: Category? = null,
         val categories: List<Category> = Category.values().toList(),
         val nameError: String? = null,
-        val categoryError: String? = null
+        val categoryError: String? = null,
+        val targetRowCount: Int? = null,
+        val targetRowCountError: String? = null
     )
     
     sealed class Intent {
         data class UpdateName(val name: String) : Intent()
         data class SelectCategory(val category: Category) : Intent()
+        data class UpdateTargetRowCount(val targetRowCount: Int?) : Intent()
         object SaveProject : Intent()
     }
     
@@ -56,6 +59,12 @@ class AddProjectViewModel @Inject constructor(
             is AddProjectContract.Intent.SelectCategory -> {
                 _state.update { it.copy(selectedCategory = intent.category, categoryError = null) }
             }
+            is AddProjectContract.Intent.UpdateTargetRowCount -> {
+                val error = if (intent.targetRowCount != null && intent.targetRowCount < 0) {
+                    "Цель не может быть отрицательной"
+                } else null
+                _state.update { it.copy(targetRowCount = intent.targetRowCount, targetRowCountError = error) }
+            }
             is AddProjectContract.Intent.SaveProject -> {
                 saveProject()
             }
@@ -79,7 +88,8 @@ class AddProjectViewModel @Inject constructor(
         viewModelScope.launch {
             val params = AddProjectParams(
                 name = currentState.projectName,
-                category = category
+                category = category,
+                targetRowCount = currentState.targetRowCount
             )
             
             val result = addProjectService(params)

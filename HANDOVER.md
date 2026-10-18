@@ -625,6 +625,20 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - STANDARDS.md §8: схема тегов BIZ/LIN/AND/KOT/PROC/TD/DOC + P0/P1/P2, список исторических обозначений.
 - CONTRIBUTING.md §Код-ревью: правило §5, ссылка на STANDARDS §8, пометка про PROC.
 
+Неделя 3, шаг 3.1c — ввод targetRowCount (feat(add-project)):
+- AddProjectParams += targetRowCount: Int? = null (обратная совместимость).
+- AddProjectViewModel: State + targetRowCount / targetRowCountError,
+  Intent.UpdateTargetRowCount, валидация negative в onIntent,
+  проброс в AddProjectParams.
+- AddProjectService: buildProject() обёрнут в try/catch IllegalArgumentException
+  -> Result.Error(ValidationError), e.message сохраняется, Domain без Timber
+  (HANDOVER 4.5.1), execute -> return when (Result), 2 return (Detekt ReturnCount).
+- AddProjectScreen: OutlinedTextField (KeyboardType.Number), isError + supportingText,
+  enabled кнопки Save блокируется при state.targetRowCountError != null.
+- strings.xml + values-ru/strings.xml: target_row_count.
+- AddProjectServiceTest: 4 теста, backticks заменены на camelCase,
+  Dispatchers.Unconfined -> UnconfinedTestDispatcher, OptIn ExperimentalCoroutinesApi.
+
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
 Попытка ввести стандарты в другом чате: docs/architecture/coding-standards.md v4.0 (535 строк) и scripts/check_standards.py (regex-валидатор).
@@ -848,7 +862,7 @@ domain — entity, repository, service.
 platform — timer (SystemTimeProvider), service (TimerForegroundService), notification, di.
 presentation — feature_projects, feature_settings, feature_stats, feature_timer, common.
 
-app/src/test — 142 теста (284 прогона: debug + release).
+app/src/test — 145 тестов (290 прогонов: debug + release).
 
 app/proguard-rules.pro — Gson, Coroutines, attributes (не пуст).
 
@@ -880,30 +894,21 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: Неделя 3, шаг 3.1c — ввод `targetRowCount` в `AddProjectScreen`.
+Шаг 3.1c закрыт (feat(add-project), 145 тестов / 290 прогонов).
+Прогресс-бар на TimerScreen активируется при заданной цели.
 
-Проблема: `Project.targetRowCount` всегда `null` — нет UI для ввода цели.
-Прогресс-бар на `TimerScreen` мёртв. Разрыв фичи счётчика.
+Следующий шаг — на выбор:
 
-Первый шаг — факт-блок. Один прогон в WSL:
+1. 3.1d — ProjectsListScreen: показывать прогресс проекта
+   ("45 рядов" / "45/120" при заданной цели). Разведка:
+   ProjectsListViewModel.kt, ProjectsListScreen.kt.
 
-    cd /mnt/c/Users/decilya/projects/KnitTrac
-    echo "---LOG---"; git log --oneline -3
-    echo "---STATUS---"; git status --short
-    echo "---ADD-PROJECT-SCREEN---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectScreen.kt
-    echo "---ADD-PROJECT-VM---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectViewModel.kt
-    echo "---ADD-PROJECT-CONTRACT---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectContract.kt
-    echo "---ADD-PROJECT-SERVICE---"; cat -n app/src/main/java/com/knittrac/app/domain/service/AddProjectService.kt
-    echo "---PARAMS---"; grep -n -A 20 "AddProjectParams" app/src/main/java/com/knittrac/app/domain/service/Params.kt
-    echo "---END---"
+2. 3.2 — StatisticsScreen (Неделя 4): DailyStat += totalRows,
+   SessionDao.getDailyStats += SUM(row_count), LazyColumn +
+   LinearProgressIndicator (без Canvas, без библиотек — см. §12 v1.8).
 
-После вывода — патч по шагам ТЗ v1.6:
-1. AddProjectParams += targetRowCount: Int? = null.
-2. AddProjectScreen — поле ввода (KeyboardType.Number, валидация >= 0, пустой -> null).
-3. AddProjectService пробрасывает targetRowCount в Project.
-4. AddProjectServiceTest: валидный targetRowCount доходит до Project; отрицательный -> ValidationError.
-
-Не начинать без факт-блока. Не выдумывать содержимое. Не доверять памяти.
+Первый шаг — факт-блок по выбранному направлению. Не выдумывать
+содержимое. Не доверять памяти.
 
 ---
 
