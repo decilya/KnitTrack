@@ -135,4 +135,20 @@ class SessionRepositoryImplTest {
 
         assertTrue(result is Result.Success)
     }
+
+    /**
+     * deleteSessionAndDecrementProjectTotals возвращает NotFoundError,
+     * если DAO бросает NoSuchElementException (сессия не найдена).
+     */
+    @Test
+    fun deleteSessionAndDecrementProjectTotals_returnsNotFoundErrorWhenDaoThrowsNoSuchElement() = runTest {
+        coEvery {
+            sessionDao.deleteSessionAndDecrementProjectTotals(any(), any())
+        } throws NoSuchElementException("Сессия id=999 не найдена")
+
+        val result = repository.deleteSessionAndDecrementProjectTotals(999L)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
 }

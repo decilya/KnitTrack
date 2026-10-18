@@ -89,7 +89,7 @@ class SessionRepositoryImpl @Inject constructor(
     /**
      * Атомарно сохраняет сессию и инкрементит total_time проекта.
      *
-     * Делегирует в [SessionDao.insertSessionAndIncrementProjectTime]: при
+     * Делегирует в [SessionDao.insertSessionAndIncrementProjectTotals]: при
      * падении на второй операции сессия тоже откатывается.
      *
      * @param session Domain-модель сессии.
@@ -181,6 +181,9 @@ class SessionRepositoryImpl @Inject constructor(
         Result.Success(Unit)
     } catch (e: CancellationException) {
         throw e
+    } catch (e: NoSuchElementException) {
+        Timber.w(e, "deleteSessionAndDecrementProjectTotals id=%d not found", sessionId)
+        Result.Error(AppError.NotFoundError("Сессия id=$sessionId не найдена"))
     } catch (e: Exception) {
         Timber.e(e, "deleteSessionAndDecrementProjectTotals id=%d failed", sessionId)
         Result.Error(AppError.DatabaseError(e))

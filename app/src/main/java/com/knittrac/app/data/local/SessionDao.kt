@@ -34,7 +34,7 @@ interface SessionDao {
      *
      * Отличается от [insertSession] с REPLACE: если строки с таким id нет —
      * вставки не будет, вернётся 0. Для create-пути использовать
-     * [insertSessionAndIncrementProjectTime].
+     * [insertSessionAndIncrementProjectTotals].
      *
      * @return количество затронутых строк: 1 — обновлено, 0 — id не найден.
      */
@@ -102,7 +102,7 @@ interface SessionDao {
     /**
      * Внутренний метод для обновления общего времени проекта.
      * Используется исключительно внутри атомарной транзакции
-     * [insertSessionAndIncrementProjectTime].
+     * [insertSessionAndIncrementProjectTotals].
      *
      * @param pendingStatus Строковое имя статуса синхронизации (обычно
      *   SyncStatus.PENDING.name). Параметризовано, чтобы переименование

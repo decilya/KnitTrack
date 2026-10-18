@@ -1,6 +1,7 @@
 package com.knittrac.app.presentation.feature_timer
 
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
@@ -190,5 +191,67 @@ class TimerViewModelTest {
 
         coVerify(exactly = 1) { saveSessionService(any()) }
         assertEquals(false, viewModel.state.value.isSaving)
+    }
+
+    /**
+     * IncrementRow увеличивает rowCount на 1. Reset сбрасывает в 0.
+     */
+    @Test
+    fun incrementRow_increasesCount() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+
+        assertEquals(0, viewModel.state.value.rowCount)
+        viewModel.onIntent(TimerContract.Intent.IncrementRow)
+        assertEquals(1, viewModel.state.value.rowCount)
+
+        viewModel.onIntent(TimerContract.Intent.Reset)
+        assertEquals(0, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * DecrementRow уменьшает rowCount на 1, если он больше нуля.
+     */
+    @Test
+    fun decrementRow_decreasesCount() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+
+        repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
+        assertEquals(5, viewModel.state.value.rowCount)
+
+        viewModel.onIntent(TimerContract.Intent.DecrementRow)
+        assertEquals(4, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * DecrementRow на нуле оставляет rowCount = 0 (coerceAtLeast).
+     */
+    @Test
+    fun decrementRow_atZero_staysZero() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+
+        assertEquals(0, viewModel.state.value.rowCount)
+        viewModel.onIntent(TimerContract.Intent.DecrementRow)
+        assertEquals(0, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * SelectProject переносит targetRowCount из выбранного проекта в State.
+     */
+    @Test
+    fun selectProject_setsTargetRowCount() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        val project = mockk<Project> {
+            every { id } returns 1L
+            every { targetRowCount } returns 120
+        }
+        coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(project)))
+
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+
+        assertEquals(120, viewModel.state.value.targetRowCount)
     }
 }

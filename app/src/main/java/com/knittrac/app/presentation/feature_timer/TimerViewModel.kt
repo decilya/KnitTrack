@@ -89,9 +89,8 @@ class TimerViewModel @Inject constructor(
             }
             is TimerContract.Intent.SelectProject -> handleSelectProject(intent)
             is TimerContract.Intent.SaveSession -> saveSession()
-            is TimerContract.Intent.UpdateRowCount,
-            is TimerContract.Intent.IncrementRow,
-            is TimerContract.Intent.DecrementRow -> handleRowCounterIntent(intent)
+            is TimerContract.Intent.IncrementRow -> handleIncrementRow()
+            is TimerContract.Intent.DecrementRow -> handleDecrementRow()
         }
     }
 
@@ -129,18 +128,17 @@ class TimerViewModel @Inject constructor(
     }
 
     /**
-     * Обработка трёх действий над счётчиком рядов.
+     * Увеличивает счётчик рядов на единицу.
      */
-    private fun handleRowCounterIntent(intent: TimerContract.Intent) {
-        when (intent) {
-            is TimerContract.Intent.UpdateRowCount ->
-                _state.update { it.copy(rowCount = intent.count) }
-            is TimerContract.Intent.IncrementRow ->
-                _state.update { it.copy(rowCount = it.rowCount + 1) }
-            is TimerContract.Intent.DecrementRow ->
-                _state.update { it.copy(rowCount = (it.rowCount - 1).coerceAtLeast(0)) }
-            else -> Unit
-        }
+    private fun handleIncrementRow() {
+        _state.update { it.copy(rowCount = it.rowCount + 1) }
+    }
+
+    /**
+     * Уменьшает счётчик рядов на единицу, но не ниже нуля.
+     */
+    private fun handleDecrementRow() {
+        _state.update { it.copy(rowCount = (it.rowCount - 1).coerceAtLeast(0)) }
     }
 
     /**

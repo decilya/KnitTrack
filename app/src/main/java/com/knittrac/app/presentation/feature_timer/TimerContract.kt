@@ -34,7 +34,6 @@ object TimerContract {
         object Reset : Intent()
         data class SelectProject(val projectId: Long) : Intent()
         object SaveSession : Intent()
-        data class UpdateRowCount(val count: Int) : Intent()
         object IncrementRow : Intent()
         object DecrementRow : Intent()
     }
