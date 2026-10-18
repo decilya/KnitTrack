@@ -212,8 +212,8 @@ class DtoMappersTest {
      * что старые бэкапы требуют миграции.
      */
     @Test
-    fun currentVersion_isOneZero() {
-        assertEquals("1.0", ExportDataDto.CURRENT_VERSION)
+    fun currentVersion_isOneOne() {
+        assertEquals("1.1", ExportDataDto.CURRENT_VERSION)
     }
 
     /**
@@ -229,5 +229,7 @@ class DtoMappersTest {
 
         assertTrue(dto.projects.isEmpty())
         assertTrue(dto.sessions.isEmpty())
+        assertTrue(dto.patterns.isEmpty())
+        assertTrue(dto.patternRows.isEmpty())
     }
 }

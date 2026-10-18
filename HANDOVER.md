@@ -647,6 +647,14 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - app_name = "KnitTrack" (бренд, значение совпадает с EN).
 - TD-1 (RU-локализация 1/30) закрыт.
 
+Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup)):
+- sourceSets.test.assets.srcDir, Coil, чистка дублей зависимостей в build.gradle.kts.
+- ExportDataDto.CURRENT_VERSION 1.0 -> 1.1.
+- ProjectDto: добавлены patternId, currentRowNumber, currentPatternRowId, currentStitch.
+- ExportDataDto: добавлены списки patterns и patternRows.
+- Созданы PatternDto и PatternRowDto. Все DTO покрыты KDoc.
+- Тесты DtoMappersTest и DataExporterImplTest обновлены под v1.1.
+
 Неделя 3, шаг 3.1d — прогресс проекта в списке (feat(projects)):
 - ProjectsContract.ProjectUiModel += totalRows: Int = 0, targetRowCount: Int? = null.
 - ProjectsListViewModel: маппинг project.totalRows и project.targetRowCount.

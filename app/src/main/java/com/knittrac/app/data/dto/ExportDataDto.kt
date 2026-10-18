@@ -8,10 +8,12 @@ import com.google.gson.annotations.SerializedName
  *
  * Формат JSON:
  * {
- *   "version": "1.0",
+ *   "version": "1.1",
  *   "exportDate": 1234567890,
  *   "projects": [ ... ],
- *   "sessions": [ ... ]
+ *   "sessions": [ ... ],
+ *   "patterns": [ ... ],
+ *   "patternRows": [ ... ]
  * }
  *
  * Поле version — String, а не Int. Это позволяет точечные
@@ -21,17 +23,29 @@ import com.google.gson.annotations.SerializedName
  */
 @Keep
 data class ExportDataDto(
+    /** Версия формата бэкапа. */
     @SerializedName("version")
     val version: String,
 
+    /** Временная метка экспорта (Unix epoch). */
     @SerializedName("exportDate")
     val exportDate: Long,
 
+    /** Список проектов. */
     @SerializedName("projects")
     val projects: List<ProjectDto> = emptyList(),
 
+    /** Список сессий. */
     @SerializedName("sessions")
-    val sessions: List<SessionDto> = emptyList()
+    val sessions: List<SessionDto> = emptyList(),
+
+    /** Список схем. */
+    @SerializedName("patterns")
+    val patterns: List<PatternDto> = emptyList(),
+
+    /** Список рядов схем. */
+    @SerializedName("patternRows")
+    val patternRows: List<PatternRowDto> = emptyList()
 ) {
     companion object {
         /**
@@ -39,6 +53,6 @@ data class ExportDataDto(
          * изменениях структуры DTO. Добавление опциональных полей
          * версию не меняет — старые бэкапы остаются совместимыми.
          */
-        const val CURRENT_VERSION = "1.0"
+        const val CURRENT_VERSION = "1.1"
     }
 }

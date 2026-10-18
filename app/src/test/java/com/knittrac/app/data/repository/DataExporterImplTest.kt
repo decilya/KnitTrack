@@ -68,7 +68,7 @@ class DataExporterImplTest {
 
         assertTrue(result is Result.Success)
         val json = outputStream.toString(Charsets.UTF_8.name())
-        assertTrue(json.contains("\"version\":\"1.0\""))
+        assertTrue(json.contains("\"version\":\"1.1\""))
         assertTrue(json.contains("\"exportDate\":123456789"))
         assertTrue(json.contains("\"name\":\"Project A\""))
         assertTrue(json.contains("\"rowCount\":10"))
