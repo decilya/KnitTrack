@@ -639,6 +639,14 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - AddProjectServiceTest: 4 теста, backticks заменены на camelCase,
   Dispatchers.Unconfined -> UnconfinedTestDispatcher, OptIn ExperimentalCoroutinesApi.
 
+Неделя 3, i18n — полная RU-локализация (feat(i18n)):
+- values-ru/strings.xml: 2 → 56 строк (полный перевод всех ключей EN).
+- EN 56 = RU 56, ключи совпадают (comm -23 / comm -13 пусто), XML валиден.
+- project_rows_count / project_rows_progress добавлены в оба файла
+  (подготовка 3.1d — прогресс проекта в ProjectsListScreen).
+- app_name = "KnitTrack" (бренд, значение совпадает с EN).
+- TD-1 (RU-локализация 1/30) закрыт.
+
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
 Попытка ввести стандарты в другом чате: docs/architecture/coding-standards.md v4.0 (535 строк) и scripts/check_standards.py (regex-валидатор).
@@ -894,21 +902,20 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Шаг 3.1c закрыт (feat(add-project), 145 тестов / 290 прогонов).
-Прогресс-бар на TimerScreen активируется при заданной цели.
+Закрыто: 3.1c (feat(add-project), 145 тестов) + i18n (56/56 строк, TD-1).
+Следующий шаг — 3.1d: ProjectsListScreen прогресс проекта
+("45 рядов" / "45 из 120 рядов" при заданной цели).
 
-Следующий шаг — на выбор:
+Разведка по фактам: ProjectsListViewModel.kt, ProjectsListScreen.kt,
+ProjectsListViewModelTest.kt — все три уже прочитаны, патч готов.
+Ключи R.string.project_rows_count / project_rows_progress уже в XML.
 
-1. 3.1d — ProjectsListScreen: показывать прогресс проекта
-   ("45 рядов" / "45/120" при заданной цели). Разведка:
-   ProjectsListViewModel.kt, ProjectsListScreen.kt.
+Fix-очередь (не сейчас, отдельный docs(...) в конце сессии):
+P0 AND-4 (rowCount в SavedStateHandle), P1 KOT-1 (ShowError generic),
+P1 AND-3 (contentDescription хардкод), P1 AND-1/6/7, P2 все остальные
+— в TECHDEBT.md.
 
-2. 3.2 — StatisticsScreen (Неделя 4): DailyStat += totalRows,
-   SessionDao.getDailyStats += SUM(row_count), LazyColumn +
-   LinearProgressIndicator (без Canvas, без библиотек — см. §12 v1.8).
-
-Первый шаг — факт-блок по выбранному направлению. Не выдумывать
-содержимое. Не доверять памяти.
+Не выдумывать содержимое. Не доверять памяти.
 
 ---
 

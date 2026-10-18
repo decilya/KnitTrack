@@ -70,3 +70,10 @@
 | `P0/P1/P2` | Приоритет (из HANDOVER §6), не тег роли | `P0` — блокер шага |
 
 Исторические префиксы (только для чтения, не использовать в новых ревью): `B1..B8` (blockers патча ТЗ), `N1..N6` (non-blockers), `D1..D9` (document), `P1..P7` (patch blockers).
+
+### Процессные уроки (сессия 18.10.2026)
+
+- **ReturnCount в try/catch**: Detekt считает все `return`, включая финальный. Для try/catch — `return try { ... } catch { expr }` без `return` в catch. Лимит 2. `?: return` тоже считается.
+- **Анкоры перед патчем**: `sed -n 'N,Mp' file | cat -n` (не `-A`). `cat -A` манглит кириллицу в `M-PM-`. `-A` только для байтовой отладки (`\r\n`, trailing spaces).
+- **`write_new`**: перед созданием — `test -e path`. Если файл существует — `patch` с `expected=1` по конкретному блоку, не `write_new`.
+- **Один коммит на шаг**: код + его docs (handover, techdebt) в одном коммите (§21.5 п.4). Fix-очередь docs — один `docs(...)` в конце сессии (§12.11 П7). Не дробить `docs(handover)`, `docs(techdebt)`, `docs(standards)` по отдельности, если в сессии был код.
