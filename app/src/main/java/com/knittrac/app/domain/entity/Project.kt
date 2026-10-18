@@ -31,6 +31,10 @@ data class Project(
     val totalTimeSeconds: Duration = Duration.ZERO,
     val totalRows: Int = 0,
     val targetRowCount: Int? = null,
+    val patternId: Long? = null,
+    val currentRowNumber: Int = 0,
+    val currentPatternRowId: Long? = null,
+    val currentStitch: Int = 0,
     val updatedAt: Long,
     val syncStatus: SyncStatus
 ) {

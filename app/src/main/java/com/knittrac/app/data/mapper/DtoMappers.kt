@@ -30,6 +30,12 @@ fun Project.toDto(): ProjectDto = ProjectDto(
     category = category.name,
     createdAt = createdAt,
     totalTimeSeconds = totalTimeSeconds.seconds,
+    totalRows = totalRows,
+    targetRowCount = targetRowCount,
+    patternId = patternId,
+    currentRowNumber = currentRowNumber,
+    currentPatternRowId = currentPatternRowId,
+    currentStitch = currentStitch,
     updatedAt = updatedAt,
     syncStatus = syncStatus.name
 )
@@ -45,6 +51,12 @@ fun ProjectDto.toDomain(): Project = Project(
     category = Category.fromNameOrDefault(category),
     createdAt = createdAt,
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
+    totalRows = totalRows,
+    targetRowCount = targetRowCount,
+    patternId = patternId,
+    currentRowNumber = currentRowNumber,
+    currentPatternRowId = currentPatternRowId,
+    currentStitch = currentStitch,
     updatedAt = updatedAt,
     syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )

@@ -647,6 +647,13 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 - app_name = "KnitTrack" (бренд, значение совпадает с EN).
 - TD-1 (RU-локализация 1/30) закрыт.
 
+Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление мапперов (feat(data)):
+- Созданы новые Entity: PatternEntity, PatternRowEntity, ProjectProgressEntity.
+- ProjectEntity: добавлены patternId, currentRowNumber, currentPatternRowId, currentStitch (с ForeignKey).
+- AppDatabase: версия 5, написана MIGRATION_4_5 (пересоздание projects и sessions).
+- Domain Project: добавлены новые поля.
+- ИСПРАВЛЕН КРИТИЧЕСКИЙ БАГ: EntityMappers и DtoMappers теперь сохраняют totalRows и targetRowCount (ранее они терялись).
+
 Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup)):
 - sourceSets.test.assets.srcDir, Coil, чистка дублей зависимостей в build.gradle.kts.
 - ExportDataDto.CURRENT_VERSION 1.0 -> 1.1.
