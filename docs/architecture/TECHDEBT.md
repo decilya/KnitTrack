@@ -11,6 +11,30 @@
 | ProjectDto | Добавлены поля totalRows/targetRowCount | Обратная совместимость | Версионирование DTO при синхронизации с бэкендом |
 
 
+## Pattern Tracker v8.0 (утверждено 19.10.2026)
+
+Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)
+
+### Запланированный техдолг (Post-v8.0)
+
+| ID | Раздел ТЗ | Срок | Описание |
+|---|---|---|---|
+| TD-PT-1 | [§3.2](./pattern-tracker-v8.0.md#32-immutability) | v7.2 | UI для таблицы `project_overrides` |
+| TD-PT-2 | [§3.2](./pattern-tracker-v8.0.md#32-immutability) | v8 | Синхронизация `pattern_sync_metadata` |
+| TD-PT-3 | [§7](./pattern-tracker-v8.0.md#7-presentation) | После v8.0 | Счётчик петель (`current_stitch`) для спиц в UI |
+| TD-PT-4 | [§3.8](./pattern-tracker-v8.0.md#38-бисероплетение) | v9.0 | Векторная семантика крючка |
+| TD-PT-5 | [§6](./pattern-tracker-v8.0.md#6-infrastructure-room-v5) | v7.2 | Overlap операций на уровне триггера БД |
+| TD-PT-6 | [§9](./pattern-tracker-v8.0.md#9-миграция-4--5--rollback) | v7.2 | Zip-бэкап с изображениями |
+| TD-PT-7 | [§6](./pattern-tracker-v8.0.md#6-infrastructure-room-v5) | v7.2 | Иконки-файлы для кастомных символов |
+| TD-PT-8 | [§6](./pattern-tracker-v8.0.md#6-infrastructure-room-v5) | v8 | JIS-контент-пак (Nihon Vogue) |
+| TD-PT-9 | [§3.8](./pattern-tracker-v8.0.md#38-бисероплетение) | v9.0 | Семантика бисероплетения (peyote, brick, RAW и др.) |
+| TD-PT-10 | [§8](./pattern-tracker-v8.0.md#8-accessibility) | v8 | Интеграция с Ravelry |
+| TD-PT-11 | [§8](./pattern-tracker-v8.0.md#8-accessibility) | v9 | Wear OS и голосовое управление |
+| TD-PT-12 | [§10](./pattern-tracker-v8.0.md#10-монетизация) | После v8.0 | Аналитика premium-конверсии |
+| TD-PT-13 | [§10](./pattern-tracker-v8.0.md#10-монетизация) | TBD | RU-платежи (вне GP Billing) |
+| TD-PT-14 | [§1](./pattern-tracker-v8.0.md#1-общая-информация) | До релиза | FGS type `specialUse`: property для Play Console |
+| TD-PT-15 | [§10](./pattern-tracker-v8.0.md#10-монетизация) | TBD | Включение рекламы + позиционирование |
+
 ## Техдолг по ревью сессии 18.10.2026
 
 ### P0 — блокеры шага 3.1c
