@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
-**Актуально на:** 16.10.2026
-**Тесты:** 134, 0 failures
+**Состояние:** см. `git log --oneline -1`, `git status --short`.
+**Тесты:** 142 уникальных (284 прогона: debug + release), 0 failures.
 
 ---
 
@@ -448,7 +448,7 @@ Fix: Channel<LogEntry>(UNLIMITED) плюс consumer на Dispatchers.IO, trySend
 
 ### P0-3. Миграция 2 к 3 не прогонялась
 
-**Статус:** ОТКРЫТ, День 5.
+**Статус:** Принятый риск (18.10.2026). Instrumented-тест удалён, `2.json` в репозитории нет, эмулятор на AMD GPU крашится (`QEMU2 CPU0 thread`). Восстановить через `2.json` + Robolectric или прогон на USB-устройстве.
 
 connectedDebugAndroidTest не запускался.
 
@@ -482,9 +482,6 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 ## 14. СОСТОЯНИЕ — P1
 
-6. @Singleton на ProjectRepositoryImpl, SessionRepositoryImpl.
-7. System.currentTimeMillis в репозиториях вместо TimeProvider.
-8. ProjectName.DEFAULT = "Без названия" — русская строка в Domain.
 9. AppErrorMapper — НЕ мёртвый. Используется в BaseUseCase.kt и BaseFlowUseCase.kt. Плюс конфликт: мапит IOException к NetworkError, а в 2b-1 добавлен IoError и применён в репозиториях. Два маппинга одного исключения.
 10. DataExporter и DataImporter без тестов.
 11. LanguageOption в core/localization вместо domain/entity. LocaleManager переименован в LocaleService (refactor(locale), День 4).
@@ -602,6 +599,31 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 
 ---
+
+
+Неделя 3, шаг 3.1a — Data Layer (8a42566):
+- Миграция 3→4: projects += total_rows INTEGER NOT NULL DEFAULT 0, target_row_count INTEGER.
+- Бэкфилл total_rows через SUM(row_count) из sessions.
+- DAO: ProjectDao.incrementProjectTotals, SessionDao.incrementProjectTotals/decrementProjectTotals (MAX(0)), deleteSessionAndDecrementProjectTotals (@Transaction, throw при 0 rows).
+- Robolectric подключён, Migration3To4Test (data-driven бэкфилл), SaveSessionServiceTest.
+- Migration2To3Test (instrumented) удалён; 2→3 не покрыта — TECHDEBT.
+
+Неделя 3, шаг 3.1b — UI счётчика (1d47215):
+- TimerContract: + targetRowCount, IncrementRow, DecrementRow.
+- TimerViewModel: маппинг targetRowCount при SelectProject и обновлении projects, handleIncrementRow / handleDecrementRow.
+- TimerScreen: большая кнопка +1 (FAB 96dp, haptic), маленькая -1 (Icons.Remove), LinearProgressIndicator при targetRowCount > 0.
+
+Неделя 3, шаг B — тесты и чистка (560195f):
+- 4 теста в TimerViewModelTest: incrementRow_increasesCount, decrementRow_decreasesCount, decrementRow_atZero_staysZero, selectProject_setsTargetRowCount.
+- 1 тест в SessionRepositoryImplTest: deleteSessionAndDecrementProjectTotals_returnsNotFoundErrorWhenDaoThrowsNoSuchElement (LIN-8).
+- Удалён мёртвый UpdateRowCount (не вызывался ни из UI, ни из тестов).
+- KDoc-рефы insertSessionAndIncrementProjectTime -> ...ProjectTotals (3 шт: SessionDao x2, SessionRepositoryImpl x1).
+- SessionRepositoryImpl: catch (NoSuchElementException) -> NotFoundError до catch (Exception).
+- TECHDEBT: убрана stale ProjectName.DEFAULT, слиты дубликаты Migration 2→3, добавлена секция «Техдолг по ревью 18.10.2026» (P0/P1/P2).
+
+Стандарты — схема тегов (dab25a4):
+- STANDARDS.md §8: схема тегов BIZ/LIN/AND/KOT/PROC/TD/DOC + P0/P1/P2, список исторических обозначений.
+- CONTRIBUTING.md §Код-ревью: правило §5, ссылка на STANDARDS §8, пометка про PROC.
 
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
@@ -732,9 +754,7 @@ FGS type: dataSync — specialUse.
 Firebase не начинать (Фаза 3, 4-6 недель).
 Gateway не вводить (даже тонкий).
 Provider в код не вводить — источников пока один.
-TimerManager в TimerService не рефакторить (техдолг).
 Backtick-тесты не переписывать (спорное правило).
-Тесты DataExporter и DataImporter — неделя 2.
 Feature flags, Security, Performance — после релиза.
 
 ---
@@ -806,7 +826,7 @@ HANDOVER.md — этот документ.
 
 docs/architecture:
 
-coding-standards.md — 535 строк, будет разбит (День 6).
+PHILOSOPHY.md, STANDARDS.md, TECHDEBT.md, CONTRIBUTING.md — справочник, enforcement, долг, процесс.
 vo-pattern.md — паттерн VO.
 
 config/detekt:
@@ -816,7 +836,7 @@ baseline.xml — 9 записей (День 1).
 
 scripts:
 
-check_standards.py — будет архивирован (День 6).
+_archive/check_standards_legacy.py — архив regex-валидатора (заменён на detekt).
 
 app/src/main/java/com/knittrac/app:
 
@@ -828,7 +848,7 @@ domain — entity, repository, service.
 platform — timer (SystemTimeProvider), service (TimerForegroundService), notification, di.
 presentation — feature_projects, feature_settings, feature_stats, feature_timer, common.
 
-app/src/test — 132 теста.
+app/src/test — 142 теста (284 прогона: debug + release).
 
 app/proguard-rules.pro — Gson, Coroutines, attributes (не пуст).
 
@@ -860,26 +880,33 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующая сессия: Неделя 2, День 2 — рефакторинг суффиксов Manager (TimerManagerImpl -> TimerService).
+Следующая сессия: Неделя 3, шаг 3.1c — ввод `targetRowCount` в `AddProjectScreen`.
+
+Проблема: `Project.targetRowCount` всегда `null` — нет UI для ввода цели.
+Прогресс-бар на `TimerScreen` мёртв. Разрыв фичи счётчика.
 
 Первый шаг — факт-блок. Один прогон в WSL:
 
-cd /mnt/c/Users/decilya/projects/KnitTrac
-echo "---LOG---"; git log --oneline -3
-echo "---STATUS---"; git status --short
-echo "---BUILD-RELEASE---"; sed -n "/buildTypes/,/^    }/p" app/build.gradle.kts
-echo "---PROGUARD-HEAD---"; head -5 app/proguard-rules.pro
-echo "---MANIFEST-SVC---"; grep -n -A 4 "<service" app/src/main/AndroidManifest.xml
-echo "---SINGLETON-IMPL---"; grep -rn -B 1 "@Singleton" app/src/main/java/com/knittrac/app/data/repository/
-echo "---LOCALE---"; grep -rln "LocaleService" app/src/
-echo "---END---"
+    cd /mnt/c/Users/decilya/projects/KnitTrac
+    echo "---LOG---"; git log --oneline -3
+    echo "---STATUS---"; git status --short
+    echo "---ADD-PROJECT-SCREEN---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectScreen.kt
+    echo "---ADD-PROJECT-VM---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectViewModel.kt
+    echo "---ADD-PROJECT-CONTRACT---"; cat -n app/src/main/java/com/knittrac/app/presentation/feature_add_project/AddProjectContract.kt
+    echo "---ADD-PROJECT-SERVICE---"; cat -n app/src/main/java/com/knittrac/app/domain/service/AddProjectService.kt
+    echo "---PARAMS---"; grep -n -A 20 "AddProjectParams" app/src/main/java/com/knittrac/app/domain/service/Params.kt
+    echo "---END---"
 
-После вывода — День 4 собирается за один заход.
+После вывода — патч по шагам ТЗ v1.6:
+1. AddProjectParams += targetRowCount: Int? = null.
+2. AddProjectScreen — поле ввода (KeyboardType.Number, валидация >= 0, пустой -> null).
+3. AddProjectService пробрасывает targetRowCount в Project.
+4. AddProjectServiceTest: валидный targetRowCount доходит до Project; отрицательный -> ValidationError.
 
-Без факт-блока — не начинать. Не выдумывать содержимое. Не доверять памяти.
+Не начинать без факт-блока. Не выдумывать содержимое. Не доверять памяти.
 
 ---
 
 КОНЕЦ HANDOVER.
 
-Составлен 16.10.2026. HEAD f8d1d1c. Тесты 133, 0 failures.
+Полная история и актуальное состояние — `git log --oneline`. Записи о HEAD и числе тестов в этом документе не поддерживаются (§12.11 П1).
