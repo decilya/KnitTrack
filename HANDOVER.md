@@ -653,6 +653,8 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - AppDatabase: версия 5, написана MIGRATION_4_5 (пересоздание projects и sessions).
 - Domain Project: добавлены новые поля.
 - ИСПРАВЛЕН КРИТИЧЕСКИЙ БАГ: EntityMappers и DtoMappers теперь сохраняют totalRows и targetRowCount (ранее они терялись).
+- Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
+- Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
 Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup)):
 - sourceSets.test.assets.srcDir, Coil, чистка дублей зависимостей в build.gradle.kts.
