@@ -1,5 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="project_untitled">Без названия</string>
+    <string name="app_name">KnitTrack</string>
+
+    <!-- Navigation and common actions -->
+    <string name="action_back">Назад</string>
+    <string name="action_stats">Статистика</string>
+    <string name="save">Сохранить</string>
     <string name="target_row_count">Целевое количество рядов (опционально)</string>
+    <string name="start">Старт</string>
+    <string name="pause">Пауза</string>
+    <string name="reset">Сброс</string>
+    <string name="save_session">Сохранить сессию</string>
+    <string name="session_saved">Сессия успешно сохранена</string>
+
+    <!-- Categories -->
+    <string name="category_knitting">Вязание спицами</string>
+    <string name="category_crochet">Вязание крючком</string>
+    <string name="category_beading">Бисероплетение</string>
+    <string name="category_macrame">Макраме</string>
+    <string name="category_other">Другое</string>
+    <string name="category">Категория</string>
+
+    <!-- Projects -->
+    <string name="add_project">Добавить проект</string>
+    <string name="project_name">Название проекта</string>
+    <string name="project_untitled">Без названия</string>
+    <string name="no_projects_yet">Пока нет проектов. Создайте первый!</string>
+    <string name="no_projects_available">Нет доступных проектов</string>
+    <string name="select_project">Выберите проект</string>
+    <string name="row_count">Количество рядов</string>
+    <string name="project_rows_count">%1$d рядов</string>
+    <string name="project_rows_progress">%1$d из %2$d рядов</string>
+
+    <!-- Timer -->
+    <string name="timer_started">Таймер запущен</string>
+    <string name="timer_running">Таймер работает</string>
+    <string name="timer_channel_name">Таймер KnitTrack</string>
+    <string name="timer_channel_description">Уведомления о работе таймера</string>
+    <string name="timer_save_error">Не удалось сохранить сессию</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_appearance">Внешний вид</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notifications_enable">Включить уведомления</string>
+    <string name="settings_data">Данные</string>
+    <string name="settings_export_data">Экспорт данных</string>
+    <string name="settings_import_data">Импорт данных</string>
+    <string name="settings_export_success">Данные успешно экспортированы</string>
+    <string name="settings_export_error">Ошибка экспорта данных</string>
+    <string name="settings_import_success">Данные успешно импортированы</string>
+    <string name="settings_import_error">Ошибка импорта данных</string>
+    <string name="settings_error_generic">Не удалось сохранить настройку</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Статистика</string>
+
+    <!-- Empty States -->
+    <string name="no_projects_description">Добавьте первый проект, чтобы начать отслеживать время вязания.</string>
+    <string name="no_stats_title">Пока нет статистики</string>
+    <string name="no_stats_description">Завершите несколько сессий, чтобы увидеть прогресс и графики.</string>
+    <string name="chart_time_by_day">Время вязания по дням (минуты)</string>
+
+    <!-- Errors -->
+    <string name="error_load_projects">Не удалось загрузить проекты</string>
+    <string name="error_load_stats">Не удалось загрузить статистику</string>
+    <string name="error_load_projects_description">Проверьте подключение и попробуйте снова</string>
+    <string name="error_load_stats_description">Проверьте подключение и попробуйте снова</string>
+    <string name="error_retry">Повторить</string>
 </resources>
