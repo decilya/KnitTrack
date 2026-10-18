@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "888c490ce13622bf76bf2b1e12093528",
+    "identityHash": "808f3f0be913f503533128a8a77d3fb8",
     "entities": [
       {
         "tableName": "projects",
@@ -425,12 +425,266 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "symbols",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`code` TEXT NOT NULL, `owner_pattern_id` INTEGER, `display_name` TEXT NOT NULL, `text_glyph` TEXT NOT NULL, `category` TEXT NOT NULL, `default_column_span` INTEGER NOT NULL, `default_row_span` INTEGER NOT NULL, PRIMARY KEY(`code`), FOREIGN KEY(`owner_pattern_id`) REFERENCES `patterns`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerPatternId",
+            "columnName": "owner_pattern_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textGlyph",
+            "columnName": "text_glyph",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultColumnSpan",
+            "columnName": "default_column_span",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultRowSpan",
+            "columnName": "default_row_span",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "code"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_symbols_owner_pattern_id",
+            "unique": false,
+            "columnNames": [
+              "owner_pattern_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_symbols_owner_pattern_id` ON `${TABLE_NAME}` (`owner_pattern_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "patterns",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "owner_pattern_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "pattern_operations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pattern_row_id` INTEGER NOT NULL, `column_start` INTEGER NOT NULL, `symbol_code` TEXT NOT NULL, `back_symbol_code` TEXT, `color_hex` TEXT, `column_span_override` INTEGER, `row_span_override` INTEGER, `repeat_code` TEXT, PRIMARY KEY(`pattern_row_id`, `column_start`), FOREIGN KEY(`pattern_row_id`) REFERENCES `pattern_rows`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`symbol_code`) REFERENCES `symbols`(`code`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`back_symbol_code`) REFERENCES `symbols`(`code`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "patternRowId",
+            "columnName": "pattern_row_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "columnStart",
+            "columnName": "column_start",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symbolCode",
+            "columnName": "symbol_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backSymbolCode",
+            "columnName": "back_symbol_code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "color_hex",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "columnSpanOverride",
+            "columnName": "column_span_override",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rowSpanOverride",
+            "columnName": "row_span_override",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "repeatCode",
+            "columnName": "repeat_code",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pattern_row_id",
+            "column_start"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pattern_operations_symbol_code",
+            "unique": false,
+            "columnNames": [
+              "symbol_code"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pattern_operations_symbol_code` ON `${TABLE_NAME}` (`symbol_code`)"
+          },
+          {
+            "name": "index_pattern_operations_back_symbol_code",
+            "unique": false,
+            "columnNames": [
+              "back_symbol_code"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pattern_operations_back_symbol_code` ON `${TABLE_NAME}` (`back_symbol_code`)"
+          },
+          {
+            "name": "index_pattern_operations_repeat_code",
+            "unique": false,
+            "columnNames": [
+              "repeat_code"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pattern_operations_repeat_code` ON `${TABLE_NAME}` (`repeat_code`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "pattern_rows",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "pattern_row_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "symbols",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "symbol_code"
+            ],
+            "referencedColumns": [
+              "code"
+            ]
+          },
+          {
+            "table": "symbols",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "back_symbol_code"
+            ],
+            "referencedColumns": [
+              "code"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "pattern_repeats",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pattern_id` INTEGER NOT NULL, `code` TEXT NOT NULL, `stitch_count` INTEGER NOT NULL, `row_count` INTEGER NOT NULL, PRIMARY KEY(`pattern_id`, `code`), FOREIGN KEY(`pattern_id`) REFERENCES `patterns`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "patternId",
+            "columnName": "pattern_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stitchCount",
+            "columnName": "stitch_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rowCount",
+            "columnName": "row_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pattern_id",
+            "code"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "patterns",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "pattern_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '888c490ce13622bf76bf2b1e12093528')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '808f3f0be913f503533128a8a77d3fb8')"
     ]
   }
 }

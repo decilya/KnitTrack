@@ -656,6 +656,12 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 5 — Таблицы схем и DAO (feat(data)):
+- Созданы SymbolEntity, PatternOperationEntity, PatternRepeatEntity.
+- Расширен PatternDao (методы для операций).
+- MIGRATION_4_5 дополнена созданием новых таблиц.
+- Migration4To5Test обновлен (проверка 6 таблиц).
+
 Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup)):
 - sourceSets.test.assets.srcDir, Coil, чистка дублей зависимостей в build.gradle.kts.
 - ExportDataDto.CURRENT_VERSION 1.0 -> 1.1.

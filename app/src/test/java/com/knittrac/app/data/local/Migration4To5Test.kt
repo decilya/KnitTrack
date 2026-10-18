@@ -84,9 +84,9 @@ class Migration4To5Test {
             assertEquals(5, cursor.getInt(cursor.getColumnIndexOrThrow("row_count")))
         }
 
-        // 5. Проверяем, что новые таблицы созданы
-        db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('patterns', 'pattern_rows', 'project_progress')", null).use { cursor ->
-            assertEquals("Не все новые таблицы созданы", 3, cursor.count)
+        // 5. Проверяем, что все новые таблицы созданы
+        db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('patterns', 'pattern_rows', 'project_progress', 'symbols', 'pattern_operations', 'pattern_repeats')", null).use { cursor ->
+            assertEquals("Не все новые таблицы созданы", 6, cursor.count)
         }
 
         db.close()

@@ -11,6 +11,9 @@ import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.data.local.entity.PatternEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.local.entity.ProjectProgressEntity
+import com.knittrac.app.data.local.entity.SymbolEntity
+import com.knittrac.app.data.local.entity.PatternOperationEntity
+import com.knittrac.app.data.local.entity.PatternRepeatEntity
 
 /**
  * Главная конфигурация базы данных приложения Room.
@@ -29,7 +32,10 @@ import com.knittrac.app.data.local.entity.ProjectProgressEntity
         SessionEntity::class,
         PatternEntity::class,
         PatternRowEntity::class,
-        ProjectProgressEntity::class
+        ProjectProgressEntity::class,
+        SymbolEntity::class,
+        PatternOperationEntity::class,
+        PatternRepeatEntity::class
     ],
     version = 5,
     exportSchema = true
@@ -38,6 +44,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun projectDao(): ProjectDao
     abstract fun sessionDao(): SessionDao
+    abstract fun patternDao(): PatternDao
 
     companion object {
         @Volatile
@@ -204,6 +211,17 @@ abstract class AppDatabase : RoomDatabase() {
                 // 8. Создаем project_progress (после переименования projects)
                 db.execSQL("CREATE TABLE project_progress (project_id INTEGER NOT NULL, pattern_row_id INTEGER NOT NULL, PRIMARY KEY(project_id, pattern_row_id), FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE, FOREIGN KEY(pattern_row_id) REFERENCES pattern_rows(id) ON DELETE CASCADE)")
                 db.execSQL("CREATE INDEX index_project_progress_pattern_row_id ON project_progress (pattern_row_id)")
+
+                // 9. Создаем symbols, pattern_operations, pattern_repeats
+                db.execSQL("CREATE TABLE symbols (code TEXT PRIMARY KEY NOT NULL, owner_pattern_id INTEGER, display_name TEXT NOT NULL, text_glyph TEXT NOT NULL, category TEXT NOT NULL, default_column_span INTEGER NOT NULL DEFAULT 1, default_row_span INTEGER NOT NULL DEFAULT 1, FOREIGN KEY(owner_pattern_id) REFERENCES patterns(id) ON DELETE CASCADE)")
+                db.execSQL("CREATE INDEX index_symbols_owner_pattern_id ON symbols (owner_pattern_id)")
+
+                db.execSQL("CREATE TABLE pattern_operations (pattern_row_id INTEGER NOT NULL, column_start INTEGER NOT NULL, symbol_code TEXT NOT NULL, back_symbol_code TEXT, color_hex TEXT, column_span_override INTEGER, row_span_override INTEGER, repeat_code TEXT, PRIMARY KEY(pattern_row_id, column_start), FOREIGN KEY(pattern_row_id) REFERENCES pattern_rows(id) ON DELETE CASCADE, FOREIGN KEY(symbol_code) REFERENCES symbols(code) ON DELETE RESTRICT, FOREIGN KEY(back_symbol_code) REFERENCES symbols(code) ON DELETE RESTRICT)")
+                db.execSQL("CREATE INDEX index_pattern_operations_symbol_code ON pattern_operations (symbol_code)")
+                db.execSQL("CREATE INDEX index_pattern_operations_back_symbol_code ON pattern_operations (back_symbol_code)")
+                db.execSQL("CREATE INDEX index_pattern_operations_repeat_code ON pattern_operations (repeat_code)")
+
+                db.execSQL("CREATE TABLE pattern_repeats (pattern_id INTEGER NOT NULL, code TEXT NOT NULL, stitch_count INTEGER NOT NULL, row_count INTEGER NOT NULL, PRIMARY KEY(pattern_id, code), FOREIGN KEY(pattern_id) REFERENCES patterns(id) ON DELETE CASCADE)")
             }
         }
 

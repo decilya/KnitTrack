@@ -16,6 +16,7 @@
 Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)
 
 ### Выполнено (Pre-v7)
+- [x] Шаг 5: Добавлены таблицы symbols, pattern_operations, pattern_repeats и PatternDao.
 - [x] Backup DTO 1.1 (добавлены новые поля и списки, обновлены тесты).
 - [x] Миграция БД v4->v5 (схемы, прогресс, внешние ключи).
 - [x] Исправлен баг потери данных (totalRows/targetRowCount) в мапперах Entity и DTO.
