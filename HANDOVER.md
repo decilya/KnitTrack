@@ -916,8 +916,8 @@ gradle/libs.versions.toml — НЕ существует.
 1. 3.2 — StatisticsScreen (Неделя 4): DailyStat += totalRows,
    SessionDao.getDailyStats += SUM(row_count), LazyColumn +
    LinearProgressIndicator (без Canvas, без библиотек — §12 v1.8).
-2. Fix-очередь (TECHDEBT.md): P0 AND-4 (rowCount в SavedStateHandle),
-   P1 KOT-1 (ShowError generic), AND-1/3/6/7.
+2. Fix-очередь (TECHDEBT.md): P1 KOT-1 (ShowError generic), AND-1/3/6/7.
+   P0 AND-4 (SavedStateHandle для projectId/rowCount) — ЗАКРЫТ.
 
 Не выдумывать содержимое. Не доверять памяти.
 

@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
@@ -36,10 +37,16 @@ class TimerViewModel @Inject constructor(
     private val timerManager: TimerService,
     private val saveSessionService: SaveSessionService,
     private val getAllProjectsService: GetAllProjectsService,
-    private val notificationPermissionChecker: NotificationPermissionChecker
+    private val notificationPermissionChecker: NotificationPermissionChecker,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TimerContract.State())
+    private val _state = MutableStateFlow(
+        TimerContract.State(
+            projectId = savedStateHandle.get<Long>("projectId"),
+            rowCount = savedStateHandle.get<Int>("rowCount") ?: 0
+        )
+    )
     val state: StateFlow<TimerContract.State> = _state.asStateFlow()
 
     private val _effect = Channel<TimerContract.Effect>(Channel.BUFFERED)
@@ -86,6 +93,7 @@ class TimerViewModel @Inject constructor(
             is TimerContract.Intent.Reset -> {
                 timerManager.reset()
                 _state.update { it.copy(rowCount = 0) }
+                savedStateHandle["rowCount"] = 0
             }
             is TimerContract.Intent.SelectProject -> handleSelectProject(intent)
             is TimerContract.Intent.SaveSession -> saveSession()
@@ -125,20 +133,25 @@ class TimerViewModel @Inject constructor(
         _state.update {
             it.copy(projectId = intent.projectId, targetRowCount = selectedProject?.targetRowCount)
         }
+        savedStateHandle["projectId"] = intent.projectId
     }
 
     /**
      * Увеличивает счётчик рядов на единицу.
      */
     private fun handleIncrementRow() {
-        _state.update { it.copy(rowCount = it.rowCount + 1) }
+        val newCount = _state.value.rowCount + 1
+        _state.update { it.copy(rowCount = newCount) }
+        savedStateHandle["rowCount"] = newCount
     }
 
     /**
      * Уменьшает счётчик рядов на единицу, но не ниже нуля.
      */
     private fun handleDecrementRow() {
-        _state.update { it.copy(rowCount = (it.rowCount - 1).coerceAtLeast(0)) }
+        val newCount = (_state.value.rowCount - 1).coerceAtLeast(0)
+        _state.update { it.copy(rowCount = newCount) }
+        savedStateHandle["rowCount"] = newCount
     }
 
     /**
@@ -177,6 +190,7 @@ class TimerViewModel @Inject constructor(
                     _effect.send(TimerContract.Effect.SessionSaved)
                     timerManager.reset()
                     _state.update { it.copy(rowCount = 0) }
+                    savedStateHandle["rowCount"] = 0
                 } else {
                     _effect.send(
                         TimerContract.Effect.ShowError(com.knittrac.app.R.string.timer_save_error)

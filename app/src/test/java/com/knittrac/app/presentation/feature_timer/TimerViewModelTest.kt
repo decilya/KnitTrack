@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.service.GetAllProjectsService
@@ -84,7 +85,8 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
-            permissionChecker
+            permissionChecker,
+            SavedStateHandle()
         )
 
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
@@ -116,7 +118,8 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
-            permissionChecker
+            permissionChecker,
+            SavedStateHandle()
         )
 
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
@@ -147,7 +150,8 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
-            permissionChecker
+            permissionChecker,
+            SavedStateHandle()
         )
 
         val effectDeferred = async { viewModel.effect.first() }
@@ -180,7 +184,8 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
-            permissionChecker
+            permissionChecker,
+            SavedStateHandle()
         )
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
@@ -199,7 +204,7 @@ class TimerViewModelTest {
     @Test
     fun incrementRow_increasesCount() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.IncrementRow)
@@ -215,7 +220,7 @@ class TimerViewModelTest {
     @Test
     fun decrementRow_decreasesCount() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
 
         repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
         assertEquals(5, viewModel.state.value.rowCount)
@@ -230,7 +235,7 @@ class TimerViewModelTest {
     @Test
     fun decrementRow_atZero_staysZero() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.DecrementRow)
@@ -249,9 +254,20 @@ class TimerViewModelTest {
         }
         coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(project)))
 
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker)
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
         assertEquals(120, viewModel.state.value.targetRowCount)
+    }
+
+    @Test
+    fun init_restoresRowCountAndProjectIdFromSavedStateHandle() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf<String, Any>("projectId" to 5L, "rowCount" to 42))
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, permissionChecker, savedStateHandle
+        )
+
+        assertEquals(5L, viewModel.state.value.projectId)
+        assertEquals(42, viewModel.state.value.rowCount)
     }
 }
