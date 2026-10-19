@@ -34,7 +34,7 @@
 
 ### Шаг 7b-prep — открытые P2 (после fix(domain))
 - [x] `PatternRow.id: Long` -> `PatternRowId`, `PatternOperation.patternRowId: Long`
-  -> `PatternRowId` — закрыто в 0188029 (7b-prep, P1-3). SOLID приоритет 1
+  -> `PatternRowId` — закрыто в de1d4b0 (7b-prep, P1-3). SOLID приоритет 1
   (STANDARDS §11 п.6).
 - [ ] `Project.patternId: Long?` -> `PatternId?` — в 7c (ProgressService),
   когда появится реальное использование. Сейчас — маппинг Data-слоя
