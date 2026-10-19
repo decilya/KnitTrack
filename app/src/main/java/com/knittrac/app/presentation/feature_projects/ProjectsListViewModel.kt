@@ -131,7 +131,7 @@ class ProjectsListViewModel @Inject constructor(
             name = name.value,
             isUntitled = name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
             localizedCategoryName = categoryLocalizer.localize(category),
-            totalRows = totalRows,
-            targetRowCount = targetRowCount
+            totalRows = totalRows.value,
+            targetRowCount = targetRowCount?.value
         )
 }

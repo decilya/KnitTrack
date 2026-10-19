@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.repository.ProjectRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -77,7 +78,7 @@ class AddProjectServiceTest {
 
         assertTrue(result is Result.Success)
         coVerify {
-            projectRepository.addProject(match { it.targetRowCount == 120 })
+            projectRepository.addProject(match { it.targetRowCount == RowCount.create(120) })
         }
     }
 

@@ -8,6 +8,7 @@ import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.repository.ProjectRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
@@ -62,6 +63,7 @@ class AddProjectService @Inject constructor(
     private fun buildProject(name: ProjectName, params: AddProjectParams): Result<Project> {
         return try {
             val now = timeProvider.currentTimeMillis()
+            val targetRowCount = params.targetRowCount?.let { RowCount.create(it) }
             Result.Success(
                 Project(
                     name = name,
@@ -69,7 +71,7 @@ class AddProjectService @Inject constructor(
                     createdAt = now,
                     updatedAt = now,
                     syncStatus = SyncStatus.PENDING,
-                    targetRowCount = params.targetRowCount
+                    targetRowCount = targetRowCount
                 )
             )
         } catch (e: IllegalArgumentException) {

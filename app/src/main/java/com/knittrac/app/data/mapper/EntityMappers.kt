@@ -7,6 +7,8 @@ import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.entity.Session
 
 /**
@@ -22,12 +24,12 @@ fun ProjectEntity.toDomain(): Project = Project(
     category = Category.fromNameOrDefault(category),
     createdAt = createdAt,
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
-    totalRows = totalRows,
-    targetRowCount = targetRowCount,
+    totalRows = RowCount.createOrDefault(totalRows),
+    targetRowCount = targetRowCount?.let { RowCount.createOrDefault(it) },
     patternId = patternId,
-    currentRowNumber = currentRowNumber,
+    currentRowNumber = RowCount.createOrDefault(currentRowNumber),
     currentPatternRowId = currentPatternRowId,
-    currentStitch = currentStitch,
+    currentStitch = StitchCount.createOrDefault(currentStitch),
     updatedAt = updatedAt,
     syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )
@@ -42,12 +44,12 @@ fun Project.toEntity(): ProjectEntity = ProjectEntity(
     category = category.name,
     createdAt = createdAt,
     totalTimeSeconds = totalTimeSeconds.seconds,
-    totalRows = totalRows,
-    targetRowCount = targetRowCount,
+    totalRows = totalRows.value,
+    targetRowCount = targetRowCount?.value,
     patternId = patternId,
-    currentRowNumber = currentRowNumber,
+    currentRowNumber = currentRowNumber.value,
     currentPatternRowId = currentPatternRowId,
-    currentStitch = currentStitch,
+    currentStitch = currentStitch.value,
     updatedAt = updatedAt,
     syncStatus = syncStatus.name
 )

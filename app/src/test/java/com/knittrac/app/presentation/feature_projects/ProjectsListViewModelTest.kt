@@ -5,6 +5,7 @@ import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.CategoryLocalizer
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
@@ -67,8 +68,8 @@ class ProjectsListViewModelTest {
             category = Category.KNITTING,
             createdAt = 0L,
             totalTimeSeconds = Duration.ZERO,
-            totalRows = 50,
-            targetRowCount = 120,
+            totalRows = RowCount.create(50),
+            targetRowCount = RowCount.create(120),
             updatedAt = 0L,
             syncStatus = SyncStatus.SYNCED
         )
@@ -152,7 +153,7 @@ class ProjectsListViewModelTest {
             category = Category.KNITTING,
             createdAt = 0L,
             totalTimeSeconds = Duration.ZERO,
-            totalRows = 30,
+            totalRows = RowCount.create(30),
             targetRowCount = null,
             updatedAt = 0L,
             syncStatus = SyncStatus.SYNCED

@@ -3,6 +3,10 @@ package com.knittrac.app.presentation.feature_timer
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.ProjectName
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
@@ -248,10 +252,15 @@ class TimerViewModelTest {
     @Test
     fun selectProject_setsTargetRowCount() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val project = mockk<Project> {
-            every { id } returns 1L
-            every { targetRowCount } returns 120
-        }
+        val project = Project(
+            id = 1L,
+            name = ProjectName.create("Test"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.PENDING,
+            targetRowCount = RowCount.create(120)
+        )
         coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(project)))
 
         val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())

@@ -20,6 +20,7 @@
 - [x] Backup DTO 1.1 (добавлены новые поля и списки, обновлены тесты).
 - [x] Миграция БД v4->v5 (схемы, прогресс, внешние ключи).
 - [x] Исправлен баг потери данных (totalRows/targetRowCount) в мапперах Entity и DTO.
+- [x] Шаг 6: Внедрены Value Objects RowCount и StitchCount (устранен Primitive Obsession).
 
 ### Запланированный техдолг (Post-v8.0)
 

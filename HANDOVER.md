@@ -656,6 +656,14 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 6 — Value Objects RowCount и StitchCount (feat(domain)):
+- Созданы VO RowCount и StitchCount с инвариантом >= 0.
+- В Project.kt примитивы заменены на VO, init-блок с require удален.
+- Мапперы (Entity и Dto) конвертируют Int <-> VO с createOrDefault.
+- AddProjectService, TimerViewModel, ProjectsListViewModel обновлены.
+- Тесты (AddProjectServiceTest, ProjectsListViewModelTest, TimerViewModelTest) обновлены.
+- Добавлены тесты RowCountTest и StitchCountTest (границы).
+
 Pre-v7, шаг 5 — Таблицы схем и DAO (feat(data)):
 - Созданы SymbolEntity, PatternOperationEntity, PatternRepeatEntity.
 - Расширен PatternDao (методы для операций).

@@ -75,7 +75,7 @@ class TimerViewModel @Inject constructor(
                         val selected = result.data.find { it.id == currentState.projectId }
                         currentState.copy(
                             projects = result.data,
-                            targetRowCount = selected?.targetRowCount
+                            targetRowCount = selected?.targetRowCount?.value
                         )
                     }
                 }
@@ -131,7 +131,7 @@ class TimerViewModel @Inject constructor(
     private fun handleSelectProject(intent: TimerContract.Intent.SelectProject) {
         val selectedProject = _state.value.projects.find { it.id == intent.projectId }
         _state.update {
-            it.copy(projectId = intent.projectId, targetRowCount = selectedProject?.targetRowCount)
+            it.copy(projectId = intent.projectId, targetRowCount = selectedProject?.targetRowCount?.value)
         }
         savedStateHandle["projectId"] = intent.projectId
     }
