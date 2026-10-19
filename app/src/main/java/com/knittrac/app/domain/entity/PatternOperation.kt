@@ -25,7 +25,7 @@ import androidx.annotation.Keep
  */
 @Keep
 data class PatternOperation(
-    val patternRowId: Long,
+    val patternRowId: PatternRowId,
     val columnStart: ColumnStart,
     val symbol: Symbol,
     val backSymbol: Symbol? = null,

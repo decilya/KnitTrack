@@ -33,23 +33,18 @@
 - [x] `TechniqueTest`, `PatternDirectionTest` — закрыто в 7b-prep.
 
 ### Шаг 7b-prep — открытые P2 (после fix(domain))
-- [ ] `PatternRow.id: Long` -> `PatternRowId` — миграция вместе с
-  `PatternOperation.patternRowId: Long` в 7d (согласованное изменение,
-  чтобы не было несогласованности типов).
-  В рабочей копии уже созданы `PatternRowId.kt` и `PatternRowIdTest.kt`
-  (untracked) — включить в коммит 7d.
+- [x] `PatternRow.id: Long` -> `PatternRowId`, `PatternOperation.patternRowId: Long`
+  -> `PatternRowId` — закрыто в 0188029 (7b-prep, P1-3). SOLID приоритет 1
+  (STANDARDS §11 п.6).
 - [ ] `Project.patternId: Long?` -> `PatternId?` — в 7c (ProgressService),
   когда появится реальное использование. Сейчас — маппинг Data-слоя
   (`DtoMappers`, `EntityMappers`) работает с `Long?`, менять не нужно.
 
-### Fix-очередь 7b-prep (закрыть в 7b, 5 минут)
-- [ ] `PatternTest.kt`: `create_withInfiniteOffsetY_throws` -> `create_withNaNOffsetY_throws`
-  (тест на `NaN`, имя вводит в заблуждение).
-- [ ] `PatternTest.kt`: добавить `create_withPositiveInfiniteOffsetX_throws`
-  (симметрия с `NEGATIVE_INFINITY`).
-- [ ] `PatternIdTest.kt`: добавить `create_withMaxLong_returnsValue`
-  (граница `Long.MAX_VALUE`).
-- [ ] `TECHDEBT.md`: `PatternRowIdTest` (untracked, 7d) — включить в 7d.
+### Fix-очередь 7b-prep (закрыто в 99336af)
+- [x] `PatternTest.kt`: `create_withInfiniteOffsetY_throws` -> `create_withNaNOffsetY_throws`.
+- [x] `PatternTest.kt`: добавлен `create_withPositiveInfiniteOffsetX_throws`.
+- [x] `PatternIdTest.kt`: добавлен `create_withMaxLong_returnsValue`.
+- [x] `PatternRowIdTest` — включён в коммит 0188029 (не 7d).
 
 ### Запланированный техдолг (Post-v8.0)
 

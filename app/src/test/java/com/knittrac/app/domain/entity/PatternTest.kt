@@ -31,8 +31,8 @@ class PatternTest {
     fun create_withOrderedRows_ok() {
         val pattern = basePattern(
             rows = listOf(
-                PatternRow(1L, RowNumber.create(1)),
-                PatternRow(2L, RowNumber.create(2))
+                PatternRow(PatternRowId.create(1L), RowNumber.create(1)),
+                PatternRow(PatternRowId.create(2L), RowNumber.create(2))
             )
         )
         assertEquals(2, pattern.rows.size)
@@ -43,8 +43,8 @@ class PatternTest {
         // Порядок проверяется по rowNumber, не по id.
         val pattern = basePattern(
             rows = listOf(
-                PatternRow(id = 100L, rowNumber = RowNumber.create(1)),
-                PatternRow(id = 50L, rowNumber = RowNumber.create(2))
+                PatternRow(id = PatternRowId.create(100L), rowNumber = RowNumber.create(1)),
+                PatternRow(id = PatternRowId.create(50L), rowNumber = RowNumber.create(2))
             )
         )
         assertEquals(2, pattern.rows.size)
@@ -54,8 +54,8 @@ class PatternTest {
     fun create_withUnorderedRows_throws() {
         basePattern(
             rows = listOf(
-                PatternRow(1L, RowNumber.create(2)),
-                PatternRow(2L, RowNumber.create(1))
+                PatternRow(PatternRowId.create(1L), RowNumber.create(2)),
+                PatternRow(PatternRowId.create(2L), RowNumber.create(1))
             )
         )
     }
@@ -64,8 +64,8 @@ class PatternTest {
     fun create_withDuplicateRows_throws() {
         basePattern(
             rows = listOf(
-                PatternRow(1L, RowNumber.create(1)),
-                PatternRow(2L, RowNumber.create(1))
+                PatternRow(PatternRowId.create(1L), RowNumber.create(1)),
+                PatternRow(PatternRowId.create(2L), RowNumber.create(1))
             )
         )
     }

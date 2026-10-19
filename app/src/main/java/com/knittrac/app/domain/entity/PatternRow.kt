@@ -20,7 +20,7 @@ import androidx.annotation.Keep
  */
 @Keep
 data class PatternRow(
-    val id: Long,
+    val id: PatternRowId,
     val rowNumber: RowNumber,
     val operations: List<PatternOperation> = emptyList()
 ) {

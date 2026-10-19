@@ -656,6 +656,14 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 7b-prep (продолжение) — PatternRowId migration (0188029):
+- PatternRow.id: Long -> PatternRowId.
+- PatternOperation.patternRowId: Long -> PatternRowId.
+- PatternRowId.kt + PatternRowIdTest.kt — в коммит (7 тестов).
+- PatternRowTest: 3 места, PatternTest: 5 мест — обновлены.
+- Конфликт 4.5.8: YAGNI vs SOLID. Выбран SOLID (приоритет 1):
+  VO обязателен по STANDARDS §11 п.6 (инвариант + cross-aggregate reference).
+
 Pre-v7, шаг 7b-prep — исправление P1 из ревью 19.10.2026 (fix(domain)):
 - Созданы 2 VO: PatternId и PatternRowId (> 0 для сохранённых, ZERO для
   новых; create(0) throws, createOrDefault(-1) -> ZERO).
@@ -864,6 +872,18 @@ Feature flags, Security, Performance — после релиза.
 7. Коммит — одна операция.
 8. Проверка после патча — KDoc, сигнатуры, git status.
 
+Процессные уроки (сессия 19.10.2026):
+1. `git add .` запрещён (HANDOVER §7). `git add -u` (tracked) + явный `git add` (новые).
+2. `--amend` + `--force-with-lease` — только для локальных (не запушенных) коммитов.
+   Если запушен — новый коммит (линейная история).
+3. `grep` — до патча, не по памяти. `PatternRow(1L, ...)` — позиционный аргумент,
+   `grep "PatternRow(id"` его не находит. Правильно: `grep "PatternRow("` + `sed -n`.
+4. VO — приоритет 1 (HANDOVER §4.5.8). SOLID выше YAGNI. STANDARDS §11 п.6:
+   VO обязателен при инварианте или cross-aggregate reference.
+5. Не менять решение 5 раз. Зафиксировать принцип-победитель в начале обсуждения.
+6. Docs — в том же коммите, что код. Никаких `docs(handover)` отдельно.
+   Если забыл — `HANDOVER.md` в рабочей копии до следующего кода (не amend, не отдельный коммит).
+
 Правила для ИИ:
 
 Строгий review, без комплиментов.
@@ -973,6 +993,12 @@ gradle/libs.versions.toml — НЕ существует.
 ---
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
+
+Следующий шаг — **Шаг 7b:** `Pattern.getDirectionForRow(row: PatternRow): PatternDirection`
++ кэш `Map<PatternRowId, Int>`. `require(rows.isNotEmpty())`. Для `ALTERNATING`
+чётность по индексу. ТЗ v8.0 §3.4 (строка 52-53).
+
+**Перед 7b — консилиум по Q1–Q5** (чётность ALTERNATING, row не найден, кэш lazy/init).
 
 Закрыто: 3.1c, i18n (56/56), 3.1d (прогресс в списке, 146 тестов).
 Счётчик рядов закрыт end-to-end: цель задаётся при создании, счётчик на

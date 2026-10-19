@@ -17,7 +17,7 @@ class PatternRowTest {
 
     @Test
     fun create_withEmptyOperations_ok() {
-        val row = PatternRow(id = 1L, rowNumber = RowNumber.create(1))
+        val row = PatternRow(id = PatternRowId.create(1L), rowNumber = RowNumber.create(1))
         assertEquals(0, row.operations.size)
     }
 
@@ -27,11 +27,11 @@ class PatternRowTest {
         // PatternRow проверяет только уникальность columnStart.
         val sameSymbol = symbol()
         val row = PatternRow(
-            id = 1L,
+            id = PatternRowId.create(1L),
             rowNumber = RowNumber.create(1),
             operations = listOf(
-                PatternOperation(1L, ColumnStart.create(0), sameSymbol),
-                PatternOperation(1L, ColumnStart.create(1), sameSymbol)
+                PatternOperation(PatternRowId.create(1L), ColumnStart.create(0), sameSymbol),
+                PatternOperation(PatternRowId.create(1L), ColumnStart.create(1), sameSymbol)
             )
         )
         assertEquals(2, row.operations.size)
@@ -40,11 +40,11 @@ class PatternRowTest {
     @Test(expected = IllegalArgumentException::class)
     fun create_withDuplicateColumns_throws() {
         PatternRow(
-            id = 1L,
+            id = PatternRowId.create(1L),
             rowNumber = RowNumber.create(1),
             operations = listOf(
-                PatternOperation(1L, ColumnStart.create(0), symbol("V")),
-                PatternOperation(1L, ColumnStart.create(0), symbol("X"))
+                PatternOperation(PatternRowId.create(1L), ColumnStart.create(0), symbol("V")),
+                PatternOperation(PatternRowId.create(1L), ColumnStart.create(0), symbol("X"))
             )
         )
     }
