@@ -46,6 +46,16 @@
 - [x] `PatternIdTest.kt`: добавлен `create_withMaxLong_returnsValue`.
 - [x] `PatternRowIdTest` — включён в коммит 0188029 (не 7d).
 
+### Шаг 7b — открытые P2 (из ревью adb730b)
+- [ ] `Symbol.ownerPatternId: Long?` -> `PatternId?` (LIN, Primitive Obsession).
+- [ ] `Project.patternId: Long?` -> `PatternId?` (LIN, 7c).
+- [ ] `RowCount.isPositive()` / `StitchCount.isPositive()` (BIZ, 7e+):
+  убрать прямые сравнения с `ZERO` в `init` блоках.
+- [ ] Pre-commit hook: проверка `.git/index.lock` (PROC).
+- [ ] `Pattern` — God Class (SOLID, 7e+): разделение `PatternMetadata`,
+  `PatternCalibration`, `PatternContent`.
+- [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
+
 ### Шаг 7b — открытые P2 (SOLID)
 - [ ] `Pattern` — God Class (13 полей + 1 метод). Кандидат на разделение (7e+):
   `PatternMetadata` (id, name, technique, direction, isReversible),

@@ -656,6 +656,14 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 7b-fix — ревью adb730b (fix(domain)):
+- KDoc: {@code}/{@link} -> Markdown (`...`/[...]) в Pattern.kt.
+- Pattern.init: require(rows.map { it.id }.toSet().size == rows.size) —
+  защита от дубликатов id в rows (KOT/BIZ).
+- +1 тест: create_withDuplicateRowId_throws.
+- TECHDEBT: +6 P2 (Symbol.ownerPatternId, Project.patternId, isPositive,
+  index.lock, God Class, PatternDirection OCP).
+
 Pre-v7, шаг 7b — Pattern.getDirectionForRow (feat(domain)):
 - Pattern.getDirectionForRow(row: PatternRow): PatternDirection.
 - Кэш Map<PatternRowId, Int> (lazy, не в equals/hashCode).

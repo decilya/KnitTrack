@@ -167,6 +167,16 @@ class PatternTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
+    fun create_withDuplicateRowId_throws() {
+        basePattern(
+            rows = listOf(
+                PatternRow(PatternRowId.create(1L), RowNumber.create(1)),
+                PatternRow(PatternRowId.create(1L), RowNumber.create(2))
+            )
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
     fun create_withDuplicateRepeatCode_throws() {
         basePattern(
             repeats = listOf(

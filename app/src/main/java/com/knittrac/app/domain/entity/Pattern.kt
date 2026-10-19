@@ -39,9 +39,9 @@ import androidx.annotation.Keep
  * @property rows Ряды схемы, упорядоченные по rowNumber.
  * @property repeats Раппорты схемы.
  *
- * ВАЖНО: {@code rowIndexCache} — lazy-свойство (Map<PatternRowId, Int>).
+ * ВАЖНО: `rowIndexCache` — lazy-свойство (Map<PatternRowId, Int>).
  * Не входит в equals/hashCode (не часть данных Pattern), не сериализуется.
- * Используется в {@link getDirectionForRow} для O(1) поиска индекса ряда.
+ * Используется в [getDirectionForRow] для O(1) поиска индекса ряда.
  */
 @Keep
 data class Pattern(
@@ -66,6 +66,9 @@ data class Pattern(
         require(imageOffsetY.isFinite()) { "Смещение фона по Y должно быть конечным числом" }
         require(rows.zipWithNext().all { (a, b) -> a.rowNumber.value < b.rowNumber.value }) {
             "Pattern.rows должен быть упорядочен по rowNumber по возрастанию"
+        }
+        require(rows.map { it.id }.toSet().size == rows.size) {
+            "В Pattern.rows не может быть двух PatternRow с одинаковым id"
         }
         val legendCodes = legend.map { it.code }.toSet()
         require(legendCodes.size == legend.size) {
