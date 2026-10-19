@@ -656,6 +656,15 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 7b — Pattern.getDirectionForRow (feat(domain)):
+- Pattern.getDirectionForRow(row: PatternRow): PatternDirection.
+- Кэш Map<PatternRowId, Int> (lazy, не в equals/hashCode).
+- ALTERNATING: чётные индексы (0-based) -> LTR, нечётные -> RTL.
+- require(rows.isNotEmpty()).
+- +7 тестов (LTR, RTL, ALTERNATING, single row, empty, row not found, same id).
+- SOLID P2 в TECHDEBT: Pattern — God Class (7e+), PatternDirection enum (OCP).
+- 7-й процессный урок: git commit -m, index.lock.
+
 Pre-v7, шаг 7b-prep (продолжение) — PatternRowId migration (0188029):
 - PatternRow.id: Long -> PatternRowId.
 - PatternOperation.patternRowId: Long -> PatternRowId.
@@ -884,6 +893,9 @@ Feature flags, Security, Performance — после релиза.
 5. Не менять решение 5 раз. Зафиксировать принцип-победитель в начале обсуждения.
 6. Docs — в том же коммите, что код. Никаких `docs(handover)` отдельно.
    Если забыл — `HANDOVER.md` в рабочей копии до следующего кода (не amend, не отдельный коммит).
+7. `git commit` без `-m` — открывает редактор. Если редактор закрыт аварийно
+   (Ctrl+Z, crash) — `.git/index.lock` остаётся. Git блокирует операции.
+   Удалить `rm -f .git/index.lock`. Впредь — `git commit -m "..."` (без редактора).
 
 Правила для ИИ:
 
@@ -995,11 +1007,13 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-Следующий шаг — **Шаг 7b:** `Pattern.getDirectionForRow(row: PatternRow): PatternDirection`
-+ кэш `Map<PatternRowId, Int>`. `require(rows.isNotEmpty())`. Для `ALTERNATING`
-чётность по индексу. ТЗ v8.0 §3.4 (строка 52-53).
+Следующий шаг — **Шаг 7c:** `ProgressService.markRow(project, row): Result<MarkResult>`.
+Cross-aggregate validation (`row.patternId == project.patternId`). Требует
+`Project.patternId: Long?` -> `PatternId?` и `Project.currentPatternRowId: Long?`
+-> `PatternRowId?`.
 
-**Перед 7b — консилиум по Q1–Q5** (чётность ALTERNATING, row не найден, кэш lazy/init).
+**Перед 7c — консилиум:** как загружать Project и PatternRow, MarkResult, обработка
+несовпадения patternId.
 
 Закрыто: 3.1c, i18n (56/56), 3.1d (прогресс в списке, 146 тестов).
 Счётчик рядов закрыт end-to-end: цель задаётся при создании, счётчик на

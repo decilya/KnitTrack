@@ -46,6 +46,16 @@
 - [x] `PatternIdTest.kt`: добавлен `create_withMaxLong_returnsValue`.
 - [x] `PatternRowIdTest` — включён в коммит 0188029 (не 7d).
 
+### Шаг 7b — открытые P2 (SOLID)
+- [ ] `Pattern` — God Class (13 полей + 1 метод). Кандидат на разделение (7e+):
+  `PatternMetadata` (id, name, technique, direction, isReversible),
+  `PatternCalibration` (backgroundImageUri, imageOffsetX/Y/Scale),
+  `PatternContent` (legend, rows, repeats). Сейчас — ТЗ §3.4 требует
+  метод агрегата (`getDirectionForRow`), поэтому не разделяем.
+- [ ] `PatternDirection` — enum, `getDirectionForRow` — `when`. При добавлении
+  нового направления — менять `Pattern` (OCP). Кандидат на sealed class (7e+).
+  Сейчас — ТЗ §4 требует enum.
+
 ### Запланированный техдолг (Post-v8.0)
 
 | ID | Раздел ТЗ | Срок | Описание |

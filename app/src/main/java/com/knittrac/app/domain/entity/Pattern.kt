@@ -38,6 +38,10 @@ import androidx.annotation.Keep
  *   не владение).
  * @property rows Ряды схемы, упорядоченные по rowNumber.
  * @property repeats Раппорты схемы.
+ *
+ * ВАЖНО: {@code rowIndexCache} — lazy-свойство (Map<PatternRowId, Int>).
+ * Не входит в equals/hashCode (не часть данных Pattern), не сериализуется.
+ * Используется в {@link getDirectionForRow} для O(1) поиска индекса ряда.
  */
 @Keep
 data class Pattern(
@@ -70,6 +74,51 @@ data class Pattern(
         val repeatCodes = repeats.map { it.code }.toSet()
         require(repeatCodes.size == repeats.size) {
             "В repeats не может быть двух PatternRepeat с одинаковым code"
+        }
+    }
+
+    /**
+     * Кэш индексов рядов (Map<PatternRowId, Int>).
+     *
+     * lazy — не входит в equals/hashCode (не часть данных Pattern),
+     * не сериализуется. Инициализируется при первом вызове
+     * [getDirectionForRow]. Потокобезопасен (SynchronizedLazyImpl).
+     */
+    private val rowIndexCache: Map<PatternRowId, Int> by lazy {
+        rows.mapIndexed { index, row -> row.id to index }.toMap()
+    }
+
+    /**
+     * Возвращает направление чтения для указанного ряда.
+     *
+     * Контракт (ТЗ v8.0 §3.4):
+     * - [PatternDirection.LTR] — все ряды LTR.
+     * - [PatternDirection.RTL] — все ряды RTL.
+     * - [PatternDirection.ALTERNATING] — чётность индекса (0-based):
+     *   чётные индексы (0, 2, 4) -> LTR, нечётные (1, 3, 5) -> RTL.
+     *
+     * ВАЖНО: требует [rows].isNotEmpty(). Pattern с пустыми rows валиден,
+     * но getDirectionForRow для него бросает IllegalArgumentException.
+     *
+     * @param row Ряд, для которого вычисляется направление. Должен
+     *   присутствовать в [rows] (по [PatternRowId]).
+     * @return Направление чтения для ряда.
+     * @throws IllegalArgumentException Если [rows] пуст или row не найден.
+     */
+    fun getDirectionForRow(row: PatternRow): PatternDirection {
+        require(rows.isNotEmpty()) {
+            "Pattern.rows пуст: getDirectionForRow требует хотя бы один ряд"
+        }
+        return when (direction) {
+            PatternDirection.LTR -> PatternDirection.LTR
+            PatternDirection.RTL -> PatternDirection.RTL
+            PatternDirection.ALTERNATING -> {
+                val index = rowIndexCache[row.id]
+                    ?: throw IllegalArgumentException(
+                        "PatternRow с id=${row.id.value} не найден в Pattern.rows"
+                    )
+                if (index % 2 == 0) PatternDirection.LTR else PatternDirection.RTL
+            }
         }
     }
 }
