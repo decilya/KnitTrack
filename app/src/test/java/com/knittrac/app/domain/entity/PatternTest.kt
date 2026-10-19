@@ -12,7 +12,7 @@ class PatternTest {
         rows: List<PatternRow> = emptyList(),
         repeats: List<PatternRepeat> = emptyList()
     ) = Pattern(
-        id = 1L,
+        id = PatternId.create(1L),
         name = PatternName.create("Тест"),
         technique = Technique.KNITTING,
         direction = PatternDirection.LTR,
@@ -73,12 +73,96 @@ class PatternTest {
     @Test(expected = IllegalArgumentException::class)
     fun create_withZeroScale_throws() {
         Pattern(
-            id = 1L,
+            id = PatternId.create(1L),
             name = PatternName.create("Тест"),
             technique = Technique.KNITTING,
             direction = PatternDirection.LTR,
             isReversible = false,
             imageScale = 0f
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withNaNScale_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageScale = Float.NaN
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withInfiniteScale_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageScale = Float.POSITIVE_INFINITY
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withInfiniteOffsetX_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageOffsetX = Float.NEGATIVE_INFINITY
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withNaNOffsetY_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageOffsetY = Float.NaN
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withNaNOffsetX_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageOffsetX = Float.NaN
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withPositiveInfiniteOffsetX_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageOffsetX = Float.POSITIVE_INFINITY
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun create_withInfiniteOffsetYPositive_throws() {
+        Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Тест"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            imageOffsetY = Float.POSITIVE_INFINITY
         )
     }
 

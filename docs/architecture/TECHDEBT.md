@@ -28,13 +28,28 @@
   на единый VO, если появится калибровка с инвариантами (сейчас YAGNI).
 - [ ] `Symbol.displayName` — не локализован. Локализация через
   `SymbolLocalizer` (Presentation), появится в 7d+.
-- [ ] `PatternRepeat` — инварианты `stitchCount > 0`, `rowCount > 0`
-  реализованы через `.value` (обращение к внутреннему полю VO). Заменить
-  на сравнение с `StitchCount.ZERO` / `RowCount.ZERO` (семантически чище,
-  не зависит от внутреннего представления).
-- [ ] `TechniqueTest`, `PatternDirectionTest` — отсутствуют. По
-  HANDOVER §12.6.2 п.9 (enum-контракты: fromNameOrDefault, стабильность name)
-  нужны тесты. Добавить в 7b или отдельным fix(domain).
+- [x] `PatternRepeat` — закрыто в 7b-prep: `.value` заменено на сравнение с
+  `StitchCount.ZERO` / `RowCount.ZERO`.
+- [x] `TechniqueTest`, `PatternDirectionTest` — закрыто в 7b-prep.
+
+### Шаг 7b-prep — открытые P2 (после fix(domain))
+- [ ] `PatternRow.id: Long` -> `PatternRowId` — миграция вместе с
+  `PatternOperation.patternRowId: Long` в 7d (согласованное изменение,
+  чтобы не было несогласованности типов).
+  В рабочей копии уже созданы `PatternRowId.kt` и `PatternRowIdTest.kt`
+  (untracked) — включить в коммит 7d.
+- [ ] `Project.patternId: Long?` -> `PatternId?` — в 7c (ProgressService),
+  когда появится реальное использование. Сейчас — маппинг Data-слоя
+  (`DtoMappers`, `EntityMappers`) работает с `Long?`, менять не нужно.
+
+### Fix-очередь 7b-prep (закрыть в 7b, 5 минут)
+- [ ] `PatternTest.kt`: `create_withInfiniteOffsetY_throws` -> `create_withNaNOffsetY_throws`
+  (тест на `NaN`, имя вводит в заблуждение).
+- [ ] `PatternTest.kt`: добавить `create_withPositiveInfiniteOffsetX_throws`
+  (симметрия с `NEGATIVE_INFINITY`).
+- [ ] `PatternIdTest.kt`: добавить `create_withMaxLong_returnsValue`
+  (граница `Long.MAX_VALUE`).
+- [ ] `TECHDEBT.md`: `PatternRowIdTest` (untracked, 7d) — включить в 7d.
 
 ### Запланированный техдолг (Post-v8.0)
 

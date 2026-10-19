@@ -27,11 +27,13 @@ import androidx.annotation.Keep
  * @property technique Техника выполнения.
  * @property direction Направление чтения.
  * @property isReversible Двусторонняя ли схема (ЛС/ИС).
- * @property backgroundImageUri URI фонового изображения (String, не
- *   android.net.Uri — Persistence Ignorance). null — без фона.
+ * @property backgroundImageUri URI фонового изображения. String (не
+ *   android.net.Uri — Persistence Ignorance), совместим с Coil
+ *   (AsyncImage(model = String?)). null — без фона.
  * @property imageOffsetX Смещение фона по X (для Canvas-калибровки).
- * @property imageOffsetY Смещение фона по Y.
- * @property imageScale Масштаб фона.
+ *   Должно быть конечным числом (не NaN, не Infinity).
+ * @property imageOffsetY Смещение фона по Y. Должно быть конечным числом.
+ * @property imageScale Масштаб фона. Должен быть конечным числом > 0.
  * @property legend Множество символов, использованных в схеме (ссылки,
  *   не владение).
  * @property rows Ряды схемы, упорядоченные по rowNumber.
@@ -39,7 +41,7 @@ import androidx.annotation.Keep
  */
 @Keep
 data class Pattern(
-    val id: Long,
+    val id: PatternId,
     val name: PatternName,
     val technique: Technique,
     val direction: PatternDirection,
@@ -53,7 +55,11 @@ data class Pattern(
     val repeats: List<PatternRepeat> = emptyList()
 ) {
     init {
-        require(imageScale > 0f) { "Масштаб фона должен быть > 0" }
+        require(imageScale.isFinite() && imageScale > 0f) {
+            "Масштаб фона должен быть конечным числом > 0"
+        }
+        require(imageOffsetX.isFinite()) { "Смещение фона по X должно быть конечным числом" }
+        require(imageOffsetY.isFinite()) { "Смещение фона по Y должно быть конечным числом" }
         require(rows.zipWithNext().all { (a, b) -> a.rowNumber.value < b.rowNumber.value }) {
             "Pattern.rows должен быть упорядочен по rowNumber по возрастанию"
         }

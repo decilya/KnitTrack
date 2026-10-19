@@ -656,6 +656,23 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 7b-prep — исправление P1 из ревью 19.10.2026 (fix(domain)):
+- Созданы 2 VO: PatternId и PatternRowId (> 0 для сохранённых, ZERO для
+  новых; create(0) throws, createOrDefault(-1) -> ZERO).
+- Pattern.id: Long -> PatternId. PatternRowId создан, но PatternRow.id
+  остаётся Long — миграция вместе с PatternOperation.patternRowId в 7d
+  (согласованное изменение).
+- Pattern.init: require(imageScale.isFinite() && > 0), require(
+  imageOffsetX/Y.isFinite()). Защита от NaN/Infinity.
+- PatternRepeat: .value > 0 заменено на != StitchCount.ZERO / != RowCount.ZERO
+  (семантика VO, не внутреннее представление).
+- Pattern.kt KDoc: «fork — не добавлять» (усилено).
+- Добавлены 3 теста-файла: PatternIdTest (7), TechniqueTest (6),
+  PatternDirectionTest (5). Plus PatternTest + 6 тестов на NaN/Infinity.
+  PatternNameTest + 1 тест на синхронизацию MAX_LENGTH с ProjectName.
+- PatternRowId создан, но не включён в коммит (мёртвый код): миграция
+  PatternRow.id -> PatternRowId — в 7d вместе с PatternOperation.patternRowId.
+
 Pre-v7, шаг 7a — Domain-модель схем Pattern Tracker (feat(domain)):
 - Созданы 3 enum: Technique, PatternDirection, SymbolCategory
   (SymbolCategory: STANDARD/CUSTOM, без displayName — локализация в Presentation).

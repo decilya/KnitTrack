@@ -21,7 +21,7 @@ data class PatternRepeat(
 ) {
     init {
         require(code.isNotBlank()) { "Код раппорта не может быть пустым" }
-        require(stitchCount.value > 0) { "Количество петель в раппорте должно быть > 0" }
-        require(rowCount.value > 0) { "Количество рядов в раппорте должно быть > 0" }
+        require(stitchCount != StitchCount.ZERO) { "Количество петель в раппорте должно быть > 0" }
+        require(rowCount != RowCount.ZERO) { "Количество рядов в раппорте должно быть > 0" }
     }
 }

@@ -44,4 +44,9 @@ class PatternNameTest {
     fun valueClass_structuralEquality() {
         assertEquals(PatternName.create("A"), PatternName.create("A"))
     }
+
+    @Test
+    fun maxLength_isSynchronizedWithProjectName() {
+        assertEquals(ProjectName.MAX_LENGTH, PatternName.MAX_LENGTH)
+    }
 }
