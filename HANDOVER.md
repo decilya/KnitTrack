@@ -656,6 +656,24 @@ Pre-v7, шаг 3 — Миграция БД v4->v5 и исправление ма
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 - Написан Migration4To5Test (Robolectric), проверяющий сохранность сессий и проектов.
 
+Pre-v7, шаг 7a — Domain-модель схем Pattern Tracker (feat(domain)):
+- Созданы 3 enum: Technique, PatternDirection, SymbolCategory
+  (SymbolCategory: STANDARD/CUSTOM, без displayName — локализация в Presentation).
+- Созданы 4 VO: PatternName (MAX_LENGTH = 100, синхронизирован с ProjectName),
+  ColumnStart (0-based, для Canvas), RowNumber (1-based, для UI),
+  Span (>= 1).
+- Созданы 4 entity: Symbol (data class без репозитория; SymbolRepository — в 7d),
+  PatternRepeat (инвариант stitchCount > 0, rowCount > 0), PatternRow (владеет
+  operations, init проверяет уникальность columnStart), PatternOperation
+  (entity-значение внутри PatternRow, содержит symbol: Symbol, effectiveColumnSpan — getter).
+- Создан агрегат Pattern (immutable): init проверяет imageScale > 0, rows
+  упорядочен по rowNumber, legend без дубликатов code, repeats без дубликатов code.
+  fork — не метод (ForkPatternService в Application).
+- Добавлены 8 тестов (PatternName, ColumnStart, RowNumber, Span, SymbolCategory,
+  PatternRow, PatternRepeat, Pattern).
+- Отклонение от консилиума v3: require(imageScale > 0) добавлен на Фазе 4.
+- Открытый P2: backgroundImageUri/offsetX/offsetY/scale — кандидаты на BackgroundImage VO.
+
 Pre-v7, шаг 6 — Value Objects RowCount и StitchCount (feat(domain)):
 - Созданы VO RowCount и StitchCount с инвариантом >= 0.
 - В Project.kt примитивы заменены на VO, init-блок с require удален.

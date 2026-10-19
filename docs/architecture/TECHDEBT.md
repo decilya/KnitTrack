@@ -22,6 +22,20 @@
 - [x] Исправлен баг потери данных (totalRows/targetRowCount) в мапперах Entity и DTO.
 - [x] Шаг 6: Внедрены Value Objects RowCount и StitchCount (устранен Primitive Obsession).
 
+### Шаг 7a — открытые P2 (Domain-модель схем)
+- [ ] `BackgroundImage` VO: 4 поля `Pattern.backgroundImageUri: String?`,
+  `imageOffsetX: Float`, `imageOffsetY: Float`, `imageScale: Float` — кандидаты
+  на единый VO, если появится калибровка с инвариантами (сейчас YAGNI).
+- [ ] `Symbol.displayName` — не локализован. Локализация через
+  `SymbolLocalizer` (Presentation), появится в 7d+.
+- [ ] `PatternRepeat` — инварианты `stitchCount > 0`, `rowCount > 0`
+  реализованы через `.value` (обращение к внутреннему полю VO). Заменить
+  на сравнение с `StitchCount.ZERO` / `RowCount.ZERO` (семантически чище,
+  не зависит от внутреннего представления).
+- [ ] `TechniqueTest`, `PatternDirectionTest` — отсутствуют. По
+  HANDOVER §12.6.2 п.9 (enum-контракты: fromNameOrDefault, стабильность name)
+  нужны тесты. Добавить в 7b или отдельным fix(domain).
+
 ### Запланированный техдолг (Post-v8.0)
 
 | ID | Раздел ТЗ | Срок | Описание |
