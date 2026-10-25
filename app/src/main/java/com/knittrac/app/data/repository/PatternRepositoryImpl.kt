@@ -6,8 +6,14 @@ import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
 import com.knittrac.app.data.mapper.toDomain
+import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.Pattern
+import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.PatternOperation
+import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.Span
+import com.knittrac.app.domain.model.OperationSpan
 import com.knittrac.app.domain.repository.PatternRepository
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -59,6 +65,49 @@ class PatternRepositoryImpl @Inject constructor(
         throw e
     } catch (e: Exception) {
         Timber.e(e, "getPatternById id=%d failed", id.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    /**
+     * Возвращает интервалы операций в ряду для overlap-check.
+     *
+     * Проекция `OperationSpanProjection` мапится в Domain-модель [OperationSpan]
+     * с VO-типами ([ColumnStart], [Span]).
+     */
+    override suspend fun getOperationSpansForRow(
+        rowId: PatternRowId
+    ): Result<List<OperationSpan>> = try {
+        val projections = patternDao.getOperationSpansForRow(rowId.value)
+        Result.Success(
+            projections.map {
+                OperationSpan(
+                    columnStart = ColumnStart.createOrDefault(it.columnStart),
+                    span = Span.createOrDefault(it.effectiveSpan)
+                )
+            }
+        )
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "getOperationSpansForRow rowId=%d failed", rowId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    /**
+     * Вставляет операцию в ряд через пакетный [PatternDao.insertOperations].
+     */
+    override suspend fun addOperation(operation: PatternOperation): Result<Unit> = try {
+        patternDao.insertOperations(listOf(operation.toEntity()))
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(
+            e,
+            "addOperation rowId=%d columnStart=%d failed",
+            operation.patternRowId.value,
+            operation.columnStart.value
+        )
         Result.Error(AppError.DatabaseError(e))
     }
 }

@@ -56,6 +56,13 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7d — открытые P2
+
+- [ ] `PatternOperation.toEntity` теряет `rowSpanOverride`: Domain
+  `PatternOperation` имеет один `overrideSpan: Span?`, а Entity — два
+  (`columnSpanOverride`, `rowSpanOverride`). `rowSpanOverride` всегда null.
+  Исправить при появлении вертикального span в Domain (7e+).
+
 ### Шаг 7d-prep — открытые P2
 
 - [ ] `PatternRepositoryImpl.getPatternById` выполняет 4 запроса

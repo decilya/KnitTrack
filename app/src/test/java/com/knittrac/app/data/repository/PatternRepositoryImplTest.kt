@@ -9,7 +9,12 @@ import com.knittrac.app.data.local.entity.PatternEntity
 import com.knittrac.app.data.local.entity.PatternRepeatEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.local.entity.SymbolEntity
+import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.PatternOperation
+import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.Span
+import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.entity.SymbolCategory
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -113,6 +118,99 @@ class PatternRepositoryImplTest {
         coEvery { patternDao.getPatternById(1L) } throws SQLException("boom")
 
         val result = repository.getPatternById(PatternId.create(1L))
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    /**
+     * getOperationSpansForRow мапит проекции в OperationSpan с VO.
+     */
+    @Test
+    fun getOperationSpansForRow_mapsProjections() = runTest {
+        coEvery { patternDao.getOperationSpansForRow(10L) } returns listOf(
+            com.knittrac.app.data.local.OperationSpanProjection(columnStart = 0, effectiveSpan = 1),
+            com.knittrac.app.data.local.OperationSpanProjection(columnStart = 2, effectiveSpan = 3)
+        )
+
+        val result = repository.getOperationSpansForRow(PatternRowId.create(10L))
+
+        assertTrue(result is Result.Success)
+        val spans = (result as Result.Success).data
+        assertEquals(2, spans.size)
+        assertEquals(0, spans[0].columnStart.value)
+        assertEquals(1, spans[0].span.value)
+        assertEquals(2, spans[1].columnStart.value)
+        assertEquals(3, spans[1].span.value)
+    }
+
+    /**
+     * Пустой список операций — не ошибка.
+     */
+    @Test
+    fun getOperationSpansForRow_empty() = runTest {
+        coEvery { patternDao.getOperationSpansForRow(10L) } returns emptyList()
+
+        val result = repository.getOperationSpansForRow(PatternRowId.create(10L))
+
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).data.isEmpty())
+    }
+
+    /**
+     * Сбой БД при getOperationSpansForRow — DatabaseError.
+     */
+    @Test
+    fun getOperationSpansForRow_sqlException() = runTest {
+        coEvery { patternDao.getOperationSpansForRow(10L) } throws SQLException("boom")
+
+        val result = repository.getOperationSpansForRow(PatternRowId.create(10L))
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    /**
+     * addOperation делегирует в DAO и возвращает Success.
+     */
+    @Test
+    fun addOperation_success() = runTest {
+        coEvery { patternDao.insertOperations(any()) } returns Unit
+
+        val op = PatternOperation(
+            patternRowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0),
+            symbol = Symbol(
+                code = "K",
+                displayName = "Лицевая",
+                textGlyph = "V",
+                category = SymbolCategory.STANDARD,
+                defaultColumnSpan = Span.ONE
+            )
+        )
+        val result = repository.addOperation(op)
+
+        assertTrue(result is Result.Success)
+    }
+
+    /**
+     * Сбой БД при addOperation — DatabaseError.
+     */
+    @Test
+    fun addOperation_sqlException() = runTest {
+        coEvery { patternDao.insertOperations(any()) } throws SQLException("boom")
+
+        val op = PatternOperation(
+            patternRowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0),
+            symbol = Symbol(
+                code = "K",
+                displayName = "Лицевая",
+                textGlyph = "V",
+                category = SymbolCategory.STANDARD
+            )
+        )
+        val result = repository.addOperation(op)
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.DatabaseError)

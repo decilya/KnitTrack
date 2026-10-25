@@ -29,4 +29,21 @@ interface PatternDao {
 
     @Query("SELECT * FROM pattern_operations WHERE pattern_row_id = :rowId ORDER BY column_start ASC")
     suspend fun getOperationsForRow(rowId: Long): List<PatternOperationEntity>
+
+    /**
+     * Возвращает интервалы (columnStart + effectiveSpan), занятые операциями
+     * в ряду. Эффективная ширина = column_span_override, если задан,
+     * иначе symbols.default_column_span.
+     *
+     * Используется [AddPatternOperationService] для overlap-check в памяти.
+     */
+    @Query("""
+        SELECT po.column_start AS columnStart,
+               COALESCE(po.column_span_override, s.default_column_span) AS effectiveSpan
+        FROM pattern_operations po
+        INNER JOIN symbols s ON s.code = po.symbol_code
+        WHERE po.pattern_row_id = :rowId
+        ORDER BY po.column_start ASC
+    """)
+    suspend fun getOperationSpansForRow(rowId: Long): List<OperationSpanProjection>
 }
