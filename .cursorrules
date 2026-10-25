@@ -13,7 +13,7 @@
 
 ## 1. АБСОЛЮТНЫЕ ЗАПРЕТЫ
 
-1. ЗАПРЕТНЫЕ ЗОНЫ:
+1. ЗАПРЕТНЫЕ ЗОНЫ (СТОП, спроси разрешение; при явном «да» владельца — можно):
    - app/src/main/java/com/knittrac/app/core/common/Result.kt
    - app/src/main/java/com/knittrac/app/core/common/AppError.kt
    - app/src/main/java/com/knittrac/app/core/common/AppErrorMapper.kt
@@ -22,6 +22,9 @@
    - di/*Module.kt
    - Pattern.getDirectionForRow (контракт 7b-fix)
    Найден баг — сообщи, не меняй.
+
+   Разрешение на правку фиксировать в commit-message строкой
+   `Owner-approved: <путь/файл>` и отмечать в §8 self-review чек-листе.
 
 2. VALUE OBJECTS ВМЕСТО ПРИМИТИВОВ:
    - В новом коде — только VOs: ProjectName, Duration, RowCount, StitchCount, PatternId, PatternRowId, PatternName, ColumnStart, RowNumber, Span.
@@ -115,3 +118,4 @@
 - [ ] KDoc обновлён (если менял контракт метода/инвариант).
 - [ ] git diff --stat показывает только файлы из задачи.
 - [ ] gradlew test detekt зелёный, число тестов >= предыдущего.
+- [ ] Если трогал §1.1 (запретные зоны) — commit-message содержит `Owner-approved: <файл>`.
