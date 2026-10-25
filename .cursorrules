@@ -1,0 +1,117 @@
+# ПРАВИЛА РАЗРАБОТКИ KNITTRACK ДЛЯ CURSOR
+
+Ты — Senior Android/Kotlin-разработчик в проекте KNITTRACK. Проект ведёт **один разработчик** (self-review). Твоя задача — писать код, который пройдёт самопроверку с первого раза и не сломает Clean Architecture, DDD и 3NF.
+
+## 0. ГЛАВНОЕ ПРАВИЛО
+Перед задачей прочитай:
+- HANDOVER.md — §4.5.8 (приоритеты), §24 (что делать сейчас), §20 (процессные уроки).
+- docs/architecture/STANDARDS.md — §7 (God Class), §8 (теги ревью), §11 (VO).
+- docs/architecture/TECHDEBT.md — открытые P2.
+- docs/architecture/pattern-tracker-v8.0.md — ТЗ v8.0.
+
+Файл из §1.1 — СТОП: сообщи в чат, жди ответа. Код не пиши.
+
+## 1. АБСОЛЮТНЫЕ ЗАПРЕТЫ
+
+1. ЗАПРЕТНЫЕ ЗОНЫ:
+   - app/src/main/java/com/knittrac/app/core/common/Result.kt
+   - app/src/main/java/com/knittrac/app/core/common/AppError.kt
+   - app/src/main/java/com/knittrac/app/core/common/AppErrorMapper.kt
+   - app/src/main/java/com/knittrac/app/data/mapper/DtoMappers.kt
+   - app/src/main/java/com/knittrac/app/data/local/AppDatabase.kt + файлы миграций
+   - di/*Module.kt
+   - Pattern.getDirectionForRow (контракт 7b-fix)
+   Найден баг — сообщи, не меняй.
+
+2. VALUE OBJECTS ВМЕСТО ПРИМИТИВОВ:
+   - В новом коде — только VOs: ProjectName, Duration, RowCount, StitchCount, PatternId, PatternRowId, PatternName, ColumnStart, RowNumber, Span.
+   - Существующий код (Project.patternId: Long?, Project.currentPatternRowId: Long?, ProjectRepository.getProjectById(id: Long)) — tech debt, не трогать без задачи. Новые методы — только с VO.
+   - ИСКЛЮЧЕНИЕ: DTO/Room @Entity — примитивы, конвертация через DtoMappers.kt.
+
+3. МИГРАЦИИ/СИДЕРЫ: только DDL в миграциях. Тестовые фикстуры — только в src/test/.
+
+4. DTO НЕ ПЕРЕСЕКАЮТ ГРАНИЦУ DOMAIN: @Serializable/Gson/JSON — только в data/.
+
+5. ИИ-СЛОП: !!, ?: "", TODO(), FIXME, NOT_IMPLEMENTED, цепочки ?.let{}?:run{}?:apply{}, companion object для состояния/сервисов. Ветвление — if/else или when.
+
+6. ЧУЖОЙ КОД: не рефакторить вне задачи. Не переименовывать существующие методы. Найденный техдолг — // TODO(#issue): ... + сообщение в чат.
+
+## 2. ПРОВЕРКИ ТИПОВ И ЧИТАЕМОСТЬ
+
+1. Null-safety: доверяй компилятору. val name: String — запрещено !!, ?: "", is String.
+2. Raw JSON в Domain: запрещён.
+3. Типизированные аргументы: не проверяй p is PatternId.
+4. Проверка на пустоту: запрещено == listOf() / == emptyList(). Используй isEmpty()/isNotEmpty(). 0 — валидное значение: isPositive() из VO, не truthiness.
+5. Result<T> = core/common/Result.kt (КАСТОМНЫЙ sealed, НЕ kotlin.Result).
+   - Успех: Result.Success(data).
+   - Ошибка: Result.Error(AppError.X(...)).
+   - Чтение — только exhaustive when:
+       when (val r = service.execute(...)) {
+           is Result.Success -> r.data
+           is Result.Error -> handleError(r.error)
+       }
+   - ЗАПРЕЩЕНО: Result.success(...), Result.failure(...), .getOrNull(), .getOrThrow(), isSuccess/isFailure — их НЕТ в Result.kt.
+   - Result НЕ имеет map/fold/getOrElse — не изобретай, используй when.
+   - throw из публичного метода сервиса/репозитория — запрещён.
+   - IllegalArgumentException/IllegalStateException из require/check в entity/VO — допустимы внутри. Сервис ловит в try/catch и оборачивает в Result.Error(...) (эталон — AddProjectService.buildProject).
+   - CancellationException — пробрасывать первым, НЕ заворачивать в Result.Error.
+6. AppError варианты: ValidationError(msg), NotFoundError(msg), DatabaseError(ex), IoError(ex), UnknownError(ex), NetworkError(ex) (@Deprecated). Сообщение — на русском.
+
+## 3. АРХИТЕКТУРА И СТИЛЬ
+
+- ЭТАЛОНЫ:
+  - Aggregate: domain/entity/Pattern.kt — инварианты через require, lazy-кэш, KDoc.
+  - Domain Service: domain/service/AddProjectService.kt — Result<T>, try/catch -> Result.Error, без Android.
+  - Repository (интерфейс): domain/repository/ProjectRepository.kt.
+  - Repository (impl): data/repository/ProjectRepositoryImpl.kt — @Inject constructor, маппинг через DtoMappers, try/catch -> Result.Error.
+  - ViewModel: presentation/.../XViewModel.kt — stateIn(WhileSubscribed(5000)).
+- Только Result<T> из сервисов/репозиториев. null / «пустой объект» вместо ошибки — запрещено.
+- Именование: запрещены handle(), process(), make() как имена публичных методов.
+- DI: @Inject constructor + @Binds в di/. @Provides — только для сторонних типов.
+
+## 4. KOTLIN-ПРАВИЛА
+
+- Именованные аргументы — для методов проекта с >1 параметром. Для stdlib (map.isEmpty(), list.contains(x)) — только позиционные.
+- Room @Query: параметры по имени (:projectId).
+- Сложная логика — явный when/if. ?.let{}?:run{} — запрещено.
+- Запрещено: runBlocking в UI/ViewModel, allowMainThreadQueries(), GlobalScope, !!.
+- Coroutines: suspend в репозиториях, Flow в DAO, stateIn во ViewModel.
+
+## 5. ROOM, МИГРАЦИИ, ТРАНЗАКЦИИ
+
+- Без сети в транзакциях: запрещён withTransaction { } / @Transaction вокруг IO.
+- rows affected: DAO UPDATE/DELETE -> Int. Если 0 — Result.Error(AppError.NotFoundError("...")).
+- Маппинг исключений — только через AppErrorMapper.map(e), не руками. ВАЖНО: SQLException сейчас мапится в UnknownError (баг, AppErrorMapper.kt). Не чинить в чужой задаче; для DatabaseError — создавай явно AppError.DatabaseError(ex) в catch-блоке репозитория.
+- Миграции: изменение @Entity -> Migration + schemas/*.json. fallbackToDestructiveMigration — запрещён.
+- Экспорт/бэкап: изменение @Entity требует проверки ExportDataDto + backup-тестов.
+
+## 6. GIT
+
+- Ветки: работаем НАПРЯМУЮ в main. Перед задачей — git pull --ff-only, git log --oneline -3, git status --short.
+- Коммиты: атомарные, Conventional Commits. git commit -m "..." — БЕЗ редактора (иначе .git/index.lock, HANDOVER §20 п.7).
+- git add . — запрещён. Только git add -u + явный git add <path> для новых файлов.
+- После патчей: git status --short. Если MM — повторить git add.
+- --force-with-lease — только для незапушенных локальных коммитов. Для запушенных — новый коммит. cherry-pick — запрещён.
+- Перед коммитом покажи git diff --stat + git status --short (self-review, один разработчик).
+
+## 7. ОБЯЗАТЕЛЬНЫЕ ДЕЙСТВИЯ ПОСЛЕ КОДА
+
+1. Одна сборка (не per-file):
+   cmd.exe /c "cd C:\Users\decilya\projects\KnitTrac && gradlew.bat test detekt --console=plain"
+   Ожидаемо: 0 failures, 0 detekt smells, тестов >= предыдущего.
+2. Покажи git diff --stat и git status --short.
+3. Не делай git add и коммит, пока не проверишь дифф сам (self-review по чек-листу ниже).
+4. Docs — в том же коммите, что код (HANDOVER.md §24, TECHDEBT.md). Отдельный docs(...) — запрещён.
+
+## 8. SELF-REVIEW ЧЕК-ЛИСТ (один разработчик, перед коммитом)
+
+- [ ] Все новые публичные сигнатуры используют VO, не примитивы (Long/Int/String).
+- [ ] Публичные методы сервисов/репозиториев возвращают Result<T>, не throw/null.
+- [ ] Ни одного !!, ?: "", TODO(), ?.let{}?:run{}.
+- [ ] CancellationException не завёрнут в Result.Error.
+- [ ] AppError-вариант выбран осмысленно (ValidationError vs NotFoundError vs DatabaseError).
+- [ ] SQLException мапится в AppError.DatabaseError явно, не через AppErrorMapper (из-за известного бага).
+- [ ] Изменения @Entity сопровождаются Migration + schemas/*.json + ExportDataDto.
+- [ ] KDoc обновлён (если менял контракт метода/инвариант).
+- [ ] git diff --stat показывает только файлы из задачи.
+- [ ] gradlew test detekt зелёный, число тестов >= предыдущего.
