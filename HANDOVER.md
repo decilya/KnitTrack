@@ -1016,9 +1016,15 @@ gradle/libs.versions.toml — НЕ существует.
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
 Следующий шаг — **Шаг 7c:** `ProgressService.markRow(project, row): Result<MarkResult>`.
-Cross-aggregate validation (`row.patternId == project.patternId`). Требует
-`Project.patternId: Long?` -> `PatternId?` и `Project.currentPatternRowId: Long?`
--> `PatternRowId?`.
+
+**[7c-prep закрыт в `4f9baab`]** `Project.patternId` и `Project.currentPatternRowId`
+переведены в VO (`PatternId?`, `PatternRowId?`). Сборка зелёная (241 тест, 0 detekt).
+
+Сигнатуры 7c утверждены: `Project.markRow(row): Result<MarkResult>`,
+`MarkResult { Added, AlreadyExists }` (data object),
+`PatternRepository.getPatternById(PatternId): Result<Pattern>`,
+`ProgressService` — plain class, без Timber и диспетчера. Триггер
+`trg_progress_check` — отложен в 7c-2.
 
 **Перед 7c — консилиум:** как загружать Project и PatternRow, MarkResult, обработка
 несовпадения patternId.

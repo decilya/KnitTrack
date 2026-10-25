@@ -36,9 +36,8 @@
 - [x] `PatternRow.id: Long` -> `PatternRowId`, `PatternOperation.patternRowId: Long`
   -> `PatternRowId` — закрыто в de1d4b0 (7b-prep, P1-3). SOLID приоритет 1
   (STANDARDS §11 п.6).
-- [ ] `Project.patternId: Long?` -> `PatternId?` — в 7c (ProgressService),
-  когда появится реальное использование. Сейчас — маппинг Data-слоя
-  (`DtoMappers`, `EntityMappers`) работает с `Long?`, менять не нужно.
+- [x] `Project.patternId: Long?` -> `PatternId?` — закрыто в 4f9baab (7c-prep).
+- [x] `Project.currentPatternRowId: Long?` -> `PatternRowId?` — закрыто в 4f9baab (7c-prep).
 
 ### Fix-очередь 7b-prep (закрыто в 99336af)
 - [x] `PatternTest.kt`: `create_withInfiniteOffsetY_throws` -> `create_withNaNOffsetY_throws`.
@@ -48,7 +47,8 @@
 
 ### Шаг 7b — открытые P2 (из ревью adb730b)
 - [ ] `Symbol.ownerPatternId: Long?` -> `PatternId?` (LIN, Primitive Obsession).
-- [ ] `Project.patternId: Long?` -> `PatternId?` (LIN, 7c).
+- [x] `Project.patternId: Long?` -> `PatternId?` (LIN, 7c) — закрыто в 4f9baab (7c-prep).
+- [x] `Project.currentPatternRowId: Long?` -> `PatternRowId?` — закрыто в 4f9baab (7c-prep).
 - [ ] `RowCount.isPositive()` / `StitchCount.isPositive()` (BIZ, 7e+):
   убрать прямые сравнения с `ZERO` в `init` блоках.
 - [ ] Pre-commit hook: проверка `.git/index.lock` (PROC).
