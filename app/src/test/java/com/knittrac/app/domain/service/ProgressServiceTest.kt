@@ -133,4 +133,107 @@ class ProgressServiceTest {
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.DatabaseError)
     }
+
+    // ============================================================
+    // markNextRow
+    // ============================================================
+
+    /**
+     * У проекта нет currentPatternRowId — берётся первый ряд схемы.
+     */
+    @Test
+    fun markNextRow_firstRow_whenNoCurrent() = runTest {
+        val firstRow = row(id = 10L, number = 1)
+        val p = project(currentPatternRowId = null)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(firstRow)))
+        coEvery { projectRepository.updateProjectProgress(any(), any(), any(), any()) } returns
+            Result.Success(Unit)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Success)
+        assertEquals(1, (result as Result.Success).data.value)
+    }
+
+    /**
+     * Есть currentPatternRowId → выбирается ряд rowNumber + 1.
+     */
+    @Test
+    fun markNextRow_advancesToNext() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val r2 = row(id = 11L, number = 2)
+        val r3 = row(id = 12L, number = 3)
+        val p = project(currentPatternRowId = r2.id)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1, r2, r3)))
+        coEvery { projectRepository.updateProjectProgress(any(), any(), any(), any()) } returns
+            Result.Success(Unit)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Success)
+        assertEquals(3, (result as Result.Success).data.value)
+    }
+
+    /**
+     * Текущий ряд — последний: ValidationError, без записи в БД.
+     */
+    @Test
+    fun markNextRow_lastRow_returnsValidationError() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val r2 = row(id = 11L, number = 2)
+        val p = project(currentPatternRowId = r2.id)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1, r2)))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * Пустые rows — ValidationError.
+     */
+    @Test
+    fun markNextRow_emptyRows_returnsValidationError() = runTest {
+        val p = project(currentPatternRowId = null)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(emptyList()))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * patternId == null — ValidationError (нет привязанной схемы).
+     */
+    @Test
+    fun markNextRow_patternIdNull_returnsValidationError() = runTest {
+        val p = project(patternId = null, currentPatternRowId = null)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * currentPatternRowId не найден в rows — ValidationError (рассинхронизация).
+     */
+    @Test
+    fun markNextRow_currentRowMissing_returnsValidationError() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val p = project(currentPatternRowId = PatternRowId.create(999L))
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1)))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
 }

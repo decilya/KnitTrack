@@ -12,6 +12,7 @@ import com.knittrac.app.domain.entity.PatternName
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.entity.Technique
@@ -70,7 +71,7 @@ class MarkRowUseCaseTest : BaseTest() {
     )
 
     private fun params(rowId: Long = 10L): MarkRowParams =
-        MarkRowParams(projectId = 1L, rowId = PatternRowId.create(rowId))
+        MarkRowParams(projectId = ProjectId.create(1L), rowId = PatternRowId.create(rowId))
 
     /**
      * Успешный путь: project + pattern + row найдены → ProgressService вернул Added.
@@ -112,7 +113,7 @@ class MarkRowUseCaseTest : BaseTest() {
         coEvery { projectRepository.getProjectById(99L) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
-        val result = useCase(MarkRowParams(projectId = 99L, rowId = PatternRowId.create(10L)))
+        val result = useCase(MarkRowParams(projectId = ProjectId.create(99L), rowId = PatternRowId.create(10L)))
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)

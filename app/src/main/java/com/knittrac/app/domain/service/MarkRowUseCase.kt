@@ -44,7 +44,7 @@ class MarkRowUseCase @Inject constructor(
      *   при сбое репозитория.
      */
     override suspend fun execute(params: MarkRowParams): Result<MarkResult> {
-        return when (val projectResult = projectRepository.getProjectById(params.projectId)) {
+        return when (val projectResult = projectRepository.getProjectById(params.projectId.value)) {
             is Result.Error -> projectResult
             is Result.Success -> continueAfterProject(projectResult.data, params)
         }

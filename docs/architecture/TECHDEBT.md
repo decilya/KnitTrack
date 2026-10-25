@@ -56,6 +56,13 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7f-A — открытые P2
+
+- [ ] `ProgressService.markNextRow` = 3x `getPatternById` на клик:
+  `MarkNextRowUseCase` (1) + `markNextRow.selectNextRow` (1) + `markRow` (1).
+  Оптимизация — переделать `markRow` и `markNextRow` на `pattern` параметр
+  (7g), не половину в 7f-A.
+
 ### Шаг 7e — открытые P2
 
 - [ ] `MarkRowUseCase` дублирует `getPatternById` с `ProgressService.markRow`:

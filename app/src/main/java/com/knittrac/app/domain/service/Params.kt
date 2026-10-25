@@ -2,6 +2,7 @@ package com.knittrac.app.domain.service
 
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.ProjectId
 
 /**
  * Параметры для добавления нового проекта.
@@ -29,6 +30,19 @@ data class SaveSessionParams(
  * @property rowId Идентификатор ряда схемы (внутри привязанной к проекту схемы).
  */
 data class MarkRowParams(
-    val projectId: Long,
+    val projectId: ProjectId,
     val rowId: PatternRowId
+)
+
+/**
+ * Параметры для отметки следующего ряда схемы как связанного.
+ *
+ * «Следующий» определяется в [ProgressService.markNextRow]: если у проекта
+ * ещё нет текущего ряда — берётся первый ряд схемы, иначе — ряд с rowNumber
+ * на единицу больше текущего.
+ *
+ * @property projectId Идентификатор проекта.
+ */
+data class MarkNextRowParams(
+    val projectId: ProjectId
 )
