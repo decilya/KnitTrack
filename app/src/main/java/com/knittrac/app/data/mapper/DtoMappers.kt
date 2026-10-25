@@ -7,6 +7,8 @@ import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
+import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.entity.Session
@@ -34,9 +36,9 @@ fun Project.toDto(): ProjectDto = ProjectDto(
     totalTimeSeconds = totalTimeSeconds.seconds,
     totalRows = totalRows.value,
     targetRowCount = targetRowCount?.value,
-    patternId = patternId,
+    patternId = patternId?.value,
     currentRowNumber = currentRowNumber.value,
-    currentPatternRowId = currentPatternRowId,
+    currentPatternRowId = currentPatternRowId?.value,
     currentStitch = currentStitch.value,
     updatedAt = updatedAt,
     syncStatus = syncStatus.name
@@ -55,9 +57,9 @@ fun ProjectDto.toDomain(): Project = Project(
     totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
     totalRows = RowCount.createOrDefault(totalRows),
     targetRowCount = targetRowCount?.let { RowCount.createOrDefault(it) },
-    patternId = patternId,
+    patternId = patternId?.let { PatternId.createOrNull(it) },
     currentRowNumber = RowCount.createOrDefault(currentRowNumber),
-    currentPatternRowId = currentPatternRowId,
+    currentPatternRowId = currentPatternRowId?.let { PatternRowId.createOrNull(it) },
     currentStitch = StitchCount.createOrDefault(currentStitch),
     updatedAt = updatedAt,
     syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
