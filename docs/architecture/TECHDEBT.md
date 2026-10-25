@@ -56,6 +56,13 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7e — открытые P2
+
+- [ ] `MarkRowUseCase` дублирует `getPatternById` с `ProgressService.markRow`:
+  `Pattern` загружается дважды (2 SQL-запроса на одну отметку ряда).
+  Оптимизация — переделать `ProgressService.markRow(projectId, rowId)` (внутренняя
+  загрузка) и убрать двойной вызов.
+
 ### Шаг 7d — открытые P2
 
 - [ ] `PatternOperation.toEntity` теряет `rowSpanOverride`: Domain

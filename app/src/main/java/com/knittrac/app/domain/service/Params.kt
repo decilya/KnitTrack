@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.service
 
 import com.knittrac.app.domain.entity.Category
+import com.knittrac.app.domain.entity.PatternRowId
 
 /**
  * Параметры для добавления нового проекта.
@@ -19,4 +20,15 @@ data class SaveSessionParams(
     val startTimestamp: Long,
     val endTimestamp: Long,
     val rowCount: Int
+)
+
+/**
+ * Параметры для отметки ряда как связанного.
+ *
+ * @property projectId Идентификатор проекта.
+ * @property rowId Идентификатор ряда схемы (внутри привязанной к проекту схемы).
+ */
+data class MarkRowParams(
+    val projectId: Long,
+    val rowId: PatternRowId
 )

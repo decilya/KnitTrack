@@ -1023,7 +1023,7 @@ gradle/libs.versions.toml — НЕ существует.
 Сигнатуры 7c утверждены: `Project.markRow(row): Result<MarkResult>`,
 `MarkResult { Added, AlreadyExists }` (data object),
 `PatternRepository.getPatternById(PatternId): Result<Pattern>`,
-`ProgressService` — plain class, без Timber и диспетчера. **7c закрыт**, **7d-prep закрыт**, **7d закрыт** (`AddPatternOperationService`: символ в легенде, repeat_code, overlap через `getOperationSpansForRow`). Следующий — **7e** (Application UseCases: `MarkRowUseCase`, `AddPatternOperationUseCase`) или **7c-2** (триггер `trg_progress_check`).
+`ProgressService` — plain class, без Timber и диспетчера. **7c закрыт**, **7d-prep закрыт**, **7d закрыт**, **7e закрыт** (`MarkRowUseCase`, `AddPatternOperationUseCase`) (`AddPatternOperationService`: символ в легенде, repeat_code, overlap через `getOperationSpansForRow`). Следующий — **7e** (Application UseCases: `MarkRowUseCase`, `AddPatternOperationUseCase`) или **7c-2** (триггер `trg_progress_check`).
 
 **Перед 7c — консилиум:** как загружать Project и PatternRow, MarkResult, обработка
 несовпадения patternId.
