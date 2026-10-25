@@ -2,6 +2,7 @@ package com.knittrac.app.data.di
 
 import android.content.Context
 import com.knittrac.app.data.local.AppDatabase
+import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import dagger.Module
@@ -31,5 +32,11 @@ object DatabaseModule {
     @Singleton
     fun provideSessionDao(database: AppDatabase): SessionDao {
         return database.sessionDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePatternDao(database: AppDatabase): PatternDao {
+        return database.patternDao()
     }
 }
