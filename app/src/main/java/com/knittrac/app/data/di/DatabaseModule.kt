@@ -3,6 +3,8 @@ package com.knittrac.app.data.di
 import android.content.Context
 import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.PatternDao
+import com.knittrac.app.data.local.PatternRepeatDao
+import com.knittrac.app.data.local.SymbolDao
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.SessionDao
 import dagger.Module
@@ -38,5 +40,17 @@ object DatabaseModule {
     @Singleton
     fun providePatternDao(database: AppDatabase): PatternDao {
         return database.patternDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSymbolDao(database: AppDatabase): SymbolDao {
+        return database.symbolDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePatternRepeatDao(database: AppDatabase): PatternRepeatDao {
+        return database.patternRepeatDao()
     }
 }

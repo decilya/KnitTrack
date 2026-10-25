@@ -56,6 +56,15 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7d-prep — открытые P2
+
+- [ ] `PatternRepositoryImpl.getPatternById` выполняет 4 запроса
+  (`pattern` + `rows` + `symbols` + `repeats`). Для единичного вызова — ок;
+  при загрузке списка patterns потребуется batch/projection.
+- [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
+  `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
+  При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.
+
 ### Шаг 7c — открытые P2
 
 - [ ] `AppErrorMapper.map(SQLException)` -> `UnknownError` вместо `DatabaseError` (DATA).
