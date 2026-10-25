@@ -1,7 +1,10 @@
 package com.knittrac.app.domain.entity
 
 import androidx.annotation.Keep
+import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.domain.model.MarkResult
 
 /**
  * Доменная модель проекта вязания.
@@ -37,4 +40,14 @@ data class Project(
     val currentStitch: StitchCount = StitchCount.ZERO,
     val updatedAt: Long,
     val syncStatus: SyncStatus
-)
+) {
+    fun markRow(row: PatternRow): Result<MarkResult> {
+        if (patternId == null) {
+            return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+        }
+        return Result.Success(
+            if (currentPatternRowId == row.id) MarkResult.AlreadyExists
+            else MarkResult.Added
+        )
+    }
+}

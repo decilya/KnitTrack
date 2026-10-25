@@ -3,7 +3,10 @@ package com.knittrac.app.domain.repository
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Duration
+import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.StitchCount
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -64,4 +67,11 @@ interface ProjectRepository {
     @Deprecated("Используй updateProjectTotals(rows = 0)")
     suspend fun updateTotalTime(projectId: Long, duration: Duration): Result<Unit>
     suspend fun updateProjectTotals(projectId: Long, duration: Duration, rows: Int): Result<Unit>
+
+    suspend fun updateProjectProgress(
+        projectId: Long,
+        currentPatternRowId: PatternRowId?,
+        currentRowNumber: RowCount,
+        currentStitch: StitchCount
+    ): Result<Unit>
 }

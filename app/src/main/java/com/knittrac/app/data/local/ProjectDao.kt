@@ -84,4 +84,23 @@ interface ProjectDao {
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int
+
+    @Suppress("LongParameterList") // Room @Query: flat-параметры, @Embedded не применим
+    @Query("""
+        UPDATE projects
+        SET current_pattern_row_id = :currentPatternRowId,
+            current_row_number = :currentRowNumber,
+            current_stitch = :currentStitch,
+            updated_at = :updatedAt,
+            sync_status = :pendingStatus
+        WHERE id = :projectId
+    """)
+    suspend fun updateProjectProgress(
+        projectId: Long,
+        currentPatternRowId: Long?,
+        currentRowNumber: Int,
+        currentStitch: Int,
+        updatedAt: Long,
+        pendingStatus: String = SyncStatus.PENDING.name
+    ): Int
 }

@@ -56,6 +56,14 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7c — открытые P2
+
+- [ ] `AppErrorMapper.map(SQLException)` -> `UnknownError` вместо `DatabaseError` (DATA).
+  `ProjectRepositoryImpl` / `PatternRepositoryImpl` вынуждены явно создавать
+  `AppError.DatabaseError(ex)` в catch-блоках.
+- [ ] Timber-политика в Domain не унифицирована (ARCH): `SaveSessionService`
+  использует `Timber.e`, `AddProjectService` — нет. Выбрать единый стиль.
+
 ### Шаг 7b — открытые P2 (SOLID)
 - [ ] `Pattern` — God Class (13 полей + 1 метод). Кандидат на разделение (7e+):
   `PatternMetadata` (id, name, technique, direction, isReversible),

@@ -8,7 +8,10 @@ import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.Duration
+import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.repository.ProjectRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -200,6 +203,31 @@ class ProjectRepositoryImpl @Inject constructor(
         throw e
     } catch (e: Exception) {
         Timber.e(e, "updateSyncStatus projectId=%d failed", projectId)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun updateProjectProgress(
+        projectId: Long,
+        currentPatternRowId: PatternRowId?,
+        currentRowNumber: RowCount,
+        currentStitch: StitchCount
+    ): Result<Unit> = try {
+        val rows = projectDao.updateProjectProgress(
+            projectId = projectId,
+            currentPatternRowId = currentPatternRowId?.value,
+            currentRowNumber = currentRowNumber.value,
+            currentStitch = currentStitch.value,
+            updatedAt = timeProvider.currentTimeMillis()
+        )
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "updateProjectProgress projectId=%d failed", projectId)
         Result.Error(AppError.DatabaseError(e))
     }
 }
