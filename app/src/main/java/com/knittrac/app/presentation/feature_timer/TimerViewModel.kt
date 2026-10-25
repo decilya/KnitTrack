@@ -4,7 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.service.GetAllProjectsService
+import com.knittrac.app.domain.service.MarkNextRowParams
+import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
@@ -24,19 +28,27 @@ import javax.inject.Inject
  * ViewModel экрана таймера.
  *
  * Отвечает за старт/паузу/сброс таймера, выбор проекта, счётчик рядов
- * и сохранение сессии. Проверяет разрешение POST_NOTIFICATIONS перед
- * стартом и эмитит effect, если нужно показать системный диалог.
+ * (сессии и схемы), сохранение сессии. Проверяет разрешение
+ * POST_NOTIFICATIONS перед стартом и эмитит effect, если нужно показать
+ * системный диалог.
+ *
+ * Два независимых счётчика (KnitCompanion-like UX):
+ * - [TimerContract.State.rowCount] — локальный счётчик сессии
+ *   (в `SavedStateHandle`, идёт в `SaveSessionParams.rowCount`);
+ * - [TimerContract.State.currentPatternRowNumber] — текущий ряд по схеме
+ *   (в БД через [MarkNextRowUseCase] → [com.knittrac.app.domain.service.ProgressService.markNextRow]).
  *
  * Защита от double-save: флаг [TimerContract.State.isSaving] устанавливается
- * синхронно в [onIntent] до запуска корутины. Повторный [TimerContract.Intent.SaveSession]
- * во время активного сохранения игнорируется — иначе две параллельные
- * корутины создали бы две сессии и дважды инкрементнули totalTimeSeconds.
+ * синхронно в [onIntent] до запуска корутины. Аналогично
+ * [TimerContract.State.isMarkingRow] — для [TimerContract.Intent.MarkNextPatternRow].
  */
 @HiltViewModel
+@Suppress("LongParameterList") // 6 зависимостей: ViewModel координирует 4 UseCase + SavedStateHandle + permission. Разбиение через Parameter Object усложнит Hilt-граф, разбиение класса нарушит единый State.
 class TimerViewModel @Inject constructor(
     private val timerManager: TimerService,
     private val saveSessionService: SaveSessionService,
     private val getAllProjectsService: GetAllProjectsService,
+    private val markNextRowUseCase: MarkNextRowUseCase,
     private val notificationPermissionChecker: NotificationPermissionChecker,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -63,7 +75,9 @@ class TimerViewModel @Inject constructor(
                     rowCount = _state.value.rowCount,
                     targetRowCount = _state.value.targetRowCount,
                     projects = _state.value.projects,
-                    isSaving = _state.value.isSaving
+                    isSaving = _state.value.isSaving,
+                    currentPatternRowNumber = _state.value.currentPatternRowNumber,
+                    isMarkingRow = _state.value.isMarkingRow
                 )
             }.collect { _state.value = it }
         }
@@ -75,7 +89,8 @@ class TimerViewModel @Inject constructor(
                         val selected = result.data.find { it.id == currentState.projectId }
                         currentState.copy(
                             projects = result.data,
-                            targetRowCount = selected?.targetRowCount?.value
+                            targetRowCount = selected?.targetRowCount?.value,
+                            currentPatternRowNumber = currentPatternRowNumberFor(selected)
                         )
                     }
                 }
@@ -99,6 +114,7 @@ class TimerViewModel @Inject constructor(
             is TimerContract.Intent.SaveSession -> saveSession()
             is TimerContract.Intent.IncrementRow -> handleIncrementRow()
             is TimerContract.Intent.DecrementRow -> handleDecrementRow()
+            is TimerContract.Intent.MarkNextPatternRow -> handleMarkNextPatternRow()
         }
     }
 
@@ -126,18 +142,26 @@ class TimerViewModel @Inject constructor(
     }
 
     /**
-     * Выбор проекта и синхронизация целевого количества рядов в State.
+     * Выбор проекта и синхронизация целевого количества рядов и текущего
+     * ряда схемы в [TimerContract.State].
      */
     private fun handleSelectProject(intent: TimerContract.Intent.SelectProject) {
         val selectedProject = _state.value.projects.find { it.id == intent.projectId }
         _state.update {
-            it.copy(projectId = intent.projectId, targetRowCount = selectedProject?.targetRowCount?.value)
+            it.copy(
+                projectId = intent.projectId,
+                targetRowCount = selectedProject?.targetRowCount?.value,
+                currentPatternRowNumber = currentPatternRowNumberFor(selectedProject)
+            )
         }
         savedStateHandle["projectId"] = intent.projectId
     }
 
     /**
-     * Увеличивает счётчик рядов на единицу.
+     * Увеличивает локальный счётчик рядов сессии на единицу.
+     *
+     * НЕ обновляет [TimerContract.State.currentPatternRowNumber] — это
+     * отдельный счётчик (прогресс по схеме), см. [handleMarkNextPatternRow].
      */
     private fun handleIncrementRow() {
         val newCount = _state.value.rowCount + 1
@@ -146,13 +170,64 @@ class TimerViewModel @Inject constructor(
     }
 
     /**
-     * Уменьшает счётчик рядов на единицу, но не ниже нуля.
+     * Уменьшает локальный счётчик рядов сессии на единицу, но не ниже нуля.
      */
     private fun handleDecrementRow() {
         val newCount = (_state.value.rowCount - 1).coerceAtLeast(0)
         _state.update { it.copy(rowCount = newCount) }
         savedStateHandle["rowCount"] = newCount
     }
+
+    /**
+     * Отмечает следующий ряд схемы как связанный (аналог One-Tap Marker
+     * в KnitCompanion).
+     *
+     * ВАЖНО: [TimerContract.State.rowCount] (локальный счётчик сессии)
+     * НЕ инкрементится — это отдельная сущность. Обновляется только
+     * [TimerContract.State.currentPatternRowNumber] (источник — ответ
+     * [MarkNextRowUseCase]).
+     *
+     * Guard от двойного тапа: флаг [TimerContract.State.isMarkingRow]
+     * ставится синхронно до launch. Снимается в finally, чтобы не остался
+     * висеть при ошибке сервиса.
+     */
+    private fun handleMarkNextPatternRow() {
+        if (_state.value.isMarkingRow) return
+        val projectId = resolveProjectIdForMarking() ?: return
+        _state.update { it.copy(isMarkingRow = true) }
+        viewModelScope.launch {
+            try {
+                when (val result = markNextRowUseCase(MarkNextRowParams(projectId = projectId))) {
+                    is Result.Success -> _state.update {
+                        it.copy(currentPatternRowNumber = result.data.value)
+                    }
+                    is Result.Error -> _effect.send(
+                        TimerContract.Effect.ShowError(
+                            com.knittrac.app.R.string.pattern_row_mark_error
+                        )
+                    )
+                }
+            } finally {
+                _state.update { it.copy(isMarkingRow = false) }
+            }
+        }
+    }
+
+    /**
+     * Возвращает [ProjectId] выбранного проекта, или null, если проект
+     * не выбран / id некорректен (<= 0).
+     */
+    private fun resolveProjectIdForMarking(): ProjectId? {
+        val projectIdValue = _state.value.projectId ?: return null
+        return ProjectId.createOrNull(projectIdValue)
+    }
+
+    /**
+     * Возвращает номер текущего ряда схемы для проекта или null,
+     * если схема не привязана.
+     */
+    private fun currentPatternRowNumberFor(project: Project?): Int? =
+        if (project?.currentPatternRowId != null) project.currentRowNumber.value else null
 
     /**
      * Сохраняет текущую сессию.

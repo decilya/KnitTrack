@@ -38,6 +38,10 @@
     <string name="timer_channel_name">KnitTrac Timer</string>
     <string name="timer_channel_description">Notifications about timer operation</string>
     <string name="timer_save_error">Failed to save session</string>
+    <string name="decrease_row_content_description">Уменьшить счётчик рядов сессии</string>
+    <string name="next_pattern_row_content_description">Отметить следующий ряд схемы</string>
+    <string name="pattern_row_label_format">Ряд схемы: %1$d</string>
+    <string name="pattern_row_mark_error">Не удалось отметить ряд схемы</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

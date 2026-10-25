@@ -56,6 +56,15 @@
   `PatternCalibration`, `PatternContent`.
 - [ ] `PatternDirection` — enum, `getDirectionForRow` — `when` (SOLID, OCP, 7e+).
 
+### Шаг 7f-A (UI) — открытые P2
+
+- [ ] `TimerViewModelTest` отсутствует. После добавления `MarkNextPatternRow`
+  ViewModel содержит 6 зависимостей и два независимых счётчика (`rowCount`,
+  `currentPatternRowNumber`). Без теста регресс невидим. Создать в 7g.
+- [ ] Hilt-граф `MarkNextRowUseCase` → `ProgressService` → `PatternRepository`
+  → `PatternDao`/`SymbolDao`/`PatternRepeatDao` теперь reachable из
+  `TimerViewModel`. Runtime-проверка — только `@HiltAndroidTest` (7g).
+
 ### Шаг 7f-A — открытые P2
 
 - [ ] `ProgressService.markNextRow` = 3x `getPatternById` на клик:

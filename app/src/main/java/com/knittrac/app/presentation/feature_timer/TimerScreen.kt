@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,19 @@ import com.knittrac.app.R
 import com.knittrac.app.domain.service.TimerState
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * Экран таймера: время, локальный счётчик рядов сессии, прогресс по схеме,
+ * старт/пауза/сброс, сохранение сессии.
+ *
+ * Два независимых счётчика (KnitCompanion-like UX):
+ * - FAB «+1» → [TimerContract.Intent.IncrementRow] (локальный `rowCount`
+ *   сессии, идёт в `SaveSessionParams`);
+ * - IconButton «→» → [TimerContract.Intent.MarkNextPatternRow] (обновляет
+ *   `Project.currentPatternRowId` в БД через `MarkNextRowUseCase`).
+ *
+ * Бейдж «Ряд схемы: N» показывается, только если у проекта есть привязанная
+ * схема и прогресс по ней начат (`currentPatternRowNumber != null`).
+ */
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
@@ -42,10 +56,18 @@ fun TimerScreen(
             when (effect) {
                 is TimerContract.Effect.NavigateToProjects -> onNavigateToProjects()
                 is TimerContract.Effect.SessionSaved -> {
-                    Toast.makeText(context, context.getString(R.string.session_saved), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.session_saved),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 is TimerContract.Effect.ShowError -> {
-                    Toast.makeText(context, context.getString(effect.messageResId), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(effect.messageResId),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 is TimerContract.Effect.RequestNotificationPermission -> {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -101,7 +123,7 @@ fun TimerScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
-                        contentDescription = "Decrease row count"
+                        contentDescription = stringResource(R.string.decrease_row_content_description)
                     )
                 }
 
@@ -119,6 +141,36 @@ fun TimerScreen(
                         style = MaterialTheme.typography.headlineMedium
                     )
                 }
+
+                Spacer(modifier = Modifier.width(32.dp))
+
+                // Кнопка «следующий ряд схемы» (аналог One-Tap Marker
+                // в KnitCompanion). Обновляет Project.currentPatternRowId
+                // в БД, в отличие от FAB «+1» (локальный rowCount).
+                IconButton(
+                    enabled = !state.isMarkingRow && state.projectId != null,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.next_pattern_row_content_description)
+                    )
+                }
+            }
+
+            val currentPatternRowNumber = state.currentPatternRowNumber
+            if (currentPatternRowNumber != null) {
+                Text(
+                    text = stringResource(
+                        R.string.pattern_row_label_format,
+                        currentPatternRowNumber
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             val target = state.targetRowCount
@@ -141,24 +193,38 @@ fun TimerScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (state.status == TimerState.IDLE || state.status == TimerState.PAUSED) {
-                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Start) }) {
+                Button(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.onIntent(TimerContract.Intent.Start)
+                }) {
                     Text(stringResource(R.string.start))
                 }
             }
             if (state.status == TimerState.RUNNING) {
-                Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Pause) }) {
+                Button(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.onIntent(TimerContract.Intent.Pause)
+                }) {
                     Text(stringResource(R.string.pause))
                 }
             }
-            
-            Button(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.Reset) }) {
+
+            Button(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.onIntent(TimerContract.Intent.Reset)
+            }) {
                 Text(stringResource(R.string.reset))
             }
-            
-            if ((state.status == TimerState.PAUSED || state.status == TimerState.IDLE) && state.elapsedTime > 0) {
+
+            if ((state.status == TimerState.PAUSED || state.status == TimerState.IDLE) &&
+                state.elapsedTime > 0
+            ) {
                 Button(
                     enabled = !state.isSaving,
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); viewModel.onIntent(TimerContract.Intent.SaveSession) }
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.onIntent(TimerContract.Intent.SaveSession)
+                    }
                 ) {
                     Text(stringResource(R.string.save_session))
                 }
@@ -167,6 +233,12 @@ fun TimerScreen(
     }
 }
 
+/**
+ * Форматирует секунды в HH:MM:SS.
+ *
+ * `Locale.US` — стабильный формат без разделителей тысяч (зафиксировано
+ * в TECHDEBT P2: рассмотреть `Locale.ROOT` или задокументировать выбор).
+ */
 fun formatTime(seconds: Long): String {
     val h = seconds / 3600
     val m = (seconds % 3600) / 60

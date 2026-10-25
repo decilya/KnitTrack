@@ -8,6 +8,7 @@ import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.service.GetAllProjectsService
+import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.domain.service.TimerState
@@ -52,6 +53,7 @@ class TimerViewModelTest {
     private lateinit var timerManager: TimerService
     private lateinit var saveSessionService: SaveSessionService
     private lateinit var getAllProjectsService: GetAllProjectsService
+    private lateinit var markNextRowUseCase: MarkNextRowUseCase
     private lateinit var permissionChecker: NotificationPermissionChecker
 
     @Before
@@ -61,6 +63,7 @@ class TimerViewModelTest {
         timerManager = mockk(relaxed = true)
         saveSessionService = mockk()
         getAllProjectsService = mockk()
+        markNextRowUseCase = mockk()
         permissionChecker = mockk()
 
         // combine в init ViewModel подписывается на StateFlow.
@@ -89,6 +92,7 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
+            markNextRowUseCase,
             permissionChecker,
             SavedStateHandle()
         )
@@ -122,6 +126,7 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
+            markNextRowUseCase,
             permissionChecker,
             SavedStateHandle()
         )
@@ -154,6 +159,7 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
+            markNextRowUseCase,
             permissionChecker,
             SavedStateHandle()
         )
@@ -188,6 +194,7 @@ class TimerViewModelTest {
             timerManager,
             saveSessionService,
             getAllProjectsService,
+            markNextRowUseCase,
             permissionChecker,
             SavedStateHandle()
         )
@@ -208,7 +215,7 @@ class TimerViewModelTest {
     @Test
     fun incrementRow_increasesCount() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.IncrementRow)
@@ -224,7 +231,7 @@ class TimerViewModelTest {
     @Test
     fun decrementRow_decreasesCount() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
 
         repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
         assertEquals(5, viewModel.state.value.rowCount)
@@ -239,7 +246,7 @@ class TimerViewModelTest {
     @Test
     fun decrementRow_atZero_staysZero() = runTest {
         every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.DecrementRow)
@@ -263,7 +270,7 @@ class TimerViewModelTest {
         )
         coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(project)))
 
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
         assertEquals(120, viewModel.state.value.targetRowCount)
@@ -273,7 +280,7 @@ class TimerViewModelTest {
     fun init_restoresRowCountAndProjectIdFromSavedStateHandle() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf<String, Any>("projectId" to 5L, "rowCount" to 42))
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, permissionChecker, savedStateHandle
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, savedStateHandle
         )
 
         assertEquals(5L, viewModel.state.value.projectId)
