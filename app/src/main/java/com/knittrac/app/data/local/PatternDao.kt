@@ -21,6 +21,21 @@ interface PatternDao {
     @Query("SELECT * FROM pattern_operations ORDER BY pattern_row_id ASC, column_start ASC")
     suspend fun getAllOperations(): List<PatternOperationEntity>
 
+    /**
+     * Все операции схемы одним SQL. Не N+1 по рядам.
+     *
+     * @param patternId Схема-владелец.
+     */
+    @Query(
+        """
+        SELECT pattern_operations.* FROM pattern_operations
+        INNER JOIN pattern_rows ON pattern_operations.pattern_row_id = pattern_rows.id
+        WHERE pattern_rows.pattern_id = :patternId
+        ORDER BY pattern_operations.pattern_row_id, pattern_operations.column_start
+        """
+    )
+    suspend fun getAllOperationsForPattern(patternId: Long): List<PatternOperationEntity>
+
     @Query("SELECT * FROM patterns WHERE id = :id")
     suspend fun getPatternById(id: Long): PatternEntity?
 

@@ -33,7 +33,7 @@ import java.sql.SQLException
  * symbols (legend) + pattern_repeats, а также обработку ошибок
  * (NotFound, DatabaseError).
  *
- * После 7d-prep [getPatternById] делает 4 запроса, все 3 DAO замоканы.
+ * [getPatternById] делает 5 запросов, все 3 DAO замоканы.
  */
 class PatternRepositoryImplTest {
 
@@ -41,6 +41,19 @@ class PatternRepositoryImplTest {
     private val symbolDao: SymbolDao = mockk()
     private val patternRepeatDao: PatternRepeatDao = mockk()
     private val repository = PatternRepositoryImpl(patternDao, symbolDao, patternRepeatDao)
+
+    private fun stubPatternShell() {
+        coEvery { patternDao.getPatternById(1L) } returns entity
+        coEvery { patternDao.getRowsForPattern(1L) } returns rows
+        coEvery { symbolDao.getSymbolsForPattern(1L) } returns symbols
+        coEvery { patternRepeatDao.getRepeatsForPattern(1L) } returns emptyList()
+    }
+
+    private fun operation(rowId: Long, column: Int) = PatternOperationEntity(
+        patternRowId = rowId,
+        columnStart = column,
+        symbolCode = "K"
+    )
 
     private val entity = PatternEntity(
         id = 1L,
@@ -69,6 +82,7 @@ class PatternRepositoryImplTest {
         coEvery { patternDao.getRowsForPattern(1L) } returns rows
         coEvery { symbolDao.getSymbolsForPattern(1L) } returns symbols
         coEvery { patternRepeatDao.getRepeatsForPattern(1L) } returns repeats
+        coEvery { patternDao.getAllOperationsForPattern(any()) } returns emptyList()
 
         val result = repository.getPatternById(PatternId.create(1L))
 
@@ -90,6 +104,7 @@ class PatternRepositoryImplTest {
         coEvery { patternDao.getRowsForPattern(1L) } returns rows
         coEvery { symbolDao.getSymbolsForPattern(1L) } returns emptyList()
         coEvery { patternRepeatDao.getRepeatsForPattern(1L) } returns emptyList()
+        coEvery { patternDao.getAllOperationsForPattern(any()) } returns emptyList()
 
         val result = repository.getPatternById(PatternId.create(1L))
 
@@ -118,6 +133,55 @@ class PatternRepositoryImplTest {
     @Test
     fun getPatternById_sqlException_returnsDatabaseError() = runTest {
         coEvery { patternDao.getPatternById(1L) } throws SQLException("boom")
+
+        val result = repository.getPatternById(PatternId.create(1L))
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    @Test
+    fun getPatternById_includesOperationsOnMatchingRow() = runTest {
+        stubPatternShell()
+        coEvery { patternDao.getAllOperationsForPattern(1L) } returns listOf(
+            operation(rowId = 10L, column = 0),
+            operation(rowId = 10L, column = 5)
+        )
+
+        val pattern = (repository.getPatternById(PatternId.create(1L)) as Result.Success).data
+        val row10 = pattern.rows.first { it.id.value == 10L }
+        val row11 = pattern.rows.first { it.id.value == 11L }
+
+        assertEquals(2, row10.operations.size)
+        assertEquals(0, row10.operations[0].columnStart.value)
+        assertEquals(5, row10.operations[1].columnStart.value)
+        assertEquals("K", row10.operations[0].symbol.code)
+        assertTrue(row11.operations.isEmpty())
+    }
+
+    @Test
+    fun getPatternById_keepsDaoOrderInsideRow() = runTest {
+        stubPatternShell()
+        coEvery { patternDao.getAllOperationsForPattern(1L) } returns listOf(
+            operation(rowId = 10L, column = 5),
+            operation(rowId = 10L, column = 0)
+        )
+
+        val pattern = (repository.getPatternById(PatternId.create(1L)) as Result.Success).data
+        val starts = pattern.rows.first { it.id.value == 10L }.operations.map { it.columnStart.value }
+
+        assertEquals(listOf(5, 0), starts)
+    }
+
+    @Test
+    fun getPatternById_missingSymbol_returnsDatabaseError() = runTest {
+        coEvery { patternDao.getPatternById(1L) } returns entity
+        coEvery { patternDao.getRowsForPattern(1L) } returns rows
+        coEvery { symbolDao.getSymbolsForPattern(1L) } returns emptyList()
+        coEvery { patternRepeatDao.getRepeatsForPattern(1L) } returns emptyList()
+        coEvery { patternDao.getAllOperationsForPattern(1L) } returns listOf(
+            operation(rowId = 10L, column = 0)
+        )
 
         val result = repository.getPatternById(PatternId.create(1L))
 

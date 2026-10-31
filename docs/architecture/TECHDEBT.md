@@ -158,9 +158,11 @@
 
 ### Шаг 7d-prep — открытые P2
 
-- [ ] `PatternRepositoryImpl.getPatternById` выполняет 4 запроса
-  (`pattern` + `rows` + `symbols` + `repeats`). Для единичного вызова — ок;
-  при загрузке списка patterns потребуется batch/projection.
+- [ ] `PatternRepositoryImpl.getPatternById` выполняет 5 запросов
+  (`pattern` + `rows` + `operations` + `symbols` + `repeats`). Операции — один SQL, не N+1.
+  Для единичного вызова — ок; при загрузке списка patterns потребуется batch/projection.
+- [ ] **P3**: `getPatternById` грузит operations всех рядов. Отложенная загрузка видимых рядов — не сейчас.
+- [ ] **P3**: `getPatternById` мапит `PatternRowEntity` дважды (`attachOperations` и `PatternEntity.toDomain`). Оптимизация: передать уже собранные ряды в `toDomain`.
 - [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
   `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
   При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.

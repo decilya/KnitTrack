@@ -8,6 +8,8 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
+import com.knittrac.app.data.local.entity.PatternOperationEntity
+import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.data.mapper.toSummary
@@ -15,8 +17,10 @@ import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
+import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Span
+import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.model.OperationSpan
 import com.knittrac.app.domain.repository.PatternRepository
 import kotlinx.coroutines.CancellationException
@@ -25,12 +29,11 @@ import javax.inject.Inject
 
 /**
  * Реализация [PatternRepository], инкапсулирующая сборку агрегата [Pattern]
- * из четырёх таблиц: `patterns`, `pattern_rows`, `symbols`, `pattern_repeats`.
+ * из пяти таблиц: `patterns`, `pattern_rows`, `pattern_operations`,
+ * `symbols`, `pattern_repeats`.
  *
- * ВАЖНО: агрегат [Pattern] в Domain содержит `legend` и `repeats` — без них
- * невозможны проверки `symbol in legend` и `repeat_code in pattern.repeats`
- * в [AddPatternOperationService] (Шаг 7d). Поэтому [getPatternById] делает
- * 4 запроса. Для единичного вызова приемлемо (P2 в TECHDEBT: batch при списке).
+ * [getPatternById] делает 5 запросов. Операции — один SQL на схему, не N+1.
+ * Для единичного вызова приемлемо (P2 в TECHDEBT: batch при списке).
  *
  * Все catch-блоки сначала отлавливают [CancellationException] и пробрасывают
  * её дальше: отмена корутины — не ошибка, а сигнал.
@@ -42,7 +45,7 @@ class PatternRepositoryImpl @Inject constructor(
 ) : PatternRepository {
 
     /**
-     * Загружает схему по id вместе с рядами, легендой и раппортами.
+     * Загружает схему по id вместе с рядами, операциями, легендой и раппортами.
      *
      * @param id Идентификатор схемы.
      * @return [Result.Success] с полным [Pattern],
@@ -55,13 +58,18 @@ class PatternRepositoryImpl @Inject constructor(
             val rows = patternDao.getRowsForPattern(id.value)
             val symbols = symbolDao.getSymbolsForPattern(id.value)
             val repeats = patternRepeatDao.getRepeatsForPattern(id.value)
-            Result.Success(
-                entity.toDomain(
-                    rows = rows,
-                    legend = symbols.map { it.toDomain() }.toSet(),
-                    repeats = repeats.map { it.toDomain() }
+            val operations = patternDao.getAllOperationsForPattern(id.value)
+            val legend = symbols.map { it.toDomain() }.toSet()
+            when (val attached = attachOperations(rows, legend, operations)) {
+                is Result.Error -> attached
+                is Result.Success -> Result.Success(
+                    entity.toDomain(
+                        rows = rows,
+                        legend = legend,
+                        repeats = repeats.map { it.toDomain() }
+                    ).copy(rows = attached.data)
                 )
-            )
+            }
         } else {
             Result.Error(AppError.NotFoundError("Схема id=${id.value} не найдена"))
         }
@@ -70,6 +78,41 @@ class PatternRepositoryImpl @Inject constructor(
     } catch (e: Exception) {
         Timber.e(e, "getPatternById id=%d failed", id.value)
         Result.Error(AppError.DatabaseError(e))
+    }
+
+    /**
+     * Клеит операции на ряды. Порядок внутри ряда — порядок списка DAO
+     * (SQL `ORDER BY column_start`). Нет символа в легенде — [AppError.DatabaseError].
+     * Нет изнаночного символа — `backSymbol = null`.
+     */
+    private fun attachOperations(
+        rows: List<PatternRowEntity>,
+        legend: Set<Symbol>,
+        operations: List<PatternOperationEntity>
+    ): Result<List<PatternRow>> {
+        val byCode = legend.associateBy { it.code }
+        val byRow = mutableMapOf<Long, MutableList<PatternOperation>>()
+        for (entity in operations) {
+            val symbol = byCode[entity.symbolCode]
+                ?: return Result.Error(
+                    AppError.DatabaseError(
+                        IllegalStateException(
+                            "Symbol '${entity.symbolCode}' not found in legend " +
+                                "for operation row=${entity.patternRowId}"
+                        )
+                    )
+                )
+            val backSymbol = entity.backSymbolCode?.let { byCode[it] }
+            byRow.getOrPut(entity.patternRowId) { mutableListOf() }
+                .add(entity.toDomain(symbol, backSymbol))
+        }
+        return Result.Success(
+            rows.map { rowEntity ->
+                rowEntity.toDomain().copy(
+                    operations = byRow[rowEntity.id] ?: emptyList()
+                )
+            }
+        )
     }
 
     /**
