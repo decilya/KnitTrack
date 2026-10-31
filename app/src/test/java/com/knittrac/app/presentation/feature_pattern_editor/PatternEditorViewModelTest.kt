@@ -15,6 +15,7 @@ import com.knittrac.app.domain.entity.PatternName
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.domain.entity.Symbol
@@ -22,6 +23,8 @@ import com.knittrac.app.domain.entity.SymbolCategory
 import com.knittrac.app.domain.entity.Technique
 import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.domain.service.AddPatternOperationUseCase
+import com.knittrac.app.domain.service.CreatePatternParams
+import com.knittrac.app.domain.service.CreatePatternUseCase
 import com.knittrac.app.domain.service.GetAllPatternSummariesService
 import com.knittrac.app.domain.service.GetPatternByIdService
 import io.mockk.coEvery
@@ -45,6 +48,7 @@ class PatternEditorViewModelTest : BaseTest() {
     private val getPatternByIdService: GetPatternByIdService = mockk()
     private val getAllPatternSummariesService: GetAllPatternSummariesService = mockk()
     private val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
+    private val createPatternUseCase: CreatePatternUseCase = mockk()
 
     private fun symbol(code: String = "K"): Symbol = Symbol(
         code = code,
@@ -78,9 +82,12 @@ class PatternEditorViewModelTest : BaseTest() {
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()): PatternEditorViewModel {
         stubSummaries()
         return PatternEditorViewModel(
-            getPatternByIdService,
-            getAllPatternSummariesService,
-            addPatternOperationUseCase,
+            PatternEditorUseCases(
+                getPatternByIdService,
+                getAllPatternSummariesService,
+                addPatternOperationUseCase,
+                createPatternUseCase
+            ),
             savedState
         )
     }
@@ -194,4 +201,42 @@ class PatternEditorViewModelTest : BaseTest() {
         // selectedSymbolCode null — не выбирали
         assertNull(vm.state.value.selectedSymbolCode)
     }
+
+    @Test
+    fun `createPattern success loads created id`() = runTest {
+        coEvery { createPatternUseCase(any()) } returns Result.Success(PatternId.create(3L))
+        coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.CreatePattern(createParams()))
+        advanceUntilIdle()
+
+        assertEquals(PatternId.create(3L), vm.state.value.currentPatternId)
+    }
+
+    @Test
+    fun `createPattern error emits ShowError`() = runTest {
+        coEvery { createPatternUseCase(any()) } returns Result.Error(AppError.ValidationError("x"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+        val effectDeferred = async { vm.effect.first() }
+
+        vm.onIntent(PatternEditorContract.Intent.CreatePattern(createParams()))
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is PatternEditorContract.Effect.ShowError)
+        assertEquals(
+            R.string.pattern_editor_create_error,
+            (effect as PatternEditorContract.Effect.ShowError).messageResId
+        )
+    }
+
+    private fun createParams(): CreatePatternParams = CreatePatternParams(
+        name = PatternName.create("Новая"),
+        technique = Technique.KNITTING,
+        direction = PatternDirection.LTR,
+        rowCount = RowCount.create(1)
+    )
 }

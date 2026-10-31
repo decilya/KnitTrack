@@ -391,6 +391,7 @@ Icon-toggle в `TopAppBar`:
 | 3 | `feat(7f-B-3)`: `PatternEditorScreen` + Canvas (zoom/pan) + nav + 2 входа | Presentation UI | 2.5 ч |
 | 4 | `feat(7f-B-4)`: sticky + sheet режимы + column picker | Presentation UI + VM | 2 ч |
 | 5 | `docs(7f-B-5)`: `TECHDEBT` + `HANDOVER` | docs | 30 мин |
+| 6 | `feat(7f-C)`: создание схемы, сидер символов, `PatternEditorUseCases` | закрыт | — |
 
 **Итого ~9 часов, 2–3 сессии.**
 

@@ -2,6 +2,7 @@ package com.knittrac.app.data.repository
 
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
@@ -37,10 +38,11 @@ import java.sql.SQLException
  */
 class PatternRepositoryImplTest {
 
+    private val database: AppDatabase = mockk(relaxed = true)
     private val patternDao: PatternDao = mockk()
     private val symbolDao: SymbolDao = mockk()
     private val patternRepeatDao: PatternRepeatDao = mockk()
-    private val repository = PatternRepositoryImpl(patternDao, symbolDao, patternRepeatDao)
+    private val repository = PatternRepositoryImpl(database, patternDao, symbolDao, patternRepeatDao)
 
     private fun stubPatternShell() {
         coEvery { patternDao.getPatternById(1L) } returns entity

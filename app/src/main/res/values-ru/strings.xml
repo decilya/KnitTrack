@@ -14,6 +14,15 @@
     <string name="pattern_editor_mode_sheet">Ячейка, затем символ</string>
     <string name="pattern_editor_row_prefix">Ряд %1$d</string>
     <string name="pattern_editor_no_rows">В схеме нет рядов</string>
+    <string name="pattern_editor_create">Создать</string>
+    <string name="pattern_editor_create_title">Новая схема</string>
+    <string name="pattern_editor_name">Название</string>
+    <string name="pattern_editor_row_count">Число рядов</string>
+    <string name="pattern_editor_ok">ОК</string>
+    <string name="pattern_editor_cancel">Отмена</string>
+    <string name="pattern_editor_create_error">Не удалось создать схему</string>
+    <string name="add_mode_project">Проект</string>
+    <string name="add_mode_pattern">Схема</string>
     <string name="save">Сохранить</string>
     <string name="target_row_count">Целевое количество рядов (опционально)</string>
     <string name="start">Старт</string>

@@ -37,7 +37,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
         PatternOperationEntity::class,
         PatternRepeatEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -333,8 +333,26 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("PRAGMA foreign_keys = ON")
                 db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT)
                 db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE)
+                db.execSQL(DEFAULT_SYMBOLS_INSERT)
             }
         }
+
+        /**
+         * Шесть системных символов. `owner_pattern_id` пустой — они в легенде
+         * любой схемы. `INSERT OR IGNORE` не дублирует код при повторном прогоне.
+         * Глиф SSK — один `\`: в этой строке слэш литеральный, SQLite его не экранирует.
+         */
+        private const val DEFAULT_SYMBOLS_INSERT = """
+            INSERT OR IGNORE INTO symbols
+            (code, owner_pattern_id, display_name, text_glyph, category, default_column_span, default_row_span)
+            VALUES
+            ('K', NULL, 'Лицевая', 'V', 'STANDARD', 1, 1),
+            ('P', NULL, 'Изнаночная', '-', 'STANDARD', 1, 1),
+            ('O', NULL, 'Накид', 'o', 'STANDARD', 1, 1),
+            ('K2tog', NULL, 'Две вместе лицевой', '/', 'STANDARD', 1, 1),
+            ('SSK', NULL, 'Две вместе с наклоном влево', '\', 'STANDARD', 1, 1),
+            ('SL', NULL, 'Снять петлю', '▢', 'STANDARD', 1, 1)
+        """
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -376,6 +394,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(DEFAULT_SYMBOLS_INSERT)
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -383,7 +407,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "knittrac_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(
+                        MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
+                        MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7
+                    )
                     .addCallback(DATABASE_CALLBACK)
                     .build()
 

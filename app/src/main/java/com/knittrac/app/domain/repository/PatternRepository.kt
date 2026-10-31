@@ -7,6 +7,7 @@ import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.model.OperationSpan
 
 interface PatternRepository {
@@ -55,4 +56,10 @@ interface PatternRepository {
     fun getAllPatternSummaries(): Flow<List<PatternSummary>>
 
     suspend fun addOperation(operation: PatternOperation): Result<Unit>
+
+    /**
+     * Создаёт схему и [rowCount] пустых рядов.
+     * Ряды собирает реализация: у новых рядов ещё нет id.
+     */
+    suspend fun addPattern(pattern: Pattern, rowCount: RowCount): Result<PatternId>
 }

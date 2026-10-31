@@ -24,6 +24,8 @@ import javax.inject.Inject
  */
 object ProjectsContract {
 
+    enum class AddMode { PROJECT, PATTERN }
+
     /**
      * UI-модель проекта для отображения в списке.
      *

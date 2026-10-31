@@ -1,10 +1,12 @@
 package com.knittrac.app.data.repository
 
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.Flow
 import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
@@ -19,6 +21,7 @@ import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.model.OperationSpan
@@ -39,6 +42,7 @@ import javax.inject.Inject
  * её дальше: отмена корутины — не ошибка, а сигнал.
  */
 class PatternRepositoryImpl @Inject constructor(
+    private val database: AppDatabase,
     private val patternDao: PatternDao,
     private val symbolDao: SymbolDao,
     private val patternRepeatDao: PatternRepeatDao
@@ -198,4 +202,25 @@ class PatternRepositoryImpl @Inject constructor(
         )
         Result.Error(AppError.DatabaseError(e))
     }
+
+    override suspend fun addPattern(pattern: Pattern, rowCount: RowCount): Result<PatternId> = try {
+        val id = database.withTransaction {
+            val patternId = patternDao.insertPattern(pattern.toEntity())
+            if (rowCount.value > 0) {
+                patternDao.insertRows(emptyRows(patternId, rowCount.value))
+            }
+            PatternId.create(patternId)
+        }
+        Result.Success(id)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "addPattern failed")
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    private fun emptyRows(patternId: Long, count: Int): List<PatternRowEntity> =
+        (1..count).map { index ->
+            PatternRowEntity(id = 0L, patternId = patternId, rowNumber = index)
+        }
 }

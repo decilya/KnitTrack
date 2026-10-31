@@ -65,7 +65,10 @@ class DataRoundTripTest {
             assertEquals(10L, row.id)
             assertEquals(1L, row.patternId)
             assertEquals(1, row.rowNumber)
-            assertEquals("K", dest.symbolDao().getAllSymbols().single().code)
+            assertEquals(
+                setOf("K", "P", "O", "K2tog", "SSK", "SL"),
+                dest.symbolDao().getAllSymbols().map { it.code }.toSet()
+            )
             val repeat = dest.patternRepeatDao().getAllRepeats().single()
             assertEquals(1L, repeat.patternId)
             assertEquals("A", repeat.code)

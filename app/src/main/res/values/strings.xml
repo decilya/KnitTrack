@@ -53,6 +53,15 @@
     <string name="pattern_editor_mode_sheet">Cell then symbol</string>
     <string name="pattern_editor_row_prefix">Row %1$d</string>
     <string name="pattern_editor_no_rows">This pattern has no rows</string>
+    <string name="pattern_editor_create">Create</string>
+    <string name="pattern_editor_create_title">New pattern</string>
+    <string name="pattern_editor_name">Name</string>
+    <string name="pattern_editor_row_count">Row count</string>
+    <string name="pattern_editor_ok">OK</string>
+    <string name="pattern_editor_cancel">Cancel</string>
+    <string name="pattern_editor_create_error">Could not create the pattern</string>
+    <string name="add_mode_project">Project</string>
+    <string name="add_mode_pattern">Pattern</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

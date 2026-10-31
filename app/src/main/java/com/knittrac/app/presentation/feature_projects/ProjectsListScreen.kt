@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.collectLatest
  * не превысила порог LongParameterList.
  */
 class ProjectsListNavigator(
-    val onAddProject: () -> Unit,
+    val onAdd: (ProjectsContract.AddMode) -> Unit,
     val onTimer: (Long) -> Unit,
     val onStats: (Long) -> Unit,
     val onSettings: () -> Unit,
@@ -81,16 +81,38 @@ fun ProjectsListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navigator.onAddProject()
+            var addMenu by remember { mutableStateOf(false) }
+            Box {
+                FloatingActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        addMenu = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_project)
+                    )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add_project)
-                )
+                DropdownMenu(
+                    expanded = addMenu,
+                    onDismissRequest = { addMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.add_mode_project)) },
+                        onClick = {
+                            addMenu = false
+                            navigator.onAdd(ProjectsContract.AddMode.PROJECT)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.add_mode_pattern)) },
+                        onClick = {
+                            addMenu = false
+                            navigator.onAdd(ProjectsContract.AddMode.PATTERN)
+                        }
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -124,7 +146,7 @@ fun ProjectsListScreen(
                     title = stringResource(R.string.no_projects_yet),
                     description = stringResource(R.string.no_projects_description),
                     actionText = stringResource(R.string.add_project),
-                    onActionClick = navigator.onAddProject,
+                    onActionClick = { navigator.onAdd(ProjectsContract.AddMode.PROJECT) },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)

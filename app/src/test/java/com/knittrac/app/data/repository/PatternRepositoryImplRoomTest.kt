@@ -3,13 +3,19 @@ package com.knittrac.app.data.repository
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.entity.PatternEntity
 import com.knittrac.app.data.local.entity.PatternOperationEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.local.entity.SymbolEntity
+import com.knittrac.app.domain.entity.Pattern
+import com.knittrac.app.domain.entity.PatternDirection
 import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.PatternName
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.Technique
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -66,6 +72,7 @@ class PatternRepositoryImplRoomTest {
                 listOf(PatternOperationEntity(patternRowId = 10L, columnStart = 0, symbolCode = "K"))
             )
             val repository = PatternRepositoryImpl(
+                db,
                 db.patternDao(),
                 db.symbolDao(),
                 db.patternRepeatDao()
@@ -85,4 +92,57 @@ class PatternRepositoryImplRoomTest {
             db.close()
         }
     }
+
+    @Test
+    fun addPattern_insertsPatternAndNumberedRows() = runTest(UnconfinedTestDispatcher()) {
+        val db = openDb()
+        try {
+            val repository = repository(db)
+            val result = repository.addPattern(newPattern(), RowCount.create(2))
+            assertTrue(result is Result.Success)
+            val id = (result as Result.Success).data
+            val rows = db.patternDao().getRowsForPattern(id.value)
+            assertEquals(listOf(1, 2), rows.map { it.rowNumber })
+            assertTrue(rows.all { it.id != 0L })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun addPattern_writeFailure_returnsDatabaseError() = runTest(UnconfinedTestDispatcher()) {
+        val db = openDb()
+        try {
+            val repository = repository(db)
+            db.openHelper.writableDatabase.execSQL("DROP TABLE patterns")
+            val result = repository.addPattern(newPattern(), RowCount.create(1))
+            assertTrue(result.toString(), result is Result.Error)
+            assertTrue((result as Result.Error).error is AppError.DatabaseError)
+        } finally {
+            db.close()
+        }
+    }
+
+    private fun openDb(): AppDatabase {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        return Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .build()
+    }
+
+    private fun repository(db: AppDatabase): PatternRepositoryImpl = PatternRepositoryImpl(
+        db,
+        db.patternDao(),
+        db.symbolDao(),
+        db.patternRepeatDao()
+    )
+
+    private fun newPattern(): Pattern = Pattern(
+        id = PatternId.ZERO,
+        name = PatternName.create("Новая"),
+        technique = Technique.KNITTING,
+        direction = PatternDirection.LTR,
+        isReversible = false
+    )
 }

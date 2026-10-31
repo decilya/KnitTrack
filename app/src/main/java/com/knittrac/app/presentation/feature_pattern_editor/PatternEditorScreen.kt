@@ -7,10 +7,12 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AdsClick
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,8 +32,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -47,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -57,6 +66,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.knittrac.app.R
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
+import com.knittrac.app.domain.entity.PatternDirection
+import com.knittrac.app.domain.entity.PatternName
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.Technique
+import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContract.Intent
 
 /**
@@ -71,6 +85,7 @@ fun PatternEditorScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
+    var showCreateDialog by remember { mutableStateOf(false) }
     val pattern = state.pattern
     Scaffold(
         topBar = {
@@ -129,10 +144,12 @@ fun PatternEditorScreen(
     ) { padding ->
         when {
             state.isLoading -> CircularProgressIndicator(Modifier.padding(padding))
-            pattern == null -> Text(
-                text = stringResource(R.string.pattern_editor_select_pattern),
-                modifier = Modifier.padding(padding)
-            )
+            pattern == null -> Column(Modifier.padding(padding).padding(16.dp)) {
+                Text(stringResource(R.string.pattern_editor_select_pattern))
+                Button(onClick = { showCreateDialog = true }) {
+                    Text(stringResource(R.string.pattern_editor_create))
+                }
+            }
             pattern.rows.isEmpty() -> Text(
                 text = stringResource(R.string.pattern_editor_no_rows),
                 modifier = Modifier.padding(padding)
@@ -144,6 +161,15 @@ fun PatternEditorScreen(
                 modifier = Modifier.padding(padding)
             )
         }
+    }
+    if (showCreateDialog) {
+        CreatePatternDialog(
+            onDismiss = { showCreateDialog = false },
+            onCreate = { params ->
+                viewModel.onIntent(PatternEditorContract.Intent.CreatePattern(params))
+                showCreateDialog = false
+            }
+        )
     }
 }
 
@@ -297,6 +323,74 @@ private fun PatternCanvas(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CreatePatternDialog(
+    onDismiss: () -> Unit,
+    onCreate: (CreatePatternParams) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var rowCountText by remember { mutableStateOf("1") }
+    var technique by remember { mutableStateOf(Technique.KNITTING) }
+    var direction by remember { mutableStateOf(PatternDirection.LTR) }
+    var error by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pattern_editor_create_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.pattern_editor_name)) }
+                )
+                Text(stringResource(R.string.pattern_editor_row_count))
+                OutlinedTextField(
+                    value = rowCountText,
+                    onValueChange = { rowCountText = it },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                Technique.entries.forEach { item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = technique == item, onClick = { technique = item })
+                        Text(item.name)
+                    }
+                }
+                PatternDirection.entries.forEach { item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = direction == item, onClick = { direction = item })
+                        Text(item.name)
+                    }
+                }
+                if (error) Text(stringResource(R.string.pattern_editor_create_error))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val params = parseCreateInput(name, rowCountText, technique, direction)
+                if (params == null) error = true else onCreate(params)
+            }) { Text(stringResource(R.string.pattern_editor_ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.pattern_editor_cancel)) }
+        }
+    )
+}
+
+private fun parseCreateInput(
+    name: String,
+    rowCountText: String,
+    technique: Technique,
+    direction: PatternDirection
+): CreatePatternParams? {
+    val patternName = PatternName.createOrNull(name.trim())
+    val rowCount = rowCountText.toIntOrNull()?.takeIf { it >= 1 }?.let { RowCount.createOrNull(it) }
+    return if (patternName != null && rowCount != null) {
+        CreatePatternParams(patternName, technique, direction, rowCount)
+    } else {
+        null
     }
 }
 

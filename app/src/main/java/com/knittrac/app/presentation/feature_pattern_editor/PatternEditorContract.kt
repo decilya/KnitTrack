@@ -7,6 +7,7 @@ import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.model.PatternSummary
+import com.knittrac.app.domain.service.CreatePatternParams
 
 /**
  * MVI-контракт экрана Pattern Editor (7f-B).
@@ -63,6 +64,7 @@ object PatternEditorContract {
             val rowId: PatternRowId,
             val columnStart: ColumnStart
         ) : Intent()
+        data class CreatePattern(val params: CreatePatternParams) : Intent()
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()
     }

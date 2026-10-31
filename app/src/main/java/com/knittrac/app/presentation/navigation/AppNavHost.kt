@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.knittrac.app.presentation.feature_add_project.AddProjectScreen
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorScreen
+import com.knittrac.app.presentation.feature_projects.ProjectsContract
 import com.knittrac.app.presentation.feature_projects.ProjectsListNavigator
 import com.knittrac.app.presentation.feature_projects.ProjectsListScreen
 import com.knittrac.app.presentation.feature_settings.SettingsScreen
@@ -25,7 +26,14 @@ fun AppNavHost() {
         composable(Screen.ProjectsList.route) {
             ProjectsListScreen(
                 navigator = ProjectsListNavigator(
-                    onAddProject = { navController.navigate(Screen.AddProject.route) },
+                    onAdd = { mode ->
+                        when (mode) {
+                            ProjectsContract.AddMode.PROJECT ->
+                                navController.navigate(Screen.AddProject.route)
+                            ProjectsContract.AddMode.PATTERN ->
+                                navController.navigate(Screen.PatternEditorNew.route)
+                        }
+                    },
                     onTimer = { projectId ->
                         navController.navigate("${Screen.Timer.route}/$projectId")
                     },
@@ -70,6 +78,12 @@ fun AppNavHost() {
 
         composable(Screen.Settings.route) {
             SettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.PatternEditorNew.route) {
+            PatternEditorScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

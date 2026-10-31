@@ -11,9 +11,7 @@ import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.findRowById
 import com.knittrac.app.domain.entity.findSymbolByCode
 import com.knittrac.app.domain.model.AddPatternOperationParams
-import com.knittrac.app.domain.service.AddPatternOperationUseCase
-import com.knittrac.app.domain.service.GetAllPatternSummariesService
-import com.knittrac.app.domain.service.GetPatternByIdService
+import com.knittrac.app.domain.service.CreatePatternParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -42,9 +40,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class PatternEditorViewModel @Inject constructor(
-    private val getPatternByIdService: GetPatternByIdService,
-    private val getAllPatternSummariesService: GetAllPatternSummariesService,
-    private val addPatternOperationUseCase: AddPatternOperationUseCase,
+    private val useCases: PatternEditorUseCases,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -85,13 +81,14 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.SelectSymbol -> selectSymbol(intent.symbolCode)
             is PatternEditorContract.Intent.ToggleMode -> toggleMode()
             is PatternEditorContract.Intent.AddOperation -> addOperation(intent)
+            is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
             is PatternEditorContract.Intent.Retry -> retry()
         }
     }
 
     private fun observePatternSummaries() {
         viewModelScope.launch {
-            getAllPatternSummariesService(Unit).collect { result ->
+            useCases.getAllPatternSummaries(Unit).collect { result ->
                 when (result) {
                     is Result.Success -> _state.update { it.copy(availablePatterns = result.data) }
                     is Result.Error -> {
@@ -107,7 +104,7 @@ class PatternEditorViewModel @Inject constructor(
         loadJob?.cancel()
         _state.update { it.copy(isLoading = true, errorRes = null) }
         loadJob = viewModelScope.launch {
-            when (val result = getPatternByIdService(id)) {
+            when (val result = useCases.getPatternById(id)) {
                 is Result.Success -> {
                     savedStateHandle[KEY_PATTERN_ID] = id.value
                     _state.update {
@@ -147,6 +144,26 @@ class PatternEditorViewModel @Inject constructor(
         val next = !_state.value.isStickyMode
         savedStateHandle[KEY_IS_STICKY_MODE] = next
         _state.update { it.copy(isStickyMode = next) }
+    }
+
+    private fun createPattern(params: CreatePatternParams) {
+        if (_state.value.isSaving) return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                when (val result = useCases.createPattern(params)) {
+                    is Result.Success -> loadPattern(result.data)
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to create pattern")
+                        _effect.send(
+                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_create_error)
+                        )
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
     }
 
     private fun retry() {
@@ -195,7 +212,7 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private suspend fun executeAdd(context: AddContext) {
-        when (val result = addPatternOperationUseCase(context.params)) {
+        when (val result = useCases.addPatternOperation(context.params)) {
             is Result.Success -> {
                 _effect.send(PatternEditorContract.Effect.OperationAdded(result.data))
                 // Reload: VM — единый source of truth, не мутируем Domain локально.

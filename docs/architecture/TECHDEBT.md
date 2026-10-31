@@ -163,6 +163,10 @@
   Для единичного вызова — ок; при загрузке списка patterns потребуется batch/projection.
 - [ ] **P3**: `getPatternById` грузит operations всех рядов. Отложенная загрузка видимых рядов — не сейчас.
 - [ ] **P3**: `getPatternById` мапит `PatternRowEntity` дважды (`attachOperations` и `PatternEntity.toDomain`). Оптимизация: передать уже собранные ряды в `toDomain`.
+- [ ] **P3**: подписи техники и направления в диалоге создания схемы — `enum.name`. Локализация отдельно.
+- [ ] **P3**: `CreatePatternDialog` без compose-теста (`createComposeRule` в проекте нет).
+- [ ] **P3**: одинаковые `PatternName` разрешены.
+- [ ] **P3**: после создания схемы маршрут остаётся `pattern_editor_new`. Позже `navigate("pattern_editor/{id}")` с `popUpTo(pattern_editor_new) { inclusive = true }`.
 - [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
   `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
   При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.
