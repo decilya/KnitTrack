@@ -37,7 +37,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
         PatternOperationEntity::class,
         PatternRepeatEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -227,6 +227,100 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Миграция с версии 5 на версию 6 (7c-2).
+         *
+         * Добавляет триггеры `trg_progress_check_insert` / `trg_progress_check_update`
+         * (SQLite не поддерживает `INSERT OR UPDATE` в одном CREATE TRIGGER)
+         * для защиты инвариантов
+         * прогресса на уровне БД (см. docs/architecture/rows-and-patterns.md):
+         * - A: current_pattern_row_id принадлежит схеме проекта (pattern_id);
+         * - B: current_row_number = row_number денормализованного ряда;
+         * - C: current_pattern_row_id IS NULL → current_row_number = 0.
+         *
+         * Порядок обязателен: сначала санитизация существующих данных
+         * (иначе триггер отклонит UPDATE), затем CREATE TRIGGER.
+         *
+         * D-инвариант (stitch > 0 → row IS NOT NULL) — P3, включается
+         * вместе с per-stitch tracking (7f-B). Сейчас current_stitch в БД
+         * всегда 0 (ProgressService.updateProgress → StitchCount.ZERO).
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Санитизация A+B: row невалиден → обнулить row и number
+                db.execSQL(
+                    "UPDATE projects SET current_pattern_row_id = NULL, " +
+                        "current_row_number = 0 " +
+                        "WHERE current_pattern_row_id IS NOT NULL AND (" +
+                        "pattern_id IS NULL OR NOT EXISTS (" +
+                        "SELECT 1 FROM pattern_rows " +
+                        "WHERE id = current_pattern_row_id " +
+                        "AND pattern_id = projects.pattern_id))"
+                )
+
+                // 2. Санитизация B-fix: row валиден, number рассинхронизирован → починить
+                db.execSQL(
+                    "UPDATE projects SET current_row_number = (" +
+                        "SELECT row_number FROM pattern_rows " +
+                        "WHERE id = current_pattern_row_id) " +
+                        "WHERE current_pattern_row_id IS NOT NULL " +
+                        "AND current_row_number != (" +
+                        "SELECT row_number FROM pattern_rows " +
+                        "WHERE id = current_pattern_row_id)"
+                )
+
+                // 3. Санитизация C: row NULL, number != 0 → 0
+                db.execSQL(
+                    "UPDATE projects SET current_row_number = 0 " +
+                        "WHERE current_pattern_row_id IS NULL " +
+                        "AND current_row_number != 0"
+                )
+
+                // 4. CREATE TRIGGER (SQLite: одно событие на триггер).
+                // INSERT: прогресс должен быть NULL/0/0.
+                db.execSQL(
+                    "CREATE TRIGGER trg_progress_check_insert " +
+                        "BEFORE INSERT ON projects BEGIN " +
+                        "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                        "SELECT 1 FROM pattern_rows " +
+                        "WHERE id = NEW.current_pattern_row_id " +
+                        "AND pattern_id IS NEW.pattern_id); " +
+                        "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                        "SELECT 1 FROM pattern_rows " +
+                        "WHERE id = NEW.current_pattern_row_id " +
+                        "AND row_number = NEW.current_row_number); " +
+                        "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                        "WHERE NEW.current_pattern_row_id IS NULL " +
+                        "AND NEW.current_row_number != 0; " +
+                        "END"
+                )
+
+                // UPDATE: только progress-колонки (OF фильтрует события).
+                db.execSQL(
+                    "CREATE TRIGGER trg_progress_check_update " +
+                        "BEFORE UPDATE OF " +
+                        "current_pattern_row_id, current_row_number, " +
+                        "current_stitch, pattern_id ON projects BEGIN " +
+                        "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                        "SELECT 1 FROM pattern_rows " +
+                        "WHERE id = NEW.current_pattern_row_id " +
+                        "AND pattern_id IS NEW.pattern_id); " +
+                        "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                        "SELECT 1 FROM pattern_rows " +
+                        "WHERE id = NEW.current_pattern_row_id " +
+                        "AND row_number = NEW.current_row_number); " +
+                        "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                        "WHERE NEW.current_pattern_row_id IS NULL " +
+                        "AND NEW.current_row_number != 0; " +
+                        "END"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -234,7 +328,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "knittrac_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
 
                 INSTANCE = instance
