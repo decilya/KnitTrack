@@ -61,9 +61,9 @@
 - [ ] `TimerViewModelTest` отсутствует. После добавления `MarkNextPatternRow`
   ViewModel содержит 6 зависимостей и два независимых счётчика (`rowCount`,
   `currentPatternRowNumber`). Без теста регресс невидим. Создать в 7g.
-- [ ] Hilt-граф `MarkNextRowUseCase` → `ProgressService` → `PatternRepository`
+- [x] Hilt-граф `MarkNextRowUseCase` → `ProgressService` → `PatternRepository`
   → `PatternDao`/`SymbolDao`/`PatternRepeatDao` теперь reachable из
-  `TimerViewModel`. Runtime-проверка — только `@HiltAndroidTest` (7g).
+  `TimerViewModel`. Runtime-проверка — `@HiltAndroidTest` (7g-A, `HiltGraphTest`).
 
 ### Шаг 7f-A — открытые P2
 
