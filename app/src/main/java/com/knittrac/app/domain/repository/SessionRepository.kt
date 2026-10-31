@@ -23,7 +23,9 @@ interface SessionRepository {
      * если обновление времени проекта не удастся, сессия также не будет сохранена (произойдет откат).
      * 
      * @param session Domain-модель сессии для сохранения.
-     * @return [Result.Success] с ID новой сессии или [Result.Error] при сбое транзакции.
+     * @return [Result.Success] с ID новой сессии;
+     *   [com.knittrac.app.core.common.AppError.NotFoundError], если проект не найден;
+     *   [com.knittrac.app.core.common.AppError.DatabaseError] при прочих сбоях БД.
      */
     suspend fun addSessionAtomically(session: Session): Result<Long>
     

@@ -1,5 +1,6 @@
 package com.knittrac.app.core.common
 
+import android.database.SQLException
 import java.io.IOException
 
 /**
@@ -19,6 +20,7 @@ object AppErrorMapper {
      * подходящий подкласс [AppError]:
      * - [IOException] → [AppError.IoError]
      * - [IllegalArgumentException] → [AppError.ValidationError]
+     * - [android.database.SQLException] → [AppError.DatabaseError]
      * - Все остальные → [AppError.UnknownError]
      * 
      * @param e Исключение, которое необходимо преобразовать.
@@ -33,7 +35,10 @@ object AppErrorMapper {
             e.message ?: "Некорректные входные данные"
         )
 
-        // Все остальные исключения считаем неизвестными ошибками
+        // Room: SQLiteException, SQLiteConstraintException и прочие наследники.
+        // java.sql.SQLException сюда не входит.
+        is SQLException -> AppError.DatabaseError(e)
+
         else -> AppError.UnknownError(e)
     }
 }

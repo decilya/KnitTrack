@@ -3,6 +3,7 @@ package com.knittrac.app.data.local
 import androidx.room.*
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.SessionEntity
+import com.knittrac.app.data.local.exceptions.ProjectNotFoundException
 import com.knittrac.app.domain.entity.DailyStat
 import kotlinx.coroutines.flow.Flow
 
@@ -145,7 +146,7 @@ interface SessionDao {
     ): Long {
         val newRowId = insertSession(session)
         val rows = incrementProjectTotals(session.projectId, durationSeconds, session.rowCount, updatedAt)
-        if (rows != 1) throw IllegalStateException("Проект id=${session.projectId} не найден")
+        if (rows != 1) throw ProjectNotFoundException(session.projectId)
         return newRowId
     }
 

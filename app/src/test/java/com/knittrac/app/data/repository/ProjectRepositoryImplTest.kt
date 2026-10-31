@@ -230,17 +230,17 @@ class ProjectRepositoryImplTest {
     }
 
     /**
-     * deleteProject идемпотентен: если строки уже нет (rows = 0),
-     * возвращается Success, а не NotFoundError. Защищает UI от гонки
-     * при повторном нажатии «Удалить».
+     * deleteProject при rows = 0 возвращает NotFoundError.
+     * Повторный вызов после успешного удаления — тоже NotFoundError.
      */
     @Test
-    fun deleteProject_isIdempotentWhenDaoReturnsZeroRows() = runTest {
+    fun deleteProject_rows0_returnsNotFoundError() = runTest {
         coEvery { projectDao.deleteProjectById(99L) } returns 0
 
         val result = repository.deleteProject(99L)
 
-        assertTrue(result is Result.Success)
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
         coVerify(exactly = 1) { projectDao.deleteProjectById(99L) }
     }
 }

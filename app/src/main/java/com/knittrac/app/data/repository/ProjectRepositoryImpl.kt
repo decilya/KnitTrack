@@ -127,18 +127,23 @@ class ProjectRepositoryImpl @Inject constructor(
     /**
      * Удаляет проект по id. Каскад на сессии — FK CASCADE в БД.
      *
-     * Идемпотентно: если проекта с таким id уже нет, возвращается Success,
-     * а не NotFoundError. Защищает UI от гонки между нажатием «Удалить»
-     * и параллельным удалением (например, после перезагрузки списка).
+     * rows=0 → [AppError.NotFoundError]. Идемпотентность — на уровне
+     * вызывающего кода: повторный вызов после успешного удаления
+     * получает NotFoundError, а не Success.
      *
      * Одним SQL-запросом DELETE без предварительного чтения entity.
      *
      * @param id Идентификатор проекта.
-     * @return [Result.Success] или [Result.Error].
+     * @return [Result.Success] если удалена 1 строка, [Result.Error] с
+     *   [AppError.NotFoundError] если строки не было, или [AppError.DatabaseError].
      */
     override suspend fun deleteProject(id: Long): Result<Unit> = try {
-        projectDao.deleteProjectById(id)
-        Result.Success(Unit)
+        val rows = projectDao.deleteProjectById(id)
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Проект id=$id не найден"))
+        } else {
+            Result.Success(Unit)
+        }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {

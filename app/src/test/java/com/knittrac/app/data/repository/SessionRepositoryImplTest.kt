@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.data.local.SessionDao
+import com.knittrac.app.data.local.exceptions.ProjectNotFoundException
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
@@ -147,6 +148,27 @@ class SessionRepositoryImplTest {
         } throws NoSuchElementException("Сессия id=999 не найдена")
 
         val result = repository.deleteSessionAndDecrementProjectTotals(999L)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
+
+    /**
+     * addSessionAtomically возвращает NotFoundError, если DAO сообщает,
+     * что проект для сессии не найден.
+     */
+    @Test
+    fun addSessionAtomically_projectMissing_returnsNotFoundError() = runTest {
+        coEvery {
+            sessionDao.insertSessionAndIncrementProjectTotals(any(), any(), any())
+        } throws ProjectNotFoundException(10L)
+
+        val session = Session(
+            projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
+            durationSeconds = Duration.create(60L), rowCount = 5, updatedAt = 1_000L
+        )
+
+        val result = repository.addSessionAtomically(session)
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)

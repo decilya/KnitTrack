@@ -47,7 +47,8 @@ interface ProjectDao {
      * FK CASCADE на sessions выполняется на уровне БД.
      *
      * @return количество затронутых строк: 1 — удалено, 0 — записи не было.
-     *   rows=0 — не ошибка: удаление идемпотентно.
+     *   Репозиторий трактует 0 как NotFoundError. Идемпотентность —
+     *   на уровне вызывающего кода.
      */
     @Query("DELETE FROM projects WHERE id = :id")
     suspend fun deleteProjectById(id: Long): Int

@@ -6,7 +6,6 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.repository.SessionRepository
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -50,12 +49,6 @@ class SaveSessionService @Inject constructor(
         )
 
         // 3. Атомарное сохранение. При сбое транзакция откатится целиком.
-        return when (val result = sessionRepository.addSessionAtomically(session)) {
-            is Result.Success -> result
-            is Result.Error -> {
-                Timber.e(result.error.cause, "Failed to save session atomically")
-                result
-            }
-        }
+        return sessionRepository.addSessionAtomically(session)
     }
 }

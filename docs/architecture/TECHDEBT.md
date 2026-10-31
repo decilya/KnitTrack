@@ -43,14 +43,16 @@
 
 ### Открыто (P1)
 
-- [ ] **P1 #1**: Timber в `SaveSessionService`.
-- [ ] **P1 #2**: `AppErrorMapper` — `SQLException` на Flow-пути становится `UnknownError`.
+- [x] **P1 #1**: Timber убран из `SaveSessionService`. Лог остаётся в `SessionRepositoryImpl`. Закрыто в этом коммите.
+- [x] **P1 #2**: `AppErrorMapper` — `android.database.SQLException` → `DatabaseError`. `Owner-approved`. Закрыто в этом коммите.
 - [ ] **P1 #5**: `TimerForegroundService` не стартует ни один экран.
 
 ### Открыто (P2/P3)
 
 - [ ] **P2**: Compose-тест `ProjectsListScreen` (иконка stats на карточке). Robolectric `createComposeRule` в проекте нет. Тот же класс, что P1-5 у `TimerScreen`.
-- [ ] **P2 #9–#23, #24–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшие: `deleteProject` игнорирует 0 строк; нет проекта при `insertSessionAndIncrement` — `DatabaseError` вместо `NotFoundError`; бэкап не пишет схемы, но `ProjectDto` пишет FK.
+- [x] **P2 #24**: `deleteProject` при 0 строк возвращает `NotFoundError`. Контракт изменён осознанно: удаление больше не идемпотентно. Закрыто в этом коммите.
+- [x] **P2 #25**: `addSessionAtomically` — нет проекта → `NotFoundError` (`ProjectNotFoundException`). Строки 161 и 169 `SessionDao` по-прежнему `IllegalStateException` → `DatabaseError`. Закрыто в этом коммите.
+- [ ] **P2 #9–#23, #26–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшее: бэкап не пишет схемы, но `ProjectDto` пишет FK.
 
 
 

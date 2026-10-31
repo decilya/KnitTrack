@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.data.local.SessionDao
+import com.knittrac.app.data.local.exceptions.ProjectNotFoundException
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.DailyStat
@@ -93,7 +94,9 @@ class SessionRepositoryImpl @Inject constructor(
      * падении на второй операции сессия тоже откатывается.
      *
      * @param session Domain-модель сессии.
-     * @return [Result.Success] с id новой сессии или [Result.Error].
+     * @return [Result.Success] с id новой сессии;
+     *   [AppError.NotFoundError], если проект не найден;
+     *   [AppError.DatabaseError] при прочих сбоях БД.
      */
     override suspend fun addSessionAtomically(session: Session): Result<Long> = try {
         val entity = session.toEntity().copy(
@@ -108,6 +111,9 @@ class SessionRepositoryImpl @Inject constructor(
         Result.Success(newRowId)
     } catch (e: CancellationException) {
         throw e
+    } catch (e: ProjectNotFoundException) {
+        Timber.e(e, "addSessionAtomically projectId=%d not found", session.projectId)
+        Result.Error(AppError.NotFoundError(e.message ?: "Проект не найден"))
     } catch (e: Exception) {
         Timber.e(e, "addSessionAtomically projectId=%d failed", session.projectId)
         Result.Error(AppError.DatabaseError(e))
