@@ -1,12 +1,14 @@
 package com.knittrac.app.presentation.feature_timer
 
 import androidx.lifecycle.SavedStateHandle
+import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.SaveSessionService
@@ -34,6 +36,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -285,5 +288,105 @@ class TimerViewModelTest {
 
         assertEquals(5L, viewModel.state.value.projectId)
         assertEquals(42, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * MarkNextPatternRow success: вызывает MarkNextRowUseCase, обновляет
+     * currentPatternRowNumber из ответа, снимает флаг isMarkingRow.
+     */
+    @Test
+    fun markNextPatternRow_success_updatesStateAndResetsFlag() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        coEvery { markNextRowUseCase(any()) } returns Result.Success(RowNumber.create(5))
+
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        assertEquals(5, viewModel.state.value.currentPatternRowNumber)
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+        coVerify(exactly = 1) { markNextRowUseCase(any()) }
+    }
+
+    /**
+     * MarkNextPatternRow error: эмитит ShowError(pattern_row_mark_error),
+     * currentPatternRowNumber не меняется, isMarkingRow снят в finally.
+     */
+    @Test
+    fun markNextPatternRow_error_emitsShowErrorAndResetsFlag() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        coEvery { markNextRowUseCase(any()) } returns
+            Result.Error(AppError.ValidationError("нет привязанной схемы"))
+
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
+        )
+
+        val effectDeferred = async { withTimeoutOrNull(50L) { viewModel.effect.first() } }
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        val effect = effectDeferred.await()
+        advanceUntilIdle()
+
+        assertTrue(
+            "Ожидался ShowError, получен: " + effect,
+            effect is TimerContract.Effect.ShowError
+        )
+        val showError = effect as TimerContract.Effect.ShowError
+        assertEquals(
+            com.knittrac.app.R.string.pattern_row_mark_error,
+            showError.messageResId
+        )
+        assertNull(viewModel.state.value.currentPatternRowNumber)
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Guard: пока первый вызов висит, второй onIntent отбрасывается флагом
+     * isMarkingRow — MarkNextRowUseCase вызывается ровно один раз.
+     */
+    @Test
+    fun markNextPatternRow_doubleTap_secondCallIgnored() = runTest {
+        every { permissionChecker.isGranted() } returns true
+        coEvery { markNextRowUseCase(any()) } coAnswers {
+            delay(100)
+            Result.Success(RowNumber.create(5))
+        }
+
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { markNextRowUseCase(any()) }
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Нет projectId: resolveProjectIdForMarking возвращает null,
+     * MarkNextRowUseCase не вызывается, isMarkingRow остаётся false.
+     */
+    @Test
+    fun markNextPatternRow_noProject_doesNotCallUseCase() = runTest {
+        every { permissionChecker.isGranted() } returns true
+
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            SavedStateHandle()
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { markNextRowUseCase(any()) }
+        assertEquals(false, viewModel.state.value.isMarkingRow)
     }
 }
