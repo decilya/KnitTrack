@@ -12,6 +12,15 @@ interface PatternDao {
     @Query("SELECT * FROM patterns ORDER BY name ASC")
     fun getAllPatternsFlow(): Flow<List<PatternEntity>>
 
+    @Query("SELECT * FROM patterns ORDER BY id ASC")
+    suspend fun getAllPatterns(): List<PatternEntity>
+
+    @Query("SELECT * FROM pattern_rows ORDER BY pattern_id ASC, row_number ASC")
+    suspend fun getAllRows(): List<PatternRowEntity>
+
+    @Query("SELECT * FROM pattern_operations ORDER BY pattern_row_id ASC, column_start ASC")
+    suspend fun getAllOperations(): List<PatternOperationEntity>
+
     @Query("SELECT * FROM patterns WHERE id = :id")
     suspend fun getPatternById(id: Long): PatternEntity?
 

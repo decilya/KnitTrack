@@ -6,11 +6,14 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.data.dto.ExportDataDto
+import com.knittrac.app.data.dto.PatternDto
+import com.knittrac.app.data.dto.PatternOperationDto
+import com.knittrac.app.data.dto.PatternRepeatDto
+import com.knittrac.app.data.dto.PatternRowDto
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
+import com.knittrac.app.data.dto.SymbolDto
 import com.knittrac.app.data.mapper.toDomain
-import com.knittrac.app.domain.entity.Project
-import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.repository.BackupRepository
 import com.knittrac.app.domain.repository.DataImporter
 import kotlinx.coroutines.CancellationException
@@ -45,22 +48,7 @@ class DataImporterImpl @Inject constructor(
                 }
 
                 backupRepository.withTransaction {
-                    reader.beginObject()
-                    while (reader.hasNext()) {
-                        when (reader.nextName()) {
-                            "version" -> {
-                                val version = reader.nextString()
-                                if (version != ExportDataDto.CURRENT_VERSION) {
-                                    Timber.w("Backup version '%s' != current '%s'", version, ExportDataDto.CURRENT_VERSION)
-                                }
-                            }
-                            "exportDate" -> reader.skipValue()
-                            "projects" -> readAndInsertProjects(reader)
-                            "sessions" -> readAndInsertSessions(reader)
-                            else -> reader.skipValue()
-                        }
-                    }
-                    reader.endObject()
+                    readBackup(reader)
                 }
 
                 Result.Success(Unit)
@@ -78,33 +66,102 @@ class DataImporterImpl @Inject constructor(
             }
         }
 
-    private suspend fun readAndInsertProjects(reader: JsonReader) {
-        val batch = mutableListOf<Project>()
-        reader.beginArray()
+    private suspend fun readBackup(reader: JsonReader) {
+        var version = ""
+        reader.beginObject()
         while (reader.hasNext()) {
-            val dto = gson.fromJson<ProjectDto>(reader, ProjectDto::class.java)
-            batch.add(dto.toDomain())
-            if (batch.size >= BATCH_SIZE) {
-                backupRepository.saveProjectsBatch(batch)
-                batch.clear()
+            when (val name = reader.nextName()) {
+                "version" -> {
+                    version = reader.nextString()
+                    warnIfOld(version)
+                }
+                else -> readNamed(reader, name, version)
             }
         }
-        reader.endArray()
-        if (batch.isNotEmpty()) backupRepository.saveProjectsBatch(batch)
+        reader.endObject()
     }
 
-    private suspend fun readAndInsertSessions(reader: JsonReader) {
-        val batch = mutableListOf<Session>()
+    private fun warnIfOld(version: String) {
+        if (version != ExportDataDto.CURRENT_VERSION) {
+            Timber.w(
+                "Backup version '%s' != current '%s'; pattern links will be dropped",
+                version,
+                ExportDataDto.CURRENT_VERSION
+            )
+        }
+    }
+
+    private suspend fun readNamed(reader: JsonReader, name: String, version: String) {
+        if (readPatternArray(reader, name)) return
+        readProjectArray(reader, name, version)
+    }
+
+    private suspend fun readPatternArray(reader: JsonReader, name: String): Boolean = when (name) {
+        "patterns" -> readSaved(reader, PatternDto::class.java, { it.toDomain() }) {
+            backupRepository.savePatternsBatch(it)
+        }
+        "patternRows" -> readSaved(reader, PatternRowDto::class.java, { it.patternId to it.toDomain() }) {
+            backupRepository.savePatternRowsBatch(it)
+        }
+        "symbols" -> readSaved(reader, SymbolDto::class.java, { it.toDomain() }) {
+            backupRepository.saveSymbolsBatch(it)
+        }
+        "patternRepeats" -> readSaved(reader, PatternRepeatDto::class.java, { it.patternId to it.toDomain() }) {
+            backupRepository.savePatternRepeatsBatch(it)
+        }
+        "patternOperations" -> readSaved(reader, PatternOperationDto::class.java, { it.toDomain() }) {
+            backupRepository.savePatternOperationsBatch(it)
+        }
+        else -> false
+    }
+
+    private suspend fun <D, T> readSaved(
+        reader: JsonReader,
+        dtoClass: Class<D>,
+        map: (D) -> T,
+        save: suspend (List<T>) -> Unit
+    ): Boolean {
+        readBatch(reader, dtoClass, map, save)
+        return true
+    }
+
+    private suspend fun readProjectArray(reader: JsonReader, name: String, version: String) {
+        when (name) {
+            "exportDate" -> reader.skipValue()
+            "projects" -> readBatch(reader, ProjectDto::class.java, { dto ->
+                val safe = if (version == ExportDataDto.CURRENT_VERSION) dto else dto.withoutPatternLink()
+                safe.toDomain()
+            }) { backupRepository.saveProjectsBatch(it) }
+            "sessions" -> readBatch(reader, SessionDto::class.java, { it.toDomain() }) {
+                backupRepository.saveSessionsBatch(it)
+            }
+            else -> reader.skipValue()
+        }
+    }
+
+    private suspend fun <D, T> readBatch(
+        reader: JsonReader,
+        dtoClass: Class<D>,
+        map: (D) -> T,
+        save: suspend (List<T>) -> Unit
+    ) {
+        val batch = mutableListOf<T>()
         reader.beginArray()
         while (reader.hasNext()) {
-            val dto = gson.fromJson<SessionDto>(reader, SessionDto::class.java)
-            batch.add(dto.toDomain())
+            batch.add(map(gson.fromJson(reader, dtoClass)))
             if (batch.size >= BATCH_SIZE) {
-                backupRepository.saveSessionsBatch(batch)
+                save(batch.toList())
                 batch.clear()
             }
         }
         reader.endArray()
-        if (batch.isNotEmpty()) backupRepository.saveSessionsBatch(batch)
+        if (batch.isNotEmpty()) save(batch.toList())
     }
+
+    /** Старый бэкап не содержит рядов. Триггер требует номер 0, если ряда нет. */
+    private fun ProjectDto.withoutPatternLink(): ProjectDto = copy(
+        patternId = null,
+        currentPatternRowId = null,
+        currentRowNumber = 0
+    )
 }

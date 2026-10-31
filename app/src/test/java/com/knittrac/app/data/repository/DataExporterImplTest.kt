@@ -15,6 +15,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayOutputStream
@@ -28,7 +29,8 @@ class DataExporterImplTest {
     private val exporter = DataExporterImpl(backupRepository, gson, timeProvider, UnconfinedTestDispatcher())
 
     @Test
-    fun `exportTo successfully writes JSON with projects and sessions`() = runTest(UnconfinedTestDispatcher()) {
+    fun `exportTo writes JSON version 1_2 with projects sessions and pattern tables`() =
+        runTest(UnconfinedTestDispatcher()) {
         val project = Project(
             id = 1L, 
             name = ProjectName.create("Project A"), 
@@ -58,6 +60,11 @@ class DataExporterImplTest {
             val action = firstArg<suspend (Session) -> Unit>()
             action(session)
         }
+        coEvery { context.forEachPattern(any()) } returns Unit
+        coEvery { context.forEachPatternRow(any()) } returns Unit
+        coEvery { context.forEachSymbol(any()) } returns Unit
+        coEvery { context.forEachPatternRepeat(any()) } returns Unit
+        coEvery { context.forEachPatternOperation(any()) } returns Unit
         coEvery { backupRepository.exportSnapshot<Unit>(any()) } coAnswers {
             val block = firstArg<suspend (BackupRepository.ExportContext) -> Unit>()
             block(context)
@@ -68,9 +75,26 @@ class DataExporterImplTest {
 
         assertTrue(result is Result.Success)
         val json = outputStream.toString(Charsets.UTF_8.name())
-        assertTrue(json.contains("\"version\":\"1.1\""))
+        assertTrue(json.contains("\"version\":\"1.2\""))
         assertTrue(json.contains("\"exportDate\":123456789"))
         assertTrue(json.contains("\"name\":\"Project A\""))
         assertTrue(json.contains("\"rowCount\":10"))
+        assertTrue(json.contains("\"patterns\":[]"))
+        assertTrue(json.contains("\"patternRows\":[]"))
+        assertTrue(json.contains("\"symbols\":[]"))
+        assertTrue(json.contains("\"patternRepeats\":[]"))
+        assertTrue(json.contains("\"patternOperations\":[]"))
+        val order = listOf(
+            "\"patterns\"",
+            "\"patternRows\"",
+            "\"symbols\"",
+            "\"patternRepeats\"",
+            "\"patternOperations\"",
+            "\"projects\"",
+            "\"sessions\""
+        )
+        val indexes = order.map { json.indexOf(it) }
+        assertTrue(indexes.all { it >= 0 })
+        assertEquals(indexes, indexes.sorted())
     }
 }

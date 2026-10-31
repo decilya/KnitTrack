@@ -19,6 +19,16 @@ import com.knittrac.app.domain.entity.SymbolCategory
  * ВАЖНО: `ownerPatternId` в Domain остаётся `Long?` (P2 #1 в TECHDEBT,
  * миграция на `PatternId?` отложена до 7d+).
  */
+fun Symbol.toEntity(): SymbolEntity = SymbolEntity(
+    code = code,
+    ownerPatternId = ownerPatternId,
+    displayName = displayName,
+    textGlyph = textGlyph,
+    category = category.name,
+    defaultColumnSpan = defaultColumnSpan.value,
+    defaultRowSpan = defaultRowSpan.value
+)
+
 fun SymbolEntity.toDomain(): Symbol = Symbol(
     code = code,
     ownerPatternId = ownerPatternId,
@@ -36,6 +46,13 @@ fun SymbolEntity.toDomain(): Symbol = Symbol(
  * при повреждённых данных с нулевыми значениями маппинг бросит
  * IllegalArgumentException — это P2 в TECHDEBT (нужен CHECK в БД, миграция v6).
  */
+fun PatternRepeat.toEntity(patternId: Long): PatternRepeatEntity = PatternRepeatEntity(
+    patternId = patternId,
+    code = code,
+    stitchCount = stitchCount.value,
+    rowCount = rowCount.value
+)
+
 fun PatternRepeatEntity.toDomain(): PatternRepeat = PatternRepeat(
     code = code,
     stitchCount = StitchCount.createOrDefault(stitchCount),

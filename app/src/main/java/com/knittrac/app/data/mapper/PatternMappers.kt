@@ -59,6 +59,29 @@ fun PatternRowEntity.toDomain(): PatternRow = PatternRow(
 )
 
 /**
+ * Метаданные схемы для INSERT в `patterns`. Ряды, легенда и раппорты
+ * пишутся отдельными таблицами.
+ */
+fun Pattern.toEntity(): PatternEntity = PatternEntity(
+    id = id.value,
+    name = name.value,
+    technique = technique.name,
+    direction = direction.name,
+    isReversible = isReversible,
+    backgroundImageUri = backgroundImageUri,
+    imageOffsetX = imageOffsetX,
+    imageOffsetY = imageOffsetY,
+    imageScale = imageScale
+)
+
+/** Ряд для INSERT. `patternId` в Domain не хранится — его передаёт владелец. */
+fun PatternRow.toEntity(patternId: Long): PatternRowEntity = PatternRowEntity(
+    id = id.value,
+    patternId = patternId,
+    rowNumber = rowNumber.value
+)
+
+/**
  * Лёгкая проекция [PatternEntity] → [PatternSummary] для селектора схем (7f-B).
  *
  * ISP: только `id + name`. Не загружает `rows`, `legend`, `repeats`.

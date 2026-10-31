@@ -29,6 +29,7 @@ class DataImporterImplTest {
             {
               "id": 1, "name": "Project A", "category": "KNITTING",
               "createdAt": 100, "totalTimeSeconds": 500,
+              "patternId": 7, "currentPatternRowId": 9, "currentRowNumber": 4,
               "updatedAt": 200, "syncStatus": "PENDING"
             }
           ],
@@ -53,7 +54,17 @@ class DataImporterImplTest {
         val result = importer.importFrom(inputStream)
 
         assertTrue(result is Result.Success)
-        coVerify { backupRepository.saveProjectsBatch(match { it.size == 1 && it[0].name.value == "Project A" }) }
+        coVerify {
+            backupRepository.saveProjectsBatch(
+                match {
+                    it.size == 1 &&
+                        it[0].name.value == "Project A" &&
+                        it[0].patternId == null &&
+                        it[0].currentPatternRowId == null &&
+                        it[0].currentRowNumber.value == 0
+                }
+            )
+        }
         coVerify { backupRepository.saveSessionsBatch(match { it.size == 1 && it[0].rowCount == 10 }) }
     }
 

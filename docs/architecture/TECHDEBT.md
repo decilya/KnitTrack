@@ -63,7 +63,11 @@
 - [x] **P2-A**: `PatternCanvas` рисует номера рядов в header через `TextMeasurer.measure` + `DrawScope.drawText`. Закрыто в этом коммите.
 - [x] **P2-B**: `PatternCanvas` guard `localY < 0f` в `detectTapGestures` — тап «выше первой строки» после pan не попадает в row 0. Закрыто в этом коммите.
 - [ ] **P3**: Номера рядов масштабируются с zoom/pan (MVP). Фиксированный размер шрифта — отдельный `Canvas` в `Row`, синхронизация `offset`/`scale` вручную.
-- [ ] **P2 #9–#23, #26, #29–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшее: бэкап не пишет схемы, но `ProjectDto` пишет FK.
+- [x] **P2 #30**: backup `1.2` пишет patterns, patternRows, symbols, patternRepeats, patternOperations. Импорт `1.0`/`1.1` обнуляет patternId, currentPatternRowId и currentRowNumber. Закрыто в этом коммите.
+- [ ] **P3-A**: `Reset`/`SessionSaved` шлют `startService(ACTION_STOP)` даже если сервис не запущен — лишний onCreate/onDestroy.
+- [ ] **P3-B**: `handleSystemRestart` показывает `00:00:00`, таймер при этом на паузе.
+- [ ] **P3**: `project_progress` в бэкап не входит. В коде нет INSERT в эту таблицу.
+- [ ] **P2 #9–#23, #26, #29, #31–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026.
 
 
 

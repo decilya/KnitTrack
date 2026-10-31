@@ -1,6 +1,8 @@
 package com.knittrac.app.data.local
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.knittrac.app.data.local.entity.SymbolEntity
 
@@ -27,4 +29,10 @@ interface SymbolDao {
      */
     @Query("SELECT * FROM symbols WHERE owner_pattern_id IS NULL OR owner_pattern_id = :patternId")
     suspend fun getSymbolsForPattern(patternId: Long): List<SymbolEntity>
+
+    @Query("SELECT * FROM symbols ORDER BY code ASC")
+    suspend fun getAllSymbols(): List<SymbolEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSymbols(symbols: List<SymbolEntity>)
 }
