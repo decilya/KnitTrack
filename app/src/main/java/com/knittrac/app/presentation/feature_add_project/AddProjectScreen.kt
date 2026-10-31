@@ -122,7 +122,7 @@ fun AddProjectScreen(
             Button(
                 onClick = { viewModel.onIntent(AddProjectContract.Intent.SaveProject) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = state.projectName.isNotBlank() && state.selectedCategory != null && state.targetRowCountError == null
+                enabled = !state.isSaving && state.projectName.isNotBlank() && state.selectedCategory != null && state.targetRowCountError == null
             ) {
                 Text(stringResource(R.string.save))
             }

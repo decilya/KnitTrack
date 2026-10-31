@@ -263,7 +263,7 @@ class Migration5To6Test {
         room.close()
     }
 
-    /** Fresh install: onCreate → TRIGGER_CALLBACK создаёт оба триггера.
+    /** Fresh install: onCreate → DATABASE_CALLBACK создаёт оба триггера.
      *  Регресс P0-1: без callback триггера бы не было (MIGRATION_5_6 не вызывается). */
     @Test
     fun freshInstall_createsTrigger() {
@@ -274,10 +274,43 @@ class Migration5To6Test {
                 AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6
             )
-            .addCallback(AppDatabase.TRIGGER_CALLBACK)
+            .addCallback(AppDatabase.DATABASE_CALLBACK)
             .build()
         room.openHelper.writableDatabase
         assertEquals(2, triggerCount(room))
+        room.close()
+    }
+
+    /**
+     * Fresh install: callback пересоздаёт projects и sessions с CHECK.
+     * Room onCreate сам CHECK не ставит.
+     */
+    @Test
+    fun freshInstall_createsCheckConstraints() {
+        context.deleteDatabase(dbName)
+        val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
+            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .build()
+        room.openHelper.writableDatabase
+
+        val projectsSql = room.openHelper.readableDatabase.query(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='projects'"
+        ).use { c ->
+            assertTrue(c.moveToFirst())
+            c.getString(0)
+        }
+        assertTrue(projectsSql.contains("CHECK"))
+        assertTrue(projectsSql.contains("total_time_seconds >= 0"))
+        assertTrue(projectsSql.contains("total_rows >= 0"))
+
+        val sessionsSql = room.openHelper.readableDatabase.query(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='sessions'"
+        ).use { c ->
+            assertTrue(c.moveToFirst())
+            c.getString(0)
+        }
+        assertTrue(sessionsSql.contains("duration_seconds >= 0"))
+
         room.close()
     }
 }

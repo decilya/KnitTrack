@@ -29,6 +29,31 @@
 - [ ] **P2-1 (P3→P2)**: `getOperationsForRow` грузит legend на каждый вызов. На Canvas с N видимыми рядами — N загрузок. Batch-запрос.
 
 
+## Аудит 31.10.2026 (Grok, полный)
+
+Файла `AUDIT-2026-10-31.md` в репозитории нет. Открытые пункты перечислены здесь.
+
+### Закрыто в этом коммите
+
+- [x] **P1 #3**: fresh install без CHECK. `DATABASE_CALLBACK.onCreate` пересоздаёт пустые `projects` и `sessions` с CHECK (тот же SQL, что `MIGRATION_4_5`). `project_progress` не дропается: `PRAGMA foreign_keys = OFF` на время DROP, `ON` до триггеров.
+- [x] **P1 #4**: `AddProjectViewModel` — `isSaving` до `launch`, сброс в `finally`.
+- [x] **P1 #6**: `Screen.Settings`, маршрут в `AppNavHost`, иконка в TopBar списка проектов.
+- [x] **P1 #7**: статистика с карточки своего проекта, не с `projects.first()`.
+- [x] **P1 #8**: KDoc `TimerViewModel` — разрешение в `PermissionViewModel`.
+
+### Открыто (P1)
+
+- [ ] **P1 #1**: Timber в `SaveSessionService`.
+- [ ] **P1 #2**: `AppErrorMapper` — `SQLException` на Flow-пути становится `UnknownError`.
+- [ ] **P1 #5**: `TimerForegroundService` не стартует ни один экран.
+
+### Открыто (P2/P3)
+
+- [ ] **P2**: Compose-тест `ProjectsListScreen` (иконка stats на карточке). Robolectric `createComposeRule` в проекте нет. Тот же класс, что P1-5 у `TimerScreen`.
+- [ ] **P2 #9–#23, #24–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшие: `deleteProject` игнорирует 0 строк; нет проекта при `insertSessionAndIncrement` — `DatabaseError` вместо `NotFoundError`; бэкап не пишет схемы, но `ProjectDto` пишет FK.
+
+
+
 ## Pattern Tracker v8.0 (утверждено 19.10.2026)
 
 Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)

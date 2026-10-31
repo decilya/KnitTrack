@@ -5,6 +5,7 @@
     <!-- Navigation and common actions -->
     <string name="action_back">Назад</string>
     <string name="action_stats">Статистика</string>
+    <string name="settings">Настройки</string>
     <string name="save">Сохранить</string>
     <string name="target_row_count">Целевое количество рядов (опционально)</string>
     <string name="start">Старт</string>

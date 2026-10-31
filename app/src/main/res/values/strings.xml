@@ -5,6 +5,7 @@
     <!-- Navigation and common actions -->
     <string name="action_back">Back</string>
     <string name="action_stats">Statistics</string>
+    <string name="settings">Settings</string>
     <string name="save">Save</string>
     <string name="target_row_count">Target rows (optional)</string>
     <string name="start">Start</string>

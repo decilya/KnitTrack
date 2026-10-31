@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -33,7 +34,8 @@ import kotlinx.coroutines.flow.collectLatest
  *
  * @param onNavigateToAddProject Лямбда навигации на экран создания проекта.
  * @param onNavigateToTimer Лямбда навигации на таймер с projectId.
- * @param onNavigateToStats Лямбда навигации на статистику с projectId.
+ * @param onNavigateToStats Лямбда навигации на статистику конкретного проекта.
+ * @param onNavigateToSettings Лямбда навигации на экран настроек.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -41,7 +43,8 @@ fun ProjectsListScreen(
     viewModel: ProjectsListViewModel = hiltViewModel(),
     onNavigateToAddProject: () -> Unit,
     onNavigateToTimer: (Long) -> Unit,
-    onNavigateToStats: (Long) -> Unit
+    onNavigateToStats: (Long) -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val haptic = LocalHapticFeedback.current
@@ -61,16 +64,14 @@ fun ProjectsListScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
-                    if (state.projects.isNotEmpty()) {
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onNavigateToStats(state.projects.first().id)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Assessment,
-                                contentDescription = stringResource(R.string.action_stats)
-                            )
-                        }
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onNavigateToSettings()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
                     }
                 }
             )
@@ -137,7 +138,8 @@ fun ProjectsListScreen(
                         ProjectCard(
                             project = projectUi,
                             modifier = Modifier.animateItemPlacement(),
-                            onClick = { onNavigateToTimer(projectUi.id) }
+                            onClick = { onNavigateToTimer(projectUi.id) },
+                            onStatsClick = { onNavigateToStats(projectUi.id) }
                         )
                     }
                 }
@@ -156,15 +158,21 @@ fun ProjectsListScreen(
 private fun ProjectCard(
     project: ProjectsContract.ProjectUiModel,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onStatsClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = modifier
             .fillMaxWidth()
             .hapticClickable(onClick = onClick)
     ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.weight(1f)
         ) {
             val displayName = if (project.isUntitled) {
                 androidx.compose.ui.res.stringResource(com.knittrac.app.R.string.project_untitled)
@@ -196,6 +204,16 @@ private fun ProjectCard(
                     text = stringResource(R.string.project_rows_count, project.totalRows),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+            IconButton(onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onStatsClick()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Assessment,
+                    contentDescription = stringResource(R.string.action_stats)
                 )
             }
         }

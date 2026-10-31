@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.knittrac.app.presentation.feature_add_project.AddProjectScreen
 import com.knittrac.app.presentation.feature_projects.ProjectsListScreen
+import com.knittrac.app.presentation.feature_settings.SettingsScreen
 import com.knittrac.app.presentation.feature_stats.StatsScreen
 import com.knittrac.app.presentation.feature_timer.TimerScreen
 
@@ -23,7 +24,8 @@ fun AppNavHost() {
             ProjectsListScreen(
                 onNavigateToAddProject = { navController.navigate(Screen.AddProject.route) },
                 onNavigateToTimer = { projectId -> navController.navigate("${Screen.Timer.route}/$projectId") },
-                onNavigateToStats = { projectId -> navController.navigate("${Screen.Stats.route}/$projectId") }
+                onNavigateToStats = { projectId -> navController.navigate("${Screen.Stats.route}/$projectId") },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
         
@@ -48,6 +50,12 @@ fun AppNavHost() {
             arguments = listOf(navArgument("projectId") { type = NavType.LongType })
         ) {
             StatsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

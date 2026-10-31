@@ -176,6 +176,30 @@ abstract class AppDatabase : RoomDatabase() {
          * Добавляет таблицы схем и прогресса. Пересоздает projects для добавления FK.
          * Порядок: backup sessions -> create projects_new -> drop old -> rename -> restore sessions.
          */
+        private const val CREATE_PROJECTS_WITH_CHECK =
+            "CREATE TABLE projects_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL CHECK(length(trim(name)) > 0 AND length(name) <= 100), category TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, total_time_seconds INTEGER NOT NULL CHECK(total_time_seconds >= 0), total_rows INTEGER NOT NULL DEFAULT 0 CHECK(total_rows >= 0), target_row_count INTEGER, pattern_id INTEGER, current_row_number INTEGER NOT NULL DEFAULT 0, current_pattern_row_id INTEGER, current_stitch INTEGER NOT NULL DEFAULT 0, sync_status TEXT NOT NULL, FOREIGN KEY(pattern_id) REFERENCES patterns(id) ON DELETE SET NULL, FOREIGN KEY(current_pattern_row_id) REFERENCES pattern_rows(id) ON DELETE SET NULL)"
+
+        private const val CREATE_INDEX_PROJECTS_PATTERN_ID =
+            "CREATE INDEX index_projects_pattern_id ON projects_new (pattern_id)"
+
+        private const val CREATE_INDEX_PROJECTS_CURRENT_ROW =
+            "CREATE INDEX index_projects_current_pattern_row_id ON projects_new (current_pattern_row_id)"
+
+        private const val CREATE_SESSIONS_WITH_CHECK =
+            "CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, project_id INTEGER NOT NULL, start_time INTEGER NOT NULL, end_time INTEGER NOT NULL, duration_seconds INTEGER NOT NULL CHECK(duration_seconds >= 0), row_count INTEGER NOT NULL, updated_at INTEGER NOT NULL, sync_status TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE)"
+
+        private const val CREATE_INDEX_SESSIONS_PROJECT_ID =
+            "CREATE INDEX index_sessions_project_id ON sessions (project_id)"
+
+        private const val CREATE_INDEX_SESSIONS_START_TIME =
+            "CREATE INDEX index_sessions_start_time ON sessions (start_time)"
+
+        private const val CREATE_PROJECT_PROGRESS =
+            "CREATE TABLE project_progress (project_id INTEGER NOT NULL, pattern_row_id INTEGER NOT NULL, PRIMARY KEY(project_id, pattern_row_id), FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE, FOREIGN KEY(pattern_row_id) REFERENCES pattern_rows(id) ON DELETE CASCADE)"
+
+        private const val CREATE_INDEX_PROJECT_PROGRESS_ROW =
+            "CREATE INDEX index_project_progress_pattern_row_id ON project_progress (pattern_row_id)"
+
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Создаем новые таблицы схем
@@ -189,9 +213,9 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("INSERT INTO sessions_backup SELECT id, project_id, start_time, end_time, duration_seconds, row_count, updated_at, sync_status FROM sessions")
 
                 // 3. Создаем projects_new со всеми CHECK и FK
-                db.execSQL("CREATE TABLE projects_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL CHECK(length(trim(name)) > 0 AND length(name) <= 100), category TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, total_time_seconds INTEGER NOT NULL CHECK(total_time_seconds >= 0), total_rows INTEGER NOT NULL DEFAULT 0 CHECK(total_rows >= 0), target_row_count INTEGER, pattern_id INTEGER, current_row_number INTEGER NOT NULL DEFAULT 0, current_pattern_row_id INTEGER, current_stitch INTEGER NOT NULL DEFAULT 0, sync_status TEXT NOT NULL, FOREIGN KEY(pattern_id) REFERENCES patterns(id) ON DELETE SET NULL, FOREIGN KEY(current_pattern_row_id) REFERENCES pattern_rows(id) ON DELETE SET NULL)")
-                db.execSQL("CREATE INDEX index_projects_pattern_id ON projects_new (pattern_id)")
-                db.execSQL("CREATE INDEX index_projects_current_pattern_row_id ON projects_new (current_pattern_row_id)")
+                db.execSQL(CREATE_PROJECTS_WITH_CHECK)
+                db.execSQL(CREATE_INDEX_PROJECTS_PATTERN_ID)
+                db.execSQL(CREATE_INDEX_PROJECTS_CURRENT_ROW)
 
                 // 4. Переносим данные
                 db.execSQL("INSERT INTO projects_new (id, name, category, created_at, updated_at, total_time_seconds, total_rows, target_row_count, sync_status) SELECT id, name, category, created_at, updated_at, total_time_seconds, total_rows, target_row_count, sync_status FROM projects")
@@ -204,15 +228,15 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE projects_new RENAME TO projects")
 
                 // 7. Восстанавливаем sessions с FK на projects
-                db.execSQL("CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, project_id INTEGER NOT NULL, start_time INTEGER NOT NULL, end_time INTEGER NOT NULL, duration_seconds INTEGER NOT NULL CHECK(duration_seconds >= 0), row_count INTEGER NOT NULL, updated_at INTEGER NOT NULL, sync_status TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE)")
-                db.execSQL("CREATE INDEX index_sessions_project_id ON sessions (project_id)")
-                db.execSQL("CREATE INDEX index_sessions_start_time ON sessions (start_time)")
+                db.execSQL(CREATE_SESSIONS_WITH_CHECK)
+                db.execSQL(CREATE_INDEX_SESSIONS_PROJECT_ID)
+                db.execSQL(CREATE_INDEX_SESSIONS_START_TIME)
                 db.execSQL("INSERT INTO sessions SELECT id, project_id, start_time, end_time, duration_seconds, row_count, updated_at, sync_status FROM sessions_backup")
                 db.execSQL("DROP TABLE sessions_backup")
 
                 // 8. Создаем project_progress (после переименования projects)
-                db.execSQL("CREATE TABLE project_progress (project_id INTEGER NOT NULL, pattern_row_id INTEGER NOT NULL, PRIMARY KEY(project_id, pattern_row_id), FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE, FOREIGN KEY(pattern_row_id) REFERENCES pattern_rows(id) ON DELETE CASCADE)")
-                db.execSQL("CREATE INDEX index_project_progress_pattern_row_id ON project_progress (pattern_row_id)")
+                db.execSQL(CREATE_PROJECT_PROGRESS)
+                db.execSQL(CREATE_INDEX_PROJECT_PROGRESS_ROW)
 
                 // 9. Создаем symbols, pattern_operations, pattern_repeats
                 db.execSQL("CREATE TABLE symbols (code TEXT PRIMARY KEY NOT NULL, owner_pattern_id INTEGER, display_name TEXT NOT NULL, text_glyph TEXT NOT NULL, category TEXT NOT NULL, default_column_span INTEGER NOT NULL DEFAULT 1, default_row_span INTEGER NOT NULL DEFAULT 1, FOREIGN KEY(owner_pattern_id) REFERENCES patterns(id) ON DELETE CASCADE)")
@@ -283,15 +307,30 @@ abstract class AppDatabase : RoomDatabase() {
                 "END"
 
         /**
-         * Создаёт триггеры `trg_progress_check_*` на **fresh install**.
+         * Fresh install: CHECK на projects/sessions и триггеры прогресса.
          *
-         * Миграции выполняются только при `onUpgrade`. Для новой БД Room вызывает
-         * `onCreate` (создаёт таблицы), и MIGRATION_5_6 не запускается. Без этого
-         * callback новый пользователь получил бы БД без защиты инвариантов прогресса.
+         * Room `onCreate` создаёт таблицы без CHECK. Миграции 2→3 и 4→5
+         * добавляют CHECK только при upgrade. Callback пересоздаёт пустые
+         * `projects` и `sessions` тем же SQL.
+         *
+         * `project_progress` не дропается: на fresh install она пустая, FK
+         * не нарушается. `PRAGMA foreign_keys = OFF` на время DROP/CREATE,
+         * `ON` — до триггеров, они пишут в `project_progress`.
          */
-        internal val TRIGGER_CALLBACK = object : RoomDatabase.Callback() {
+        internal val DATABASE_CALLBACK = object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
+                db.execSQL("PRAGMA foreign_keys = OFF")
+                db.execSQL("DROP TABLE sessions")
+                db.execSQL("DROP TABLE projects")
+                db.execSQL(CREATE_PROJECTS_WITH_CHECK)
+                db.execSQL(CREATE_INDEX_PROJECTS_PATTERN_ID)
+                db.execSQL(CREATE_INDEX_PROJECTS_CURRENT_ROW)
+                db.execSQL("ALTER TABLE projects_new RENAME TO projects")
+                db.execSQL(CREATE_SESSIONS_WITH_CHECK)
+                db.execSQL(CREATE_INDEX_SESSIONS_PROJECT_ID)
+                db.execSQL(CREATE_INDEX_SESSIONS_START_TIME)
+                db.execSQL("PRAGMA foreign_keys = ON")
                 db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT)
                 db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE)
             }
@@ -345,7 +384,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "knittrac_database"
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-                    .addCallback(TRIGGER_CALLBACK)
+                    .addCallback(DATABASE_CALLBACK)
                     .build()
 
                 INSTANCE = instance

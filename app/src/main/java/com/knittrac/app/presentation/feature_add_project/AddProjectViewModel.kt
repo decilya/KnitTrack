@@ -24,7 +24,8 @@ object AddProjectContract {
         val nameError: String? = null,
         val categoryError: String? = null,
         val targetRowCount: Int? = null,
-        val targetRowCountError: String? = null
+        val targetRowCountError: String? = null,
+        val isSaving: Boolean = false
     )
     
     sealed class Intent {
@@ -72,32 +73,46 @@ class AddProjectViewModel @Inject constructor(
     }
     
     private fun saveProject() {
-        val currentState = _state.value
-        
-        if (currentState.projectName.isBlank()) {
-            _state.update { it.copy(nameError = "Название проекта не может быть пустым") }
-            return
-        }
-        
-        val category = currentState.selectedCategory
-        if (category == null) {
-            _state.update { it.copy(categoryError = "Выберите категорию") }
-            return
-        }
-        
+        if (_state.value.isSaving) return
+        val params = resolveInput() ?: return
+        _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val params = AddProjectParams(
-                name = currentState.projectName,
-                category = category,
-                targetRowCount = currentState.targetRowCount
-            )
-            
-            val result = addProjectService(params)
-            if (result is Result.Success) {
-                _effect.send(AddProjectContract.Effect.ProjectAdded)
-            } else {
-                _effect.send(AddProjectContract.Effect.ShowError("Ошибка сохранения проекта"))
+            try {
+                val result = addProjectService(params)
+                if (result is Result.Success) {
+                    _effect.send(AddProjectContract.Effect.ProjectAdded)
+                } else {
+                    _effect.send(AddProjectContract.Effect.ShowError("Ошибка сохранения проекта"))
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
             }
         }
+    }
+
+    /**
+     * Проверяет имя и категорию. При ошибке пишет её в state и возвращает null.
+     */
+    private fun resolveInput(): AddProjectParams? {
+        val currentState = _state.value
+        val category = currentState.selectedCategory
+        if (currentState.projectName.isBlank() || category == null) {
+            _state.update {
+                it.copy(
+                    nameError = if (currentState.projectName.isBlank()) {
+                        "Название проекта не может быть пустым"
+                    } else {
+                        null
+                    },
+                    categoryError = if (category == null) "Выберите категорию" else null
+                )
+            }
+            return null
+        }
+        return AddProjectParams(
+            name = currentState.projectName,
+            category = category,
+            targetRowCount = currentState.targetRowCount
+        )
     }
 }
