@@ -14,6 +14,7 @@
 ## Pattern Tracker v8.0 (утверждено 19.10.2026)
 
 Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)
+Семантика рядов и схем: [docs/architecture/rows-and-patterns.md](./rows-and-patterns.md)
 
 ### Выполнено (Pre-v7)
 - [x] Шаг 5: Добавлены таблицы symbols, pattern_operations, pattern_repeats и PatternDao.
@@ -102,6 +103,18 @@
 - [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
   `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
   При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.
+
+### Шаг 7c-2 — закрыто (trg_progress_check)
+
+- [x] Триггеры `trg_progress_check_insert` / `trg_progress_check_update`
+  (`BEFORE INSERT` / `BEFORE UPDATE OF current_pattern_row_id, current_row_number,
+  current_stitch, pattern_id ON projects`): A (row ∈ pattern), B (number =
+  row_number), C (row IS NULL → number = 0). Миграция 5→6 с санитизацией
+  (A+B → B-fix → C). `Migration5To6Test` — 8 кейсов. Семантика —
+  `rows-and-patterns.md`.
+- [ ] D-инвариант (`stitch > 0 → row IS NOT NULL`) — P3. Включить с per-stitch
+  tracking (7f-B). Сейчас `current_stitch` в БД всегда 0
+  (`ProgressService.updateProgress` → `StitchCount.ZERO`).
 
 ### Шаг 7c — открытые P2
 

@@ -963,6 +963,7 @@ docs/architecture:
 
 PHILOSOPHY.md, STANDARDS.md, TECHDEBT.md, CONTRIBUTING.md — справочник, enforcement, долг, процесс.
 vo-pattern.md — паттерн VO.
+rows-and-patterns.md — семантика рядов и схем, инварианты trg_progress_check.
 
 config/detekt:
 
@@ -1023,7 +1024,7 @@ gradle/libs.versions.toml — НЕ существует.
 Сигнатуры 7c утверждены: `Project.markRow(row): Result<MarkResult>`,
 `MarkResult { Added, AlreadyExists }` (data object),
 `PatternRepository.getPatternById(PatternId): Result<Pattern>`,
-`ProgressService` — plain class, без Timber и диспетчера. **7c закрыт**, **7d-prep закрыт**, **7d закрыт**, **7e закрыт**, **7f-A-prep закрыт**, **7f-A закрыт** (UI: кнопка «следующий ряд схемы» на TimerScreen, KnitCompanion-like UX) (ProjectId VO, markNextRow + MarkNextRowUseCase) (`MarkRowUseCase`, `AddPatternOperationUseCase`) (`AddPatternOperationService`: символ в легенде, repeat_code, overlap через `getOperationSpansForRow`). **7g-A закрыт:** `HiltGraphTest` — `@HiltAndroidTest` graph reachability (5 core `@Inject`, `kspTest` hilt-compiler). P1 #2 закрыт. **7g-B закрыт:** `MarkNextPatternRow` покрыт 4 кейсами в `TimerViewModelTest` (success, error->ShowError, double-tap guard, no-project guard). **7g-C закрыт:** overlap-check в `AddPatternOperationService` использует `legendSymbol.defaultColumnSpan` из `pattern.legend` (D8), +1 регрессионный тест (`add_staleSpanInParams_usesLegendSpanForOverlap`). Следующий — **7g-D закрыт:** PermissionViewModel выделен из TimerViewModel (5 зависимостей, @Suppress снят). PermissionViewModelTest (+2 кейса), TimerViewModelTest 12 кейсов. **Все 4 P1 закрыты.** Next: **7c-2** (триггер trg_progress_check).
+`ProgressService` — plain class, без Timber и диспетчера. **7c закрыт**, **7d-prep закрыт**, **7d закрыт**, **7e закрыт**, **7f-A-prep закрыт**, **7f-A закрыт** (UI: кнопка «следующий ряд схемы» на TimerScreen, KnitCompanion-like UX) (ProjectId VO, markNextRow + MarkNextRowUseCase) (`MarkRowUseCase`, `AddPatternOperationUseCase`) (`AddPatternOperationService`: символ в легенде, repeat_code, overlap через `getOperationSpansForRow`). **7g-A закрыт:** `HiltGraphTest` — `@HiltAndroidTest` graph reachability (5 core `@Inject`, `kspTest` hilt-compiler). P1 #2 закрыт. **7g-B закрыт:** `MarkNextPatternRow` покрыт 4 кейсами в `TimerViewModelTest` (success, error->ShowError, double-tap guard, no-project guard). **7g-C закрыт:** overlap-check в `AddPatternOperationService` использует `legendSymbol.defaultColumnSpan` из `pattern.legend` (D8), +1 регрессионный тест (`add_staleSpanInParams_usesLegendSpanForOverlap`). Следующий — **7g-D закрыт:** PermissionViewModel выделен из TimerViewModel (5 зависимостей, @Suppress снят). PermissionViewModelTest (+2 кейса), TimerViewModelTest 12 кейсов. **Все 4 P1 закрыты.** **7c-2 закрыт:** `trg_progress_check_insert` / `trg_progress_check_update` (A/B/C), `MIGRATION_5_6`, `Migration5To6Test` (8 кейсов). Next: **7f-B** (PatternEditor).
 
 **Перед 7c — консилиум:** как загружать Project и PatternRow, MarkResult, обработка
 несовпадения patternId.

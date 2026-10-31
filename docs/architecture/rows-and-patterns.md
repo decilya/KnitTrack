@@ -143,11 +143,40 @@ per-stitch tracking (7f-B). В текущем коде `ProgressService.updatePr
 ### 6.1. Триггер `trg_progress_check`
 
 ```sql
-CREATE TRIGGER trg_progress_check
-BEFORE INSERT OR UPDATE OF
+-- SQLite не поддерживает INSERT OR UPDATE в одном CREATE TRIGGER.
+-- Два отдельных триггера: INSERT (без OF) + UPDATE OF (фильтр по колонкам).
+
+CREATE TRIGGER trg_progress_check_insert
+BEFORE INSERT ON projects
+BEGIN
+    -- A: ряд принадлежит схеме проекта
+    SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта')
+    WHERE NEW.current_pattern_row_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM pattern_rows
+        WHERE id = NEW.current_pattern_row_id
+          AND pattern_id IS NEW.pattern_id
+      );
+
+    -- B: current_row_number = row_number
+    SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации')
+    WHERE NEW.current_pattern_row_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM pattern_rows
+        WHERE id = NEW.current_pattern_row_id
+          AND row_number = NEW.current_row_number
+      );
+
+    -- C: row IS NULL → number = 0
+    SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0')
+    WHERE NEW.current_pattern_row_id IS NULL
+      AND NEW.current_row_number != 0;
+END;
+
+CREATE TRIGGER trg_progress_check_update
+BEFORE UPDATE OF
     current_pattern_row_id, current_row_number, current_stitch, pattern_id
 ON projects
-FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта')
     WHERE NEW.current_pattern_row_id IS NOT NULL
@@ -173,10 +202,10 @@ END;
 
 **Gotchas SQLite (зафиксировать явно):**
 
+- SQLite не поддерживает `INSERT OR UPDATE` в одном `CREATE TRIGGER` —
+  нужно два триггера (`_insert` без `OF`, `_update` с `UPDATE OF col1, col2, ...`).
 - `UPDATE OF col1, col2, ...` фильтрует только UPDATE-события. На INSERT
   триггер срабатывает всегда, независимо от `OF`-списка.
-- `FOR EACH ROW` в SQLite — no-op (синтаксис валиден, семантика row-based
-  по умолчанию). Отличие от PostgreSQL.
 - `IS` (не `=`) в подзапросе A — NULL-safe. При `NEW.pattern_id IS NULL`
   подзапрос даёт 0 строк (FK `pattern_rows.pattern_id` NOT NULL), триггер
   корректно отбивает.
@@ -195,15 +224,15 @@ END;
    id = current_pattern_row_id)`. Не теряет row.
 3. Санитизация C: `UPDATE projects SET current_row_number = 0 WHERE
    current_pattern_row_id IS NULL AND current_row_number != 0`.
-4. `CREATE TRIGGER trg_progress_check ...`.
+4. `CREATE TRIGGER trg_progress_check_insert` + `trg_progress_check_update`.
 5. Room при сборке генерирует `schemas/com.knittrac.app.data.local.AppDatabase/6.json`.
 
 **Порядок обязателен:** триггер после всех UPDATE. Иначе санитизация упадёт
 на RAISE.
 
 `schemas/6.json` идентичен `5.json` — Room не экспортирует триггеры в schema
-JSON. Тест проверяет триггер через `SELECT name FROM sqlite_master WHERE
-type='trigger' AND name='trg_progress_check'`, не через schema validation.
+JSON. Тест проверяет триггеры через `SELECT name FROM sqlite_master WHERE
+type='trigger' AND name LIKE 'trg_progress_check%'`, не через schema validation.
 
 ### 6.3. INSERT-путь
 
