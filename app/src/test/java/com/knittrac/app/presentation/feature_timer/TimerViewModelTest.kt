@@ -14,7 +14,6 @@ import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
 import com.knittrac.app.domain.service.TimerState
-import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -57,7 +56,6 @@ class TimerViewModelTest {
     private lateinit var saveSessionService: SaveSessionService
     private lateinit var getAllProjectsService: GetAllProjectsService
     private lateinit var markNextRowUseCase: MarkNextRowUseCase
-    private lateinit var permissionChecker: NotificationPermissionChecker
 
     @Before
     fun setUp() {
@@ -67,7 +65,6 @@ class TimerViewModelTest {
         saveSessionService = mockk()
         getAllProjectsService = mockk()
         markNextRowUseCase = mockk()
-        permissionChecker = mockk()
 
         // combine в init ViewModel подписывается на StateFlow.
         // relaxed mock без этих every упал бы на cast.
@@ -87,83 +84,22 @@ class TimerViewModelTest {
      * Permission granted: таймер стартует, RequestNotificationPermission
      * не эмитится.
      */
-    @Test
-    fun permissionGranted_startDoesNotEmitPermissionRequest() = runTest {
-        every { permissionChecker.isGranted() } returns true
-
-        val viewModel = TimerViewModel(
-            timerManager,
-            saveSessionService,
-            getAllProjectsService,
-            markNextRowUseCase,
-            permissionChecker,
-            SavedStateHandle()
-        )
-
-        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
-
-        val effectDeferred = async {
-            withTimeoutOrNull(50L) { viewModel.effect.first() }
-        }
-        viewModel.onIntent(TimerContract.Intent.Start)
-
-        val effect = effectDeferred.await()
-
-        verify { timerManager.start() }
-        verify { permissionChecker.isGranted() }
-        assertNull(
-            "RequestNotificationPermission не должен эмититься при granted, получен: $effect",
-            effect
-        )
-    }
-
     /**
      * Permission denied: таймер всё равно стартует (permission не блокирует),
      * но эмитится RequestNotificationPermission, чтобы Screen показал диалог.
      */
-    @Test
-    fun permissionDenied_startEmitsPermissionRequest() = runTest {
-        every { permissionChecker.isGranted() } returns false
-
-        val viewModel = TimerViewModel(
-            timerManager,
-            saveSessionService,
-            getAllProjectsService,
-            markNextRowUseCase,
-            permissionChecker,
-            SavedStateHandle()
-        )
-
-        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
-
-        val effectDeferred = async { viewModel.effect.first() }
-        viewModel.onIntent(TimerContract.Intent.Start)
-
-        val effect = effectDeferred.await()
-
-        assertEquals(
-            "Ожидался RequestNotificationPermission",
-            TimerContract.Effect.RequestNotificationPermission,
-            effect
-        )
-        verify { timerManager.start() }
-        verify { permissionChecker.isGranted() }
-    }
-
     /**
      * Без выбранного проекта Start эмитит NavigateToProjects
      * и НЕ вызывает timerManager.start().
      */
     @Test
     fun startWithoutProjectId_navigatesToProjects() = runTest {
-        every { permissionChecker.isGranted() } returns true
 
         val viewModel = TimerViewModel(
             timerManager,
             saveSessionService,
             getAllProjectsService,
             markNextRowUseCase,
-            permissionChecker,
             SavedStateHandle()
         )
 
@@ -182,7 +118,6 @@ class TimerViewModelTest {
      */
     @Test
     fun doubleTapSaveSession_secondCallIgnored() = runTest {
-        every { permissionChecker.isGranted() } returns true
         every { timerManager.elapsedTime } returns MutableStateFlow(120L)
         every { timerManager.sessionStartTime } returns 1_000L
 
@@ -198,7 +133,6 @@ class TimerViewModelTest {
             saveSessionService,
             getAllProjectsService,
             markNextRowUseCase,
-            permissionChecker,
             SavedStateHandle()
         )
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
@@ -217,8 +151,7 @@ class TimerViewModelTest {
      */
     @Test
     fun incrementRow_increasesCount() = runTest {
-        every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.IncrementRow)
@@ -233,8 +166,7 @@ class TimerViewModelTest {
      */
     @Test
     fun decrementRow_decreasesCount() = runTest {
-        every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, SavedStateHandle())
 
         repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
         assertEquals(5, viewModel.state.value.rowCount)
@@ -248,8 +180,7 @@ class TimerViewModelTest {
      */
     @Test
     fun decrementRow_atZero_staysZero() = runTest {
-        every { permissionChecker.isGranted() } returns true
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, SavedStateHandle())
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.DecrementRow)
@@ -261,7 +192,6 @@ class TimerViewModelTest {
      */
     @Test
     fun selectProject_setsTargetRowCount() = runTest {
-        every { permissionChecker.isGranted() } returns true
         val project = Project(
             id = 1L,
             name = ProjectName.create("Test"),
@@ -273,7 +203,7 @@ class TimerViewModelTest {
         )
         coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(project)))
 
-        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, SavedStateHandle())
+        val viewModel = TimerViewModel(timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, SavedStateHandle())
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
         assertEquals(120, viewModel.state.value.targetRowCount)
@@ -283,7 +213,7 @@ class TimerViewModelTest {
     fun init_restoresRowCountAndProjectIdFromSavedStateHandle() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf<String, Any>("projectId" to 5L, "rowCount" to 42))
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker, savedStateHandle
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, savedStateHandle
         )
 
         assertEquals(5L, viewModel.state.value.projectId)
@@ -296,11 +226,10 @@ class TimerViewModelTest {
      */
     @Test
     fun markNextPatternRow_success_updatesStateAndResetsFlag() = runTest {
-        every { permissionChecker.isGranted() } returns true
         coEvery { markNextRowUseCase(any()) } returns Result.Success(RowNumber.create(5))
 
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
         )
 
@@ -318,12 +247,11 @@ class TimerViewModelTest {
      */
     @Test
     fun markNextPatternRow_error_emitsShowErrorAndResetsFlag() = runTest {
-        every { permissionChecker.isGranted() } returns true
         coEvery { markNextRowUseCase(any()) } returns
             Result.Error(AppError.ValidationError("нет привязанной схемы"))
 
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
         )
 
@@ -351,14 +279,13 @@ class TimerViewModelTest {
      */
     @Test
     fun markNextPatternRow_doubleTap_secondCallIgnored() = runTest {
-        every { permissionChecker.isGranted() } returns true
         coEvery { markNextRowUseCase(any()) } coAnswers {
             delay(100)
             Result.Success(RowNumber.create(5))
         }
 
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
         )
 
@@ -376,10 +303,9 @@ class TimerViewModelTest {
      */
     @Test
     fun markNextPatternRow_noProject_doesNotCallUseCase() = runTest {
-        every { permissionChecker.isGranted() } returns true
 
         val viewModel = TimerViewModel(
-            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, permissionChecker,
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase,
             SavedStateHandle()
         )
 
@@ -388,5 +314,19 @@ class TimerViewModelTest {
 
         coVerify(exactly = 0) { markNextRowUseCase(any()) }
         assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Start with selected project: вызывает timerManager.start().
+     */
+    @Test
+    fun start_callsTimerManagerStart() = runTest {
+        val viewModel = TimerViewModel(
+            timerManager, saveSessionService, getAllProjectsService, markNextRowUseCase, SavedStateHandle()
+        )
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+        viewModel.onIntent(TimerContract.Intent.Start)
+
+        verify { timerManager.start() }
     }
 }

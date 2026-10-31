@@ -60,7 +60,7 @@
 
 - [x] `TimerViewModelTest`: `MarkNextPatternRow` покрыт 4 кейсами (success,
   error->ShowError, double-tap guard, no-project guard). Закрыто в 7g-B.
-  God Object ViewModel (6 зависимостей) — открыт, 7g-D.
+  God Object ViewModel: закрыто в 7g-D (PermissionViewModel, TimerViewModel - 5 зависимостей, @Suppress снят).
 - [x] Hilt-граф `MarkNextRowUseCase` → `ProgressService` → `PatternRepository`
   → `PatternDao`/`SymbolDao`/`PatternRepeatDao` теперь reachable из
   `TimerViewModel`. Runtime-проверка — `@HiltAndroidTest` (7g-A, `HiltGraphTest`).
@@ -163,6 +163,12 @@
 | ProjectRepositoryImpl | `@Deprecated updateTotalTime` без `ReplaceWith` и без плана удаления | Добавить `ReplaceWith("updateProjectTotals(..., rows = 0)")`, мигрировать call sites, удалить |
 | TimerContract | `ShowError(messageResId = 0)` — `getString(0)` крашит `Resources.NotFoundException` | `require(messageResId != 0)` в конструкторе |
 | AddProjectViewModel | `ShowError("Ошибка сохранения проекта")` — generic, не использует `result.error.message`; `"Цель не может быть отрицательной"` — хардкод вместо strings.xml | `ShowError(@StringRes Int)` или `result.error.message`; строку в XML |
+
+### P3
+
+| Место | Проблема | План |
+|---|---|---|
+| TimerViewModel | KDoc устарел: "Проверяет разрешение POST_NOTIFICATIONS перед стартом" - проверка вынесена в `PermissionViewModel` (7g-D) | Править `sed`-патчем или вручную (Cyrillic в heredoc ломается - урок A1) |
 
 ### P2
 

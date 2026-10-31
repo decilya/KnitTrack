@@ -12,7 +12,6 @@ import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
-import com.knittrac.app.platform.notification.NotificationPermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,13 +42,11 @@ import javax.inject.Inject
  * [TimerContract.State.isMarkingRow] — для [TimerContract.Intent.MarkNextPatternRow].
  */
 @HiltViewModel
-@Suppress("LongParameterList") // 6 зависимостей: ViewModel координирует 4 UseCase + SavedStateHandle + permission. Разбиение через Parameter Object усложнит Hilt-граф, разбиение класса нарушит единый State.
 class TimerViewModel @Inject constructor(
     private val timerManager: TimerService,
     private val saveSessionService: SaveSessionService,
     private val getAllProjectsService: GetAllProjectsService,
     private val markNextRowUseCase: MarkNextRowUseCase,
-    private val notificationPermissionChecker: NotificationPermissionChecker,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -127,17 +124,6 @@ class TimerViewModel @Inject constructor(
             viewModelScope.launch { _effect.send(TimerContract.Effect.NavigateToProjects) }
             return
         }
-
-        // На API 33+ без granted POST_NOTIFICATIONS foreground-уведомление
-        // таймера не показывается. Эмитим effect, Screen запустит
-        // системный диалог. Таймер стартует независимо от решения —
-        // permission влияет только на видимость уведомления.
-        if (!notificationPermissionChecker.isGranted()) {
-            viewModelScope.launch {
-                _effect.send(TimerContract.Effect.RequestNotificationPermission)
-            }
-        }
-
         timerManager.start()
     }
 

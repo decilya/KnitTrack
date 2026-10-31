@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
+    permissionViewModel: PermissionViewModel = hiltViewModel(),
     onNavigateToProjects: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
@@ -45,8 +46,6 @@ fun TimerScreen(
     val haptic = LocalHapticFeedback.current
 
     // Системный диалог запроса POST_NOTIFICATIONS (Android 13+).
-    // Запускается по Effect.RequestNotificationPermission из ViewModel,
-    // когда пользователь стартует таймер без granted-разрешения.
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { /* granted или нет — таймер уже стартовал */ }
@@ -68,9 +67,6 @@ fun TimerScreen(
                         context.getString(effect.messageResId),
                         Toast.LENGTH_SHORT
                     ).show()
-                }
-                is TimerContract.Effect.RequestNotificationPermission -> {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         }
@@ -195,6 +191,9 @@ fun TimerScreen(
             if (state.status == TimerState.IDLE || state.status == TimerState.PAUSED) {
                 Button(onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (!permissionViewModel.isGranted()) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
                     viewModel.onIntent(TimerContract.Intent.Start)
                 }) {
                     Text(stringResource(R.string.start))
