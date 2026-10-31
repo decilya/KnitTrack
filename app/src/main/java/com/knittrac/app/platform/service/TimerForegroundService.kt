@@ -7,8 +7,11 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.knittrac.app.MainActivity
 import com.knittrac.app.R
 import com.knittrac.app.core.di.IoDispatcher
@@ -169,7 +172,12 @@ class TimerForegroundService : Service() {
             title = getString(R.string.timer_started),
             text = formatTime(0L)
         )
-        startForeground(NOTIFICATION_ID, notification)
+        ServiceCompat.startForeground(
+            this,
+            NOTIFICATION_ID,
+            notification,
+            foregroundServiceType()
+        )
 
         timerManager.start()
 
@@ -223,19 +231,20 @@ class TimerForegroundService : Service() {
             title = getString(R.string.timer_started),
             text = formatTime(0L)
         )
-        startForeground(NOTIFICATION_ID, notification)
+        ServiceCompat.startForeground(
+            this,
+            NOTIFICATION_ID,
+            notification,
+            foregroundServiceType()
+        )
         stopSelf()
     }
 
     /**
-     * Android 15 (API 35) ограничивает время работы dataSync-сервиса
-     * 6 часами в сутки. При достижении лимита система вызывает этот
-     * метод — мы обязаны остановиться в течение нескольких секунд,
-     * иначе RemoteServiceException и краш приложения.
-     *
-     * Останавливаем таймер и сервис корректно. Сессия пользователя
-     * сохраняется (elapsedTime в TimerService не сбрасывается),
-     * её можно сохранить при следующем открытии приложения.
+     * Android 15 вызывает timeout у foreground-сервиса. Тип в манифесте —
+     * specialUse, не dataSync. Останавливаемся сразу: иначе
+     * RemoteServiceException. Таймер на паузе, сессию можно сохранить
+     * при следующем открытии.
      */
     override fun onTimeout(startId: Int) {
         Timber.w(
@@ -265,6 +274,17 @@ class TimerForegroundService : Service() {
      * startService() / startForegroundService().
      */
     override fun onBind(intent: Intent?): IBinder? = null
+
+    /**
+     * API 34+ требует тип, совпадающий с манифестом (`specialUse`).
+     * Ниже 34 тип в [ServiceCompat.startForeground] не передаётся.
+     */
+    private fun foregroundServiceType(): Int =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        } else {
+            0
+        }
 
     /**
      * Создаёт канал уведомлений для Android 8+ (API 26).

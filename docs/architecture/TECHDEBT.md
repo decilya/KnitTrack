@@ -21,6 +21,7 @@
 - **`StandardTestDispatcher` требует `advanceUntilIdle()`.** `viewModelScope.launch` не выполняется немедленно.
 - **Fresh install не проходит через `MIGRATION_X_Y`.** Триггер/CHECK создаётся только в миграции. Для `onCreate` — `RoomDatabase.Callback`. Регресс P0-1.
 - **`Float.toInt()` — усечение к нулю, не floor.** `(-16f/32f).toInt() = 0`, не `-1`. Для координат Canvas после pan — guard `if (coord < 0f) return`, не полагаться на `toInt()`.
+- **Тест на `coerceAtLeast`/`coerceIn` — входные данные выше порога.** `maxColumnsOf(5+3) = 10` — это coerce, не формула. `maxColumnsOf(8+3) = 11` — формула.
 
 ### Открыто после code review 31.10.2026
 
@@ -46,7 +47,9 @@
 
 - [x] **P1 #1**: Timber убран из `SaveSessionService`. Лог остаётся в `SessionRepositoryImpl`. Закрыто в этом коммите.
 - [x] **P1 #2**: `AppErrorMapper` — `android.database.SQLException` → `DatabaseError`. `Owner-approved`. Закрыто в этом коммите.
-- [ ] **P1 #5**: `TimerForegroundService` не стартует ни один экран.
+- [x] **P1 #5**: `TimerForegroundService` стартует из `TimerScreen.onClick(Start)` через `ContextCompat.startForegroundService` + `ACTION_START`. `Reset` / `SessionSaved` → `ACTION_STOP`. `ServiceCompat.startForeground` с `FOREGROUND_SERVICE_TYPE_SPECIAL_USE` (API 34+). Manifest: +`FOREGROUND_SERVICE_SPECIAL_USE`. Закрыто в этом коммите.
+- [ ] **P2**: `TimerForegroundService` не покрыт unit-тестом (Robolectric + `ServiceController` + `ShadowService`). Отложено.
+- [ ] **P2 (7g-D2)**: foreground-старт вынести в `ForegroundServiceStarter` после декомпозиции `TimerViewModel` (detekt `LongParameterList=6`). Сейчас сервис стартует `TimerScreen`.
 
 ### Открыто (P2/P3)
 

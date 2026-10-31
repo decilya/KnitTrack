@@ -1,7 +1,9 @@
 package com.knittrac.app.presentation.feature_timer
 
 import android.Manifest
+import android.content.Intent
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -22,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
 import com.knittrac.app.domain.entity.canOpenPatternEditor
 import com.knittrac.app.domain.service.TimerState
+import com.knittrac.app.platform.service.TimerForegroundService
 import kotlinx.coroutines.flow.collectLatest
 
 /**
@@ -63,6 +66,10 @@ fun TimerScreen(
                         context.getString(R.string.session_saved),
                         Toast.LENGTH_SHORT
                     ).show()
+                    context.startService(
+                        Intent(context, TimerForegroundService::class.java)
+                            .setAction(TimerForegroundService.ACTION_STOP)
+                    )
                 }
                 is TimerContract.Effect.ShowError -> {
                     Toast.makeText(
@@ -211,6 +218,11 @@ fun TimerScreen(
                     if (!permissionViewModel.isGranted()) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
+                    ContextCompat.startForegroundService(
+                        context,
+                        Intent(context, TimerForegroundService::class.java)
+                            .setAction(TimerForegroundService.ACTION_START)
+                    )
                     viewModel.onIntent(TimerContract.Intent.Start)
                 }) {
                     Text(stringResource(R.string.start))
@@ -228,6 +240,10 @@ fun TimerScreen(
             Button(onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 viewModel.onIntent(TimerContract.Intent.Reset)
+                context.startService(
+                    Intent(context, TimerForegroundService::class.java)
+                        .setAction(TimerForegroundService.ACTION_STOP)
+                )
             }) {
                 Text(stringResource(R.string.reset))
             }
