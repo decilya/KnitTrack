@@ -262,4 +262,22 @@ class Migration5To6Test {
         }
         room.close()
     }
+
+    /** Fresh install: onCreate → TRIGGER_CALLBACK создаёт оба триггера.
+     *  Регресс P0-1: без callback триггера бы не было (MIGRATION_5_6 не вызывается). */
+    @Test
+    fun freshInstall_createsTrigger() {
+        context.deleteDatabase(dbName)
+        val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
+            .addMigrations(
+                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6
+            )
+            .addCallback(AppDatabase.TRIGGER_CALLBACK)
+            .build()
+        room.openHelper.writableDatabase
+        assertEquals(2, triggerCount(room))
+        room.close()
+    }
 }

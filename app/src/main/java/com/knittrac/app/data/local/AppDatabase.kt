@@ -245,6 +245,58 @@ abstract class AppDatabase : RoomDatabase() {
          * вместе с per-stitch tracking (7f-B). Сейчас current_stitch в БД
          * всегда 0 (ProgressService.updateProgress → StitchCount.ZERO).
          */
+        private const val CREATE_TRIGGER_PROGRESS_INSERT =
+            "CREATE TRIGGER trg_progress_check_insert " +
+                "BEFORE INSERT ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND row_number = NEW.current_row_number); " +
+                "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                "WHERE NEW.current_pattern_row_id IS NULL " +
+                "AND NEW.current_row_number != 0; " +
+                "END"
+
+        private const val CREATE_TRIGGER_PROGRESS_UPDATE =
+            "CREATE TRIGGER trg_progress_check_update " +
+                "BEFORE UPDATE OF current_pattern_row_id, current_row_number, " +
+                "current_stitch, pattern_id ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND row_number = NEW.current_row_number); " +
+                "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                "WHERE NEW.current_pattern_row_id IS NULL " +
+                "AND NEW.current_row_number != 0; " +
+                "END"
+
+        /**
+         * Создаёт триггеры `trg_progress_check_*` на **fresh install**.
+         *
+         * Миграции выполняются только при `onUpgrade`. Для новой БД Room вызывает
+         * `onCreate` (создаёт таблицы), и MIGRATION_5_6 не запускается. Без этого
+         * callback новый пользователь получил бы БД без защиты инвариантов прогресса.
+         */
+        internal val TRIGGER_CALLBACK = object : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE)
+            }
+        }
+
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Санитизация A+B: row невалиден → обнулить row и number
@@ -278,46 +330,10 @@ abstract class AppDatabase : RoomDatabase() {
 
                 // 4. CREATE TRIGGER (SQLite: одно событие на триггер).
                 // INSERT: прогресс должен быть NULL/0/0.
-                db.execSQL(
-                    "CREATE TRIGGER trg_progress_check_insert " +
-                        "BEFORE INSERT ON projects BEGIN " +
-                        "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
-                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
-                        "SELECT 1 FROM pattern_rows " +
-                        "WHERE id = NEW.current_pattern_row_id " +
-                        "AND pattern_id IS NEW.pattern_id); " +
-                        "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
-                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
-                        "SELECT 1 FROM pattern_rows " +
-                        "WHERE id = NEW.current_pattern_row_id " +
-                        "AND row_number = NEW.current_row_number); " +
-                        "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
-                        "WHERE NEW.current_pattern_row_id IS NULL " +
-                        "AND NEW.current_row_number != 0; " +
-                        "END"
-                )
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT)
 
                 // UPDATE: только progress-колонки (OF фильтрует события).
-                db.execSQL(
-                    "CREATE TRIGGER trg_progress_check_update " +
-                        "BEFORE UPDATE OF " +
-                        "current_pattern_row_id, current_row_number, " +
-                        "current_stitch, pattern_id ON projects BEGIN " +
-                        "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
-                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
-                        "SELECT 1 FROM pattern_rows " +
-                        "WHERE id = NEW.current_pattern_row_id " +
-                        "AND pattern_id IS NEW.pattern_id); " +
-                        "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
-                        "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
-                        "SELECT 1 FROM pattern_rows " +
-                        "WHERE id = NEW.current_pattern_row_id " +
-                        "AND row_number = NEW.current_row_number); " +
-                        "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
-                        "WHERE NEW.current_pattern_row_id IS NULL " +
-                        "AND NEW.current_row_number != 0; " +
-                        "END"
-                )
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE)
             }
         }
 
@@ -329,6 +345,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "knittrac_database"
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addCallback(TRIGGER_CALLBACK)
                     .build()
 
                 INSTANCE = instance

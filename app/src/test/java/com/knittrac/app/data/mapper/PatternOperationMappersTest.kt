@@ -1,5 +1,6 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.data.local.entity.PatternOperationEntity
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
@@ -74,5 +75,23 @@ class PatternOperationMappersTest {
         assertNull(entity.colorHex)
         assertNull(entity.columnSpanOverride)
         assertNull(entity.repeatCode)
+    }
+
+    @Test
+    fun entityToDomain_mapsFields() {
+        val symbol = Symbol(
+            code = "K", displayName = "Лицевая", textGlyph = "V",
+            category = SymbolCategory.STANDARD
+        )
+        val entity = PatternOperationEntity(
+            patternRowId = 10L, columnStart = 3, symbolCode = "K",
+            backSymbolCode = null, colorHex = "#FF0000",
+            columnSpanOverride = null, rowSpanOverride = null, repeatCode = null
+        )
+        val op = entity.toDomain(symbol)
+        assertEquals(10L, op.patternRowId.value)
+        assertEquals(3, op.columnStart.value)
+        assertEquals("K", op.symbol.code)
+        assertEquals("#FF0000", op.colorHex)
     }
 }

@@ -113,9 +113,15 @@ class PatternRepositoryImpl @Inject constructor(
             .map { it.toDomain() }
             .associateBy { it.code }
         val entities = patternDao.getOperationsForRow(rowId.value)
-        val operations = entities.mapNotNull { entity ->
+        val operations = entities.map { entity ->
             val symbol = symbols[entity.symbolCode]
-                ?: return@mapNotNull null  // FK RESTRICT гарантирует наличие; defensive
+                ?: return Result.Error(
+                    AppError.DatabaseError(
+                        IllegalStateException(
+                            "Symbol '${entity.symbolCode}' not found in legend for pattern ${patternId.value}"
+                        )
+                    )
+                )
             val backSymbol = entity.backSymbolCode?.let { symbols[it] }
             entity.toDomain(symbol, backSymbol)
         }

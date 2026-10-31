@@ -31,7 +31,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -255,7 +254,7 @@ class TimerViewModelTest {
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L))
         )
 
-        val effectDeferred = async { withTimeoutOrNull(50L) { viewModel.effect.first() } }
+        val effectDeferred = async { viewModel.effect.first() }
         viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
         val effect = effectDeferred.await()
         advanceUntilIdle()

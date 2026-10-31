@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
@@ -33,7 +34,8 @@ class ProgressServiceTest {
 
     private fun project(
         patternId: PatternId? = PatternId.create(1L),
-        currentPatternRowId: PatternRowId? = PatternRowId.create(2L)
+        currentPatternRowId: PatternRowId? = PatternRowId.create(2L),
+        currentRowNumber: RowCount = RowCount.create(1)
     ): Project = Project(
         id = 1L,
         name = ProjectName.create("Тест"),
@@ -42,6 +44,7 @@ class ProgressServiceTest {
         updatedAt = 0L,
         patternId = patternId,
         currentPatternRowId = currentPatternRowId,
+        currentRowNumber = currentRowNumber,
         syncStatus = SyncStatus.PENDING
     )
 

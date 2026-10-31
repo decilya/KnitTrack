@@ -12,7 +12,8 @@ class ProjectTest {
 
     private fun project(
         patternId: PatternId? = PatternId.create(1L),
-        currentPatternRowId: PatternRowId? = null
+        currentPatternRowId: PatternRowId? = null,
+        currentRowNumber: RowCount = RowCount.ZERO
     ): Project = Project(
         id = 1L,
         name = ProjectName.create("Тест"),
@@ -21,6 +22,7 @@ class ProjectTest {
         updatedAt = 0L,
         patternId = patternId,
         currentPatternRowId = currentPatternRowId,
+        currentRowNumber = currentRowNumber,
         syncStatus = SyncStatus.PENDING
     )
 
@@ -31,7 +33,10 @@ class ProjectTest {
 
     @Test
     fun markRow_returnsAlreadyExists_whenCurrentRowMatches() {
-        val p = project(currentPatternRowId = PatternRowId.create(1L))
+        val p = project(
+            currentPatternRowId = PatternRowId.create(1L),
+            currentRowNumber = RowCount.create(1)
+        )
         val result = p.markRow(row(1L))
         assertTrue(result is Result.Success)
         assertEquals(MarkResult.AlreadyExists, (result as Result.Success).data)
@@ -49,6 +54,30 @@ class ProjectTest {
     fun markRow_returnsValidationError_whenPatternIdIsNull() {
         val p = project(patternId = null)
         val result = p.markRow(row(1L))
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    @Test
+    fun markRow_inconsistentDenorm_returnsValidationError() {
+        val row = PatternRow(
+            id = PatternRowId.create(10L),
+            rowNumber = RowNumber.create(3)
+        )
+        val project = Project(
+            id = 1L,
+            name = ProjectName.create("P"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.PENDING,
+            patternId = PatternId.create(1L),
+            currentPatternRowId = PatternRowId.create(10L),
+            currentRowNumber = RowCount.create(99)
+        )
+
+        val result = project.markRow(row)
+
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.ValidationError)
     }

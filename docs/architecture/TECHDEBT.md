@@ -11,6 +11,24 @@
 | ProjectDto | Добавлены поля totalRows/targetRowCount | Обратная совместимость | Версионирование DTO при синхронизации с бэкендом |
 
 
+## Уроки 31.10.2026 (сессия 7c-2 + 7f-B)
+
+- **SQLite не поддерживает `INSERT OR UPDATE` в одном `CREATE TRIGGER`.** Нужны два триггера. Проверять grammar до написания миграции.
+- **При фиксе кода — сразу фиксить §X документа в том же коммите.** Иначе docs↔code рассинхрон.
+- **`Owner-approved: <файл>` — обязателен при правке §1.1.** Ретроактивно не исправить.
+- **`getOperationsForRow` требует `patternId`, не только `rowId`.** `pattern_operations.symbol_code` → FK на `symbols.code`.
+- **`mapNotNull` скрывает баги.** При маппинге «много → много» — `Result.Error` при потере.
+- **`StandardTestDispatcher` требует `advanceUntilIdle()`.** `viewModelScope.launch` не выполняется немедленно.
+- **Fresh install не проходит через `MIGRATION_X_Y`.** Триггер/CHECK создаётся только в миграции. Для `onCreate` — `RoomDatabase.Callback`. Регресс P0-1.
+
+### Открыто после code review 31.10.2026
+
+- [ ] **P1-5**: `TimerScreen` permission flow (`if (!permissionViewModel.isGranted()) launcher.launch(...)`) не покрыт тестом. Регресс невидим. Robolectric compose test (`createComposeRule`).
+- [ ] **P2-4**: `PatternEditorViewModel.retry()` перезагружает только `LoadPattern(currentPatternId)`. Ошибки от `observePatternSummaries` не обрабатываются.
+- [ ] **P2-5**: `Migration5To6Test` использует симуляцию v5 через `DROP TRIGGER + PRAGMA user_version=5`, не реальную v5. Заменить на raw SQL `CREATE TABLE` v5 (эталон `Migration4To5Test`).
+- [ ] **P2-1 (P3→P2)**: `getOperationsForRow` грузит legend на каждый вызов. На Canvas с N видимыми рядами — N загрузок. Batch-запрос.
+
+
 ## Pattern Tracker v8.0 (утверждено 19.10.2026)
 
 Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)

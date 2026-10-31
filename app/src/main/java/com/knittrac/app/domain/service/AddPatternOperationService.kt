@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
@@ -59,47 +60,24 @@ class AddPatternOperationService @Inject constructor(
 
     /**
      * Запускает все проверки по очереди (fail-fast на первой ошибке).
+     *
+     * Порядок: легенда → раппорт → overlap. Легенда читается один раз:
+     * символ передаётся в `validateOverlap` параметром — это устраняет
+     * повторный lookup и делает валидацию легенды единственной точкой.
      */
     private suspend fun validateAll(
         pattern: Pattern,
         params: AddPatternOperationParams
     ): Result<Unit> {
-        return when (val legendCheck = validateLegend(pattern, params)) {
-            is Result.Error -> legendCheck
-            is Result.Success -> validateRepeatThenOverlap(pattern, params)
-        }
-    }
-
-    /**
-     * Проверка: раппорт (если задан) есть в схеме, затем overlap.
-     */
-    private suspend fun validateRepeatThenOverlap(
-        pattern: Pattern,
-        params: AddPatternOperationParams
-    ): Result<Unit> {
+        val legendSymbol = pattern.legend.firstOrNull { it.code == params.symbol.code }
+            ?: return Result.Error(
+                AppError.ValidationError(
+                    "Символ ${params.symbol.code} отсутствует в легенде схемы"
+                )
+            )
         return when (val repeatCheck = validateRepeat(pattern, params)) {
             is Result.Error -> repeatCheck
-            is Result.Success -> validateOverlap(pattern, params)
-        }
-    }
-
-    /**
-     * Проверяет, что символ операции присутствует в легенде схемы.
-     *
-     * Символы в легенде идентифицируются по `code` (PK в БД), не по
-     * полному равенству data class: тот же код может прийти с другим
-     * displayName (например, из UI-справочника).
-     */
-    private fun validateLegend(
-        pattern: Pattern,
-        params: AddPatternOperationParams
-    ): Result<Unit> {
-        return if (pattern.legend.none { it.code == params.symbol.code }) {
-            Result.Error(
-                AppError.ValidationError("Символ ${params.symbol.code} отсутствует в легенде схемы")
-            )
-        } else {
-            Result.Success(Unit)
+            is Result.Success -> validateOverlap(params, legendSymbol)
         }
     }
 
@@ -129,15 +107,9 @@ class AddPatternOperationService @Inject constructor(
      * оставлен как defensive-проверка целостности.
      */
     private suspend fun validateOverlap(
-        pattern: Pattern,
-        params: AddPatternOperationParams
+        params: AddPatternOperationParams,
+        legendSymbol: Symbol
     ): Result<Unit> {
-        val legendSymbol = pattern.legend.firstOrNull { it.code == params.symbol.code }
-            ?: return Result.Error(
-                AppError.ValidationError(
-                    "Символ ${params.symbol.code} отсутствует в легенде схемы"
-                )
-            )
         val effectiveSpan = params.overrideSpan ?: legendSymbol.defaultColumnSpan
         val newSpan = OperationSpan(columnStart = params.columnStart, span = effectiveSpan)
 

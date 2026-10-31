@@ -6,6 +6,7 @@ import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
 import com.knittrac.app.data.local.entity.PatternEntity
+import com.knittrac.app.data.local.entity.PatternOperationEntity
 import com.knittrac.app.data.local.entity.PatternRepeatEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.local.entity.SymbolEntity
@@ -19,6 +20,7 @@ import com.knittrac.app.domain.entity.SymbolCategory
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -214,5 +216,64 @@ class PatternRepositoryImplTest {
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    @Test
+    fun `getOperationsForRow returns operations with resolved symbols`() = runTest {
+        coEvery { symbolDao.getSymbolsForPattern(1L) } returns listOf(
+            SymbolEntity(code = "K", displayName = "Лицевая", textGlyph = "V", category = "STANDARD")
+        )
+        coEvery { patternDao.getOperationsForRow(10L) } returns listOf(
+            PatternOperationEntity(
+                patternRowId = 10L,
+                columnStart = 0,
+                symbolCode = "K",
+                backSymbolCode = null,
+                colorHex = null,
+                columnSpanOverride = null,
+                rowSpanOverride = null,
+                repeatCode = null
+            )
+        )
+
+        val result = repository.getOperationsForRow(PatternId.create(1L), PatternRowId.create(10L))
+
+        assertTrue(result is Result.Success)
+        val ops = (result as Result.Success).data
+        assertEquals(1, ops.size)
+        assertEquals("K", ops[0].symbol.code)
+    }
+
+    @Test
+    fun `getOperationsForRow returns DatabaseError when symbol missing`() = runTest {
+        coEvery { symbolDao.getSymbolsForPattern(1L) } returns emptyList()
+        coEvery { patternDao.getOperationsForRow(10L) } returns listOf(
+            PatternOperationEntity(
+                patternRowId = 10L,
+                columnStart = 0,
+                symbolCode = "MISSING",
+                backSymbolCode = null,
+                colorHex = null,
+                columnSpanOverride = null,
+                rowSpanOverride = null,
+                repeatCode = null
+            )
+        )
+
+        val result = repository.getOperationsForRow(PatternId.create(1L), PatternRowId.create(10L))
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    @Test
+    fun `getAllPatternSummaries maps entities to summaries`() = runTest {
+        coEvery { patternDao.getAllPatternsFlow() } returns kotlinx.coroutines.flow.flowOf(listOf(entity))
+
+        val summaries = repository.getAllPatternSummaries().first()
+
+        assertEquals(1, summaries.size)
+        assertEquals(1L, summaries[0].id.value)
+        assertEquals("Схема", summaries[0].name.value)
     }
 }

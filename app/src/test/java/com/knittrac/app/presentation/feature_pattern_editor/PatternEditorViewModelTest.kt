@@ -1,11 +1,12 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.async
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.R
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.core.localization.SymbolLocalizer
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternDirection
@@ -28,7 +29,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -45,7 +45,6 @@ class PatternEditorViewModelTest : BaseTest() {
     private val getPatternByIdService: GetPatternByIdService = mockk()
     private val getAllPatternSummariesService: GetAllPatternSummariesService = mockk()
     private val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
-    private val symbolLocalizer: SymbolLocalizer = mockk(relaxed = true)
 
     private fun symbol(code: String = "K"): Symbol = Symbol(
         code = code,
@@ -82,7 +81,6 @@ class PatternEditorViewModelTest : BaseTest() {
             getPatternByIdService,
             getAllPatternSummariesService,
             addPatternOperationUseCase,
-            symbolLocalizer,
             savedState
         )
     }
@@ -147,8 +145,7 @@ class PatternEditorViewModelTest : BaseTest() {
         advanceUntilIdle()
         vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
 
-        val effects = mutableListOf<PatternEditorContract.Effect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effectDeferred = async { vm.effect.first() }
 
         vm.onIntent(PatternEditorContract.Intent.AddOperation(
             rowId = PatternRowId.create(10L),
@@ -156,9 +153,9 @@ class PatternEditorViewModelTest : BaseTest() {
         ))
         advanceUntilIdle()
 
-        job.cancel()
+        val effect = effectDeferred.await()
         assertEquals(false, vm.state.value.isSaving)
-        assertTrue(effects.any { it is PatternEditorContract.Effect.OperationAdded })
+        assertTrue(effect is PatternEditorContract.Effect.OperationAdded)
     }
 
     @Test
@@ -171,8 +168,7 @@ class PatternEditorViewModelTest : BaseTest() {
         advanceUntilIdle()
         vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
 
-        val effects = mutableListOf<PatternEditorContract.Effect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effectDeferred = async { vm.effect.first() }
 
         vm.onIntent(PatternEditorContract.Intent.AddOperation(
             rowId = PatternRowId.create(10L),
@@ -180,10 +176,9 @@ class PatternEditorViewModelTest : BaseTest() {
         ))
         advanceUntilIdle()
 
-        job.cancel()
-        val showError = effects.filterIsInstance<PatternEditorContract.Effect.ShowError>().firstOrNull()
-        assertTrue(showError != null)
-        assertEquals(R.string.pattern_editor_add_error, showError?.messageResId)
+        val effect = effectDeferred.await()
+        assertTrue(effect is PatternEditorContract.Effect.ShowError)
+        assertEquals(R.string.pattern_editor_add_error, (effect as PatternEditorContract.Effect.ShowError).messageResId)
     }
 
     @Test

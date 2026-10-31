@@ -45,11 +45,33 @@ data class Project(
         if (patternId == null) {
             return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
         }
-        return Result.Success(
+        return validateDenormalization(row) ?: successMarkResult(row)
+    }
+
+    /**
+     * Валидирует согласованность денормализации: если `currentPatternRowId`
+     * указывает на `row`, то `currentRowNumber` должен соответствовать
+     * `row.rowNumber`. null — валидно, не null — [Result.Error].
+     */
+    private fun validateDenormalization(row: PatternRow): Result.Error? = when {
+        currentPatternRowId != row.id -> null
+        currentRowNumber == RowCount.createOrDefault(row.rowNumber.value) -> null
+        else -> {
+            val expected = RowCount.createOrDefault(row.rowNumber.value)
+            Result.Error(
+                AppError.ValidationError(
+                    "Рассинхронизация прогресса: currentRowNumber=${currentRowNumber.value}, " +
+                        "rowNumber=${expected.value} для ряда id=${row.id.value}"
+                )
+            )
+        }
+    }
+
+    private fun successMarkResult(row: PatternRow): Result.Success<MarkResult> =
+        Result.Success(
             if (currentPatternRowId == row.id) MarkResult.AlreadyExists
             else MarkResult.Added
         )
-    }
 }
 
 /**

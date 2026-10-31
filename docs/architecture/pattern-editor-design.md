@@ -204,7 +204,8 @@ class PatternEditorViewModel @Inject constructor(
 
 - `init`: `getAllPatternSummariesService(Unit).collect` → `availablePatterns`.
   Если `savedStateHandle.get<Long>("patternId") != null` → `LoadPattern(PatternId)`.
-- `LoadPattern(id)` / `SelectPattern(id)`: `getPatternByIdService(id)` →
+- `LoadPattern(id)` / `SelectPattern(id)`: `loadJob?.cancel()` (race guard),
+  `getPatternByIdService(id)` →
   Success: `state.pattern`, `state.currentPatternId`; Error: `Effect.ShowError`.
 - `SelectRow` / `SelectColumn` / `SelectSymbol`: обновление `state` + `savedStateHandle`.
 - `ToggleMode`: `state.isStickyMode = !isStickyMode` + `savedStateHandle`.

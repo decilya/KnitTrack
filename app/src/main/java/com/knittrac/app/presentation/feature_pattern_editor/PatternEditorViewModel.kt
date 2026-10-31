@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
-import com.knittrac.app.core.localization.SymbolLocalizer
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternRowId
@@ -16,6 +15,7 @@ import com.knittrac.app.domain.service.AddPatternOperationUseCase
 import com.knittrac.app.domain.service.GetAllPatternSummariesService
 import com.knittrac.app.domain.service.GetPatternByIdService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +45,6 @@ class PatternEditorViewModel @Inject constructor(
     private val getPatternByIdService: GetPatternByIdService,
     private val getAllPatternSummariesService: GetAllPatternSummariesService,
     private val addPatternOperationUseCase: AddPatternOperationUseCase,
-    private val symbolLocalizer: SymbolLocalizer,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,6 +62,9 @@ class PatternEditorViewModel @Inject constructor(
 
     private val _effect = Channel<PatternEditorContract.Effect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
+    /** Job активной загрузки — отменяется при повторном loadPattern. */
+    private var loadJob: Job? = null
 
     init {
         observePatternSummaries()
@@ -102,8 +104,9 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private fun loadPattern(id: PatternId) {
+        loadJob?.cancel()
         _state.update { it.copy(isLoading = true, errorRes = null) }
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             when (val result = getPatternByIdService(id)) {
                 is Result.Success -> {
                     savedStateHandle[KEY_PATTERN_ID] = id.value
@@ -176,7 +179,7 @@ class PatternEditorViewModel @Inject constructor(
         val patternId = state.currentPatternId
         val symbolCode = state.selectedSymbolCode
         val row = pattern?.findRowById(intent.rowId)
-        val symbol = if (symbolCode != null) pattern?.findSymbolByCode(symbolCode) else null
+        val symbol = symbolCode?.let { pattern?.findSymbolByCode(it) }
         return when {
             pattern == null || patternId == null || row == null || symbol == null -> null
             else -> AddContext(
@@ -214,16 +217,6 @@ class PatternEditorViewModel @Inject constructor(
 
     private fun runError(@androidx.annotation.StringRes res: Int) {
         viewModelScope.launch { _effect.send(PatternEditorContract.Effect.ShowError(res)) }
-    }
-
-    /**
-     * Символ для отображения в палитре. Пока — `textGlyph`; при расширении
-     * (локализация `displayName`) — обновить [SymbolLocalizer], не VM.
-     */
-    @Suppress("unused")
-    private fun localizeSymbol(code: String): String {
-        val symbol = _state.value.pattern?.findSymbolByCode(code) ?: return code
-        return symbolLocalizer.localize(symbol)
     }
 
     private companion object {
