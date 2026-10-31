@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.entity
 
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -255,5 +256,64 @@ class PatternTest {
         // row — другой объект, но тот же id (rows[1].id)
         val sameIdRow = PatternRow(PatternRowId.create(2L), RowNumber.create(2))
         assertEquals(PatternDirection.RTL, pattern.getDirectionForRow(sameIdRow))
+    }
+
+    @Test
+    fun findRowById_returnsRow_whenPresent() {
+        val row1 = PatternRow(id = PatternRowId.create(10L), rowNumber = RowNumber.create(1))
+        val row2 = PatternRow(id = PatternRowId.create(11L), rowNumber = RowNumber.create(2))
+        val pattern = Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Схема"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            rows = listOf(row1, row2)
+        )
+        assertEquals(row2, pattern.findRowById(PatternRowId.create(11L)))
+    }
+
+    @Test
+    fun findRowById_returnsNull_whenAbsent() {
+        val pattern = Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Схема"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false
+        )
+        assertNull(pattern.findRowById(PatternRowId.create(99L)))
+    }
+
+    @Test
+    fun findSymbolByCode_returnsSymbol_whenPresent() {
+        val symbol = Symbol(
+            code = "K",
+            displayName = "Лицевая",
+            textGlyph = "V",
+            category = SymbolCategory.STANDARD,
+            defaultColumnSpan = Span.ONE
+        )
+        val pattern = Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Схема"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false,
+            legend = setOf(symbol)
+        )
+        assertEquals(symbol, pattern.findSymbolByCode("K"))
+    }
+
+    @Test
+    fun findSymbolByCode_returnsNull_whenAbsent() {
+        val pattern = Pattern(
+            id = PatternId.create(1L),
+            name = PatternName.create("Схема"),
+            technique = Technique.KNITTING,
+            direction = PatternDirection.LTR,
+            isReversible = false
+        )
+        assertNull(pattern.findSymbolByCode("X"))
     }
 }

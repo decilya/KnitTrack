@@ -126,8 +126,9 @@ UseCase — тонкий оркестратор.
 
 ## 4. Presentation — PatternEditorContract
 
-Контракт **встроен** в файл `PatternEditorViewModel.kt` (конвенция проекта:
-`ProjectsContract` в `ProjectsListViewModel.kt`).
+Контракт — **отдельный файл** `PatternEditorContract.kt` (конвенция
+`TimerContract.kt`, `SettingsContract.kt`; `ProjectsContract` внутри VM —
+историческое исключение, унификация — P3).
 
 ### 4.1. State
 
@@ -209,7 +210,9 @@ class PatternEditorViewModel @Inject constructor(
 - `ToggleMode`: `state.isStickyMode = !isStickyMode` + `savedStateHandle`.
 - `AddOperation(rowId, columnStart)`: guard `isSaving`; вызов
   `addPatternOperationUseCase(AddPatternOperationParams(...))`;
-  Success → `Effect.OperationAdded`; Error → `Effect.ShowError`.
+  Success → `Effect.OperationAdded(operation)` + **reload** `pattern`
+  (`getPatternByIdService(currentPatternId)`) — VM единый source of truth,
+  без мутации Domain в Presentation; Error → `Effect.ShowError`.
 
 ### 5.4. Guard от double-tap (`isSaving`)
 

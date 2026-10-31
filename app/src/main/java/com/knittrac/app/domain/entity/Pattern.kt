@@ -125,3 +125,22 @@ data class Pattern(
         }
     }
 }
+
+
+/**
+ * Ищет ряд по [PatternRowId] (O(n), n ≤ типичного количества рядов в схеме).
+ *
+ * Инкапсулирует знание о структуре `rows` — Domain-метод вместо
+ * `pattern.rows.firstOrNull { ... }` в Presentation (DDD: aggregate root
+ * отвечает за доступ к своим составным частям).
+ */
+fun Pattern.findRowById(id: PatternRowId): PatternRow? =
+    rows.firstOrNull { it.id == id }
+
+/**
+ * Ищет символ по `code` в легенде (O(n), n ≤ ~100).
+ *
+ * Аналогично [findRowById]: Presentation не должна знать о `legend: Set<Symbol>`.
+ */
+fun Pattern.findSymbolByCode(code: String): Symbol? =
+    legend.firstOrNull { it.code == code }

@@ -42,6 +42,8 @@
     <string name="next_pattern_row_content_description">Отметить следующий ряд схемы</string>
     <string name="pattern_row_label_format">Ряд схемы: %1$d</string>
     <string name="pattern_row_mark_error">Не удалось отметить ряд схемы</string>
+    <string name="pattern_editor_load_error">Не удалось загрузить схему</string>
+    <string name="pattern_editor_add_error">Не удалось добавить операцию</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
