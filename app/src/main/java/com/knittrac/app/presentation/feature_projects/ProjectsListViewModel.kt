@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.CategoryLocalizer
+import com.knittrac.app.domain.entity.canOpenPatternEditor
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +37,9 @@ object ProjectsContract {
         val isUntitled: Boolean,
         val localizedCategoryName: String,
         val totalRows: Int = 0,
-        val targetRowCount: Int? = null
+        val targetRowCount: Int? = null,
+        val patternId: Long? = null,
+        val canOpenPatternEditor: Boolean = false
     )
 
     data class State(
@@ -74,6 +78,8 @@ class ProjectsListViewModel @Inject constructor(
     private val _effect = Channel<ProjectsContract.Effect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
+    private var loadJob: Job? = null
+
     init {
         loadProjects()
     }
@@ -83,7 +89,8 @@ class ProjectsListViewModel @Inject constructor(
      * `isLoading`, чтобы UI показал список или EmptyState.
      */
     private fun loadProjects() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             getAllProjectsService(Unit).collect { result ->
                 when (result) {
                     is Result.Success -> {
@@ -132,6 +139,8 @@ class ProjectsListViewModel @Inject constructor(
             isUntitled = name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
             localizedCategoryName = categoryLocalizer.localize(category),
             totalRows = totalRows.value,
-            targetRowCount = targetRowCount?.value
+            targetRowCount = targetRowCount?.value,
+            patternId = patternId?.value,
+            canOpenPatternEditor = canOpenPatternEditor()
         )
 }

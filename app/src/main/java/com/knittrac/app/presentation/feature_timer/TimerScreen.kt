@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
+import com.knittrac.app.domain.entity.canOpenPatternEditor
 import com.knittrac.app.domain.service.TimerState
 import kotlinx.coroutines.flow.collectLatest
 
@@ -39,7 +41,8 @@ import kotlinx.coroutines.flow.collectLatest
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
     permissionViewModel: PermissionViewModel = hiltViewModel(),
-    onNavigateToProjects: () -> Unit = {}
+    onNavigateToProjects: () -> Unit = {},
+    onNavigateToPatternEditor: (Long) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
@@ -78,11 +81,25 @@ fun TimerScreen(
     ) {
         if (state.projects.isNotEmpty()) {
             val selectedProject = state.projects.find { it.id == state.projectId }
-            Text(
-                text = selectedProject?.name?.value ?: stringResource(R.string.select_project),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = selectedProject?.name?.value ?: stringResource(R.string.select_project),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                val patternId = selectedProject?.patternId
+                if (selectedProject?.canOpenPatternEditor() == true && patternId != null) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onNavigateToPatternEditor(patternId.value)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.pattern_editor_open)
+                        )
+                    }
+                }
+            }
         } else {
             Text(
                 text = stringResource(R.string.no_projects_available),

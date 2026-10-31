@@ -6,6 +6,14 @@
     <string name="action_back">Назад</string>
     <string name="action_stats">Статистика</string>
     <string name="settings">Настройки</string>
+    <string name="pattern_editor_title">Редактор схемы</string>
+    <string name="pattern_editor_open">Открыть редактор схемы</string>
+    <string name="pattern_editor_back">Назад</string>
+    <string name="pattern_editor_select_pattern">Выберите схему</string>
+    <string name="pattern_editor_mode_sticky">Символ, затем ячейка</string>
+    <string name="pattern_editor_mode_sheet">Ячейка, затем символ</string>
+    <string name="pattern_editor_row_prefix">Ряд %1$d</string>
+    <string name="pattern_editor_no_rows">В схеме нет рядов</string>
     <string name="save">Сохранить</string>
     <string name="target_row_count">Целевое количество рядов (опционально)</string>
     <string name="start">Старт</string>

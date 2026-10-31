@@ -7,12 +7,17 @@ import com.knittrac.app.core.localization.CategoryLocalizer
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.Duration
+import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.service.GetAllProjectsService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.test.advanceUntilIdle
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -166,5 +171,47 @@ class ProjectsListViewModelTest {
         val uiModel = viewModel.state.value.projects.single()
         assertEquals(30, uiModel.totalRows)
         assertNull(uiModel.targetRowCount)
+    }
+
+    /**
+     * Повторный Retry не оставляет второй collect: предыдущий Job отменён.
+     */
+    @Test
+    fun retry_twice_doesNotDuplicateCollect() = runTest {
+        val activeCollectors = AtomicInteger(0)
+        coEvery { getAllProjectsService(Unit) } returns callbackFlow {
+            activeCollectors.incrementAndGet()
+            awaitClose { activeCollectors.decrementAndGet() }
+        }
+
+        viewModel = ProjectsListViewModel(getAllProjectsService, categoryLocalizer)
+        advanceUntilIdle()
+        assertEquals(1, activeCollectors.get())
+
+        viewModel.onAction(ProjectsContract.Action.Retry)
+        advanceUntilIdle()
+        assertEquals(1, activeCollectors.get())
+    }
+
+    @Test
+    fun init_mapsPatternIdAndCanOpenPatternEditor() = runTest {
+        val mockProject = Project(
+            id = 4L,
+            name = ProjectName.create("Со схемой"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            totalTimeSeconds = Duration.ZERO,
+            patternId = PatternId.create(7L),
+            updatedAt = 0L,
+            syncStatus = SyncStatus.SYNCED
+        )
+        coEvery { getAllProjectsService(Unit) } returns flowOf(Result.Success(listOf(mockProject)))
+        every { categoryLocalizer.localize(Category.KNITTING) } returns "Вязание спицами"
+
+        viewModel = ProjectsListViewModel(getAllProjectsService, categoryLocalizer)
+
+        val uiModel = viewModel.state.value.projects.single()
+        assertEquals(7L, uiModel.patternId)
+        assertEquals(true, uiModel.canOpenPatternEditor)
     }
 }

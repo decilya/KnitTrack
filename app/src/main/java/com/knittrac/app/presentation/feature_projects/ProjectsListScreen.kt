@@ -1,6 +1,7 @@
 package com.knittrac.app.presentation.feature_projects
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,8 +22,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.knittrac.app.R
 import com.knittrac.app.presentation.common.EmptyStateView
-import com.knittrac.app.presentation.common.hapticClickable
 import kotlinx.coroutines.flow.collectLatest
+
+/**
+ * Переходы со списка проектов. Отдельный тип, чтобы сигнатура экрана
+ * не превысила порог LongParameterList.
+ */
+class ProjectsListNavigator(
+    val onAddProject: () -> Unit,
+    val onTimer: (Long) -> Unit,
+    val onStats: (Long) -> Unit,
+    val onSettings: () -> Unit,
+    val onPatternEditor: (Long) -> Unit
+)
 
 /**
  * Экран списка проектов.
@@ -31,20 +43,12 @@ import kotlinx.coroutines.flow.collectLatest
  * 1. isLoading → CircularProgressIndicator.
  * 2. projects.isEmpty() → EmptyStateView с кнопкой «Добавить».
  * 3. else → LazyColumn с карточками проектов.
- *
- * @param onNavigateToAddProject Лямбда навигации на экран создания проекта.
- * @param onNavigateToTimer Лямбда навигации на таймер с projectId.
- * @param onNavigateToStats Лямбда навигации на статистику конкретного проекта.
- * @param onNavigateToSettings Лямбда навигации на экран настроек.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProjectsListScreen(
-    viewModel: ProjectsListViewModel = hiltViewModel(),
-    onNavigateToAddProject: () -> Unit,
-    onNavigateToTimer: (Long) -> Unit,
-    onNavigateToStats: (Long) -> Unit,
-    onNavigateToSettings: () -> Unit
+    navigator: ProjectsListNavigator,
+    viewModel: ProjectsListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val haptic = LocalHapticFeedback.current
@@ -53,7 +57,7 @@ fun ProjectsListScreen(
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is ProjectsContract.Effect.OpenTimer -> {
-                    onNavigateToTimer(effect.projectId)
+                    navigator.onTimer(effect.projectId)
                 }
             }
         }
@@ -66,7 +70,7 @@ fun ProjectsListScreen(
                 actions = {
                     IconButton(onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onNavigateToSettings()
+                        navigator.onSettings()
                     }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -80,7 +84,7 @@ fun ProjectsListScreen(
             FloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onNavigateToAddProject()
+                    navigator.onAddProject()
                 }
             ) {
                 Icon(
@@ -120,7 +124,7 @@ fun ProjectsListScreen(
                     title = stringResource(R.string.no_projects_yet),
                     description = stringResource(R.string.no_projects_description),
                     actionText = stringResource(R.string.add_project),
-                    onActionClick = onNavigateToAddProject,
+                    onActionClick = navigator.onAddProject,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -138,8 +142,9 @@ fun ProjectsListScreen(
                         ProjectCard(
                             project = projectUi,
                             modifier = Modifier.animateItemPlacement(),
-                            onClick = { onNavigateToTimer(projectUi.id) },
-                            onStatsClick = { onNavigateToStats(projectUi.id) }
+                            onClick = { navigator.onTimer(projectUi.id) },
+                            onStatsClick = { navigator.onStats(projectUi.id) },
+                            onOpenPattern = navigator.onPatternEditor
                         )
                     }
                 }
@@ -154,18 +159,34 @@ fun ProjectsListScreen(
  * Отображает название и локализованную категорию, полученные из
  * [ProjectsContract.ProjectUiModel].
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ProjectCard(
     project: ProjectsContract.ProjectUiModel,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    onStatsClick: () -> Unit
+    onStatsClick: () -> Unit,
+    onOpenPattern: (Long) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    var menuExpanded by remember { mutableStateOf(false) }
+    Box {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .hapticClickable(onClick = onClick)
+            .combinedClickable(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                },
+                onLongClick = {
+                    val patternId = project.patternId
+                    if (project.canOpenPatternEditor && patternId != null) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        menuExpanded = true
+                    }
+                }
+            )
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -214,6 +235,22 @@ private fun ProjectCard(
                 Icon(
                     imageVector = Icons.Default.Assessment,
                     contentDescription = stringResource(R.string.action_stats)
+                )
+            }
+        }
+    }
+        DropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false }
+        ) {
+            val patternId = project.patternId
+            if (patternId != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.pattern_editor_open)) },
+                    onClick = {
+                        menuExpanded = false
+                        onOpenPattern(patternId)
+                    }
                 )
             }
         }

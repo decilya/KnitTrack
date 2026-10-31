@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import timber.log.Timber
@@ -89,6 +90,7 @@ class TimerForegroundService : Service() {
      * Отменяется в [onDestroy] через serviceScope.cancel().
      */
     private val serviceScope = CoroutineScope(SupervisorJob() + ioDispatcher)
+    private var collectJob: Job? = null
 
     /**
      * Менеджер уведомлений Android.
@@ -171,7 +173,8 @@ class TimerForegroundService : Service() {
 
         timerManager.start()
 
-        serviceScope.launch {
+        collectJob?.cancel()
+        collectJob = serviceScope.launch {
             timerManager.elapsedTime.collect { elapsed ->
                 val updatedNotification = createNotification(
                     title = getString(R.string.timer_running),
@@ -190,6 +193,7 @@ class TimerForegroundService : Service() {
      * [onDestroy], где serviceScope будет отменён.
      */
     private fun handleStop() {
+        collectJob?.cancel()
         timerManager.pause()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()

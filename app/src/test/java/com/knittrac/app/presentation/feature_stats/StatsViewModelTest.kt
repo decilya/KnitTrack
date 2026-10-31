@@ -11,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -121,5 +122,32 @@ class StatsViewModelTest {
         assertEquals(false, state.isLoading)
         assertEquals(emptyList<DailyStat>(), state.dailyStats)
         coVerify(exactly = 0) { sessionRepository.getDailyStats(any()) }
+    }
+
+    /**
+     * Второй retry отменяет ещё не завершившийся первый запрос.
+     * В state остаётся ответ последнего вызова.
+     */
+    @Test
+    fun retry_twice_cancelsPrevious() = runTest {
+        val first = listOf(DailyStat(dayTimestamp = 1L, totalSeconds = 1L))
+        val second = listOf(DailyStat(dayTimestamp = 2L, totalSeconds = 2L))
+        var calls = 0
+        coEvery { sessionRepository.getDailyStats(1L) } coAnswers {
+            calls += 1
+            if (calls == 1) {
+                delay(60_000)
+                Result.Success(first)
+            } else {
+                Result.Success(second)
+            }
+        }
+
+        viewModel = StatsViewModel(sessionRepository, savedStateHandle)
+        viewModel.onAction(StatsContract.Action.Retry)
+
+        assertEquals(second, viewModel.state.value.dailyStats)
+        assertEquals(false, viewModel.state.value.isLoading)
+        coVerify(exactly = 2) { sessionRepository.getDailyStats(1L) }
     }
 }

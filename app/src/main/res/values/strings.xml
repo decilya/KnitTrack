@@ -45,6 +45,14 @@
     <string name="pattern_row_mark_error">Не удалось отметить ряд схемы</string>
     <string name="pattern_editor_load_error">Не удалось загрузить схему</string>
     <string name="pattern_editor_add_error">Не удалось добавить операцию</string>
+    <string name="pattern_editor_title">Pattern editor</string>
+    <string name="pattern_editor_open">Open pattern editor</string>
+    <string name="pattern_editor_back">Back</string>
+    <string name="pattern_editor_select_pattern">Select a pattern</string>
+    <string name="pattern_editor_mode_sticky">Symbol then cell</string>
+    <string name="pattern_editor_mode_sheet">Cell then symbol</string>
+    <string name="pattern_editor_row_prefix">Row %1$d</string>
+    <string name="pattern_editor_no_rows">This pattern has no rows</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

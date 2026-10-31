@@ -52,7 +52,11 @@
 - [ ] **P2**: Compose-тест `ProjectsListScreen` (иконка stats на карточке). Robolectric `createComposeRule` в проекте нет. Тот же класс, что P1-5 у `TimerScreen`.
 - [x] **P2 #24**: `deleteProject` при 0 строк возвращает `NotFoundError`. Контракт изменён осознанно: удаление больше не идемпотентно. Закрыто в этом коммите.
 - [x] **P2 #25**: `addSessionAtomically` — нет проекта → `NotFoundError` (`ProjectNotFoundException`). Строки 161 и 169 `SessionDao` по-прежнему `IllegalStateException` → `DatabaseError`. Закрыто в этом коммите.
-- [ ] **P2 #9–#23, #26–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшее: бэкап не пишет схемы, но `ProjectDto` пишет FK.
+- [x] **P2 #27**: `ProjectsListViewModel.retry` отменяет предыдущий `collect`. `StatsViewModel.retry` отменяет предыдущий `launch` (`getDailyStats` — не Flow). Закрыто в этом коммите.
+- [x] **P2 #28**: `TimerViewModel` на `Result.Error` от `getAllProjects` шлёт `ShowError(error_load_projects)`. Закрыто в этом коммите.
+- [x] **P2 #34**: повторный `ACTION_START` отменяет предыдущий `collect` уведомления. `handleStop` тоже отменяет его. Закрыто в этом коммите.
+- [ ] **P2**: `PatternEditorScreenTest` не создан: `createComposeRule` в проекте нет. Zoom/pan/tap на устройстве.
+- [ ] **P2 #9–#23, #26, #29–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшее: бэкап не пишет схемы, но `ProjectDto` пишет FK.
 
 
 

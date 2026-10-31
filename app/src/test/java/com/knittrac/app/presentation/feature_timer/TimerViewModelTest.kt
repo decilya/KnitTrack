@@ -1,6 +1,7 @@
 package com.knittrac.app.presentation.feature_timer
 
 import androidx.lifecycle.SavedStateHandle
+import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
@@ -327,5 +328,30 @@ class TimerViewModelTest {
         viewModel.onIntent(TimerContract.Intent.Start)
 
         verify { timerManager.start() }
+    }
+
+    /**
+     * Ошибка потока проектов уходит в ShowError, а не проглатывается.
+     */
+    @Test
+    fun getAllProjects_error_emitsShowError() = runTest {
+        coEvery { getAllProjectsService(Unit) } returns flowOf(
+            Result.Error(AppError.UnknownError(RuntimeException("boom")))
+        )
+        val viewModel = TimerViewModel(
+            timerManager,
+            saveSessionService,
+            getAllProjectsService,
+            markNextRowUseCase,
+            SavedStateHandle()
+        )
+
+        val effect = viewModel.effect.first()
+
+        assertTrue(effect is TimerContract.Effect.ShowError)
+        assertEquals(
+            R.string.error_load_projects,
+            (effect as TimerContract.Effect.ShowError).messageResId
+        )
     }
 }

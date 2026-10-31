@@ -9,6 +9,7 @@ import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +38,7 @@ class StatsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val projectId: Long? = savedStateHandle.get<Long>("projectId")
+    private var loadJob: Job? = null
 
     private val _state = MutableStateFlow(StatsContract.State())
     val state: StateFlow<StatsContract.State> = _state.asStateFlow()
@@ -55,7 +57,8 @@ class StatsViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorRes = null) }
             
             when (val result = sessionRepository.getDailyStats(id)) {

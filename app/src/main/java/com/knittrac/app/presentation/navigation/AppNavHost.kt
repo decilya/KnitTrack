@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.knittrac.app.presentation.feature_add_project.AddProjectScreen
+import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorScreen
+import com.knittrac.app.presentation.feature_projects.ProjectsListNavigator
 import com.knittrac.app.presentation.feature_projects.ProjectsListScreen
 import com.knittrac.app.presentation.feature_settings.SettingsScreen
 import com.knittrac.app.presentation.feature_stats.StatsScreen
@@ -22,10 +24,19 @@ fun AppNavHost() {
     ) {
         composable(Screen.ProjectsList.route) {
             ProjectsListScreen(
-                onNavigateToAddProject = { navController.navigate(Screen.AddProject.route) },
-                onNavigateToTimer = { projectId -> navController.navigate("${Screen.Timer.route}/$projectId") },
-                onNavigateToStats = { projectId -> navController.navigate("${Screen.Stats.route}/$projectId") },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                navigator = ProjectsListNavigator(
+                    onAddProject = { navController.navigate(Screen.AddProject.route) },
+                    onTimer = { projectId ->
+                        navController.navigate("${Screen.Timer.route}/$projectId")
+                    },
+                    onStats = { projectId ->
+                        navController.navigate("${Screen.Stats.route}/$projectId")
+                    },
+                    onSettings = { navController.navigate(Screen.Settings.route) },
+                    onPatternEditor = { patternId ->
+                        navController.navigate("${Screen.PatternEditor.route}/$patternId")
+                    }
+                )
             )
         }
         
@@ -41,7 +52,10 @@ fun AppNavHost() {
             arguments = listOf(navArgument("projectId") { type = NavType.LongType })
         ) {
             TimerScreen(
-                onNavigateToProjects = { navController.popBackStack() }
+                onNavigateToProjects = { navController.popBackStack() },
+                onNavigateToPatternEditor = { patternId ->
+                    navController.navigate("${Screen.PatternEditor.route}/$patternId")
+                }
             )
         }
 
@@ -56,6 +70,15 @@ fun AppNavHost() {
 
         composable(Screen.Settings.route) {
             SettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "${Screen.PatternEditor.route}/{patternId}",
+            arguments = listOf(navArgument("patternId") { type = NavType.LongType })
+        ) {
+            PatternEditorScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
