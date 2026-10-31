@@ -79,7 +79,7 @@ class AddPatternOperationService @Inject constructor(
     ): Result<Unit> {
         return when (val repeatCheck = validateRepeat(pattern, params)) {
             is Result.Error -> repeatCheck
-            is Result.Success -> validateOverlap(params)
+            is Result.Success -> validateOverlap(pattern, params)
         }
     }
 
@@ -122,9 +122,23 @@ class AddPatternOperationService @Inject constructor(
 
     /**
      * Проверяет, что новая операция не пересекается с существующими в ряду.
+     *
+     * Ширина берётся из символа в legend схемы, а не из params.symbol:
+     * params.symbol может прийти из UI-кеша с устаревшим defaultColumnSpan (D8).
+     * validateLegend уже гарантировал наличие символа в legend, но firstOrNull
+     * оставлен как defensive-проверка целостности.
      */
-    private suspend fun validateOverlap(params: AddPatternOperationParams): Result<Unit> {
-        val effectiveSpan = params.overrideSpan ?: params.symbol.defaultColumnSpan
+    private suspend fun validateOverlap(
+        pattern: Pattern,
+        params: AddPatternOperationParams
+    ): Result<Unit> {
+        val legendSymbol = pattern.legend.firstOrNull { it.code == params.symbol.code }
+            ?: return Result.Error(
+                AppError.ValidationError(
+                    "Символ ${params.symbol.code} отсутствует в легенде схемы"
+                )
+            )
+        val effectiveSpan = params.overrideSpan ?: legendSymbol.defaultColumnSpan
         val newSpan = OperationSpan(columnStart = params.columnStart, span = effectiveSpan)
 
         return when (val existing = patternRepository.getOperationSpansForRow(params.row.id)) {

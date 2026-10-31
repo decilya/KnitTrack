@@ -37,12 +37,15 @@ class AddPatternOperationServiceTest {
     private val patternRepository: PatternRepository = mockk()
     private val service = AddPatternOperationService(patternRepository)
 
-    private fun symbol(code: String = "K"): Symbol = Symbol(
+    private fun symbol(
+        code: String = "K",
+        span: Span = Span.ONE
+    ): Symbol = Symbol(
         code = code,
         displayName = "Лицевая",
         textGlyph = "V",
         category = SymbolCategory.STANDARD,
-        defaultColumnSpan = Span.ONE
+        defaultColumnSpan = span
     )
 
     private fun row(id: Long = 10L, number: Int = 1): PatternRow = PatternRow(
@@ -68,12 +71,13 @@ class AddPatternOperationServiceTest {
     private fun params(
         columnStart: Int = 0,
         repeatCode: String? = null,
-        overrideSpan: Span? = null
+        overrideSpan: Span? = null,
+        sym: Symbol = symbol()
     ): AddPatternOperationParams = AddPatternOperationParams(
         patternId = PatternId.create(1L),
         row = row(),
         columnStart = ColumnStart.create(columnStart),
-        symbol = symbol(),
+        symbol = sym,
         repeatCode = repeatCode,
         overrideSpan = overrideSpan
     )
@@ -183,5 +187,40 @@ class AddPatternOperationServiceTest {
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+
+    /**
+     * Регрессия 7g-C (D8): overlap-check использует defaultColumnSpan символа
+     * из legend схемы, а не из params.symbol. params.symbol может прийти
+     * из UI-кеша с устаревшим span — иначе реальный overlap по legend-span
+     * будет пропущен.
+     *
+     * Сценарий:
+     * - params.symbol.defaultColumnSpan = 1 (устаревший, слишком узкий)
+     * - legendSymbol.defaultColumnSpan = 3 (истинный)
+     * - columnStart = 0, overrideSpan = null
+     * - существующая операция: [2, 3)
+     *
+     * stale-span: [0, 1) не пересекается с [2, 3) -> Success (баг до фикса)
+     * legend-span: [0, 3) пересекается с [2, 3) -> ValidationError (после)
+     */
+    @Test
+    fun add_staleSpanInParams_usesLegendSpanForOverlap() = runTest {
+        val staleSymbol = symbol(span = Span.ONE)
+        val legendSymbol = symbol(span = Span.create(3))
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(legend = setOf(legendSymbol)))
+        coEvery { patternRepository.getOperationSpansForRow(any()) } returns
+            Result.Success(listOf(OperationSpan(ColumnStart.create(2), Span.ONE)))
+
+        val result = service.add(params(columnStart = 0, sym = staleSymbol))
+
+        assertTrue(
+            "Ожидался ValidationError: overlap должен считаться по legend-span, не params-span",
+            result is Result.Error
+        )
+        assertTrue(
+            (result as Result.Error).error is AppError.ValidationError
+        )
     }
 }

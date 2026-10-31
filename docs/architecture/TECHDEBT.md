@@ -81,6 +81,14 @@
 
 ### Шаг 7d — открытые P2
 
+- [x] `AddPatternOperationService.validateOverlap` использовал
+  `params.symbol.defaultColumnSpan` вместо `legendSymbol.defaultColumnSpan` —
+  overlap мог быть пропущен при stale span из UI-кеша. Закрыто в 7g-C (D8).
+- [ ] `AddPatternOperationService.persist` использует `params.symbol` без
+  нормализации по legend: при stale `defaultColumnSpan` сохранится неверный
+  `PatternOperation.effectiveColumnSpan`. Тот же класс, что D8, но в слое
+  хранения. Исправить в 7g-D или отдельным коммитом.
+
 - [ ] `PatternOperation.toEntity` теряет `rowSpanOverride`: Domain
   `PatternOperation` имеет один `overrideSpan: Span?`, а Entity — два
   (`columnSpanOverride`, `rowSpanOverride`). `rowSpanOverride` всегда null.
