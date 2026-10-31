@@ -47,7 +47,11 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.knittrac.app.R
@@ -202,6 +206,11 @@ private fun PatternCanvas(
     val gridColor = MaterialTheme.colorScheme.outline
     val highlight = MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
     val maxColumns = maxColumnsOf(pattern)
+    val textMeasurer = rememberTextMeasurer()
+    val rowNumberStyle = TextStyle(
+        fontSize = 10.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 
     Canvas(
         modifier = modifier
@@ -222,6 +231,7 @@ private fun PatternCanvas(
                     val localX = (tap.x - offset.x) / scale
                     val localY = (tap.y - offset.y) / scale
                     if (localX < headerPx) return@detectTapGestures
+                    if (localY < 0f) return@detectTapGestures
                     val col = ((localX - headerPx) / cellPx).toInt()
                     val rowIndex = (localY / cellPx).toInt()
                     val row = pattern.rows.getOrNull(rowIndex) ?: return@detectTapGestures
@@ -246,6 +256,19 @@ private fun PatternCanvas(
                 for (column in 0..maxColumns) {
                     val x = headerPx + column * cellPx
                     drawLine(gridColor, Offset(x, 0f), Offset(x, height))
+                }
+                pattern.rows.forEachIndexed { rowIndex, row ->
+                    val layout = textMeasurer.measure(
+                        text = row.rowNumber.value.toString(),
+                        style = rowNumberStyle
+                    )
+                    drawText(
+                        textLayoutResult = layout,
+                        topLeft = Offset(
+                            x = (headerPx - layout.size.width) / 2f,
+                            y = rowIndex * cellPx + (cellPx - layout.size.height) / 2f
+                        )
+                    )
                 }
                 pattern.rows.forEachIndexed { rowIndex, row ->
                     row.operations.forEach { operation ->
@@ -277,7 +300,7 @@ private fun PatternCanvas(
     }
 }
 
-private fun maxColumnsOf(pattern: Pattern): Int {
+internal fun maxColumnsOf(pattern: Pattern): Int {
     val occupied = pattern.rows.maxOfOrNull { row ->
         row.operations.maxOfOrNull { operation ->
             operation.columnStart.value + operation.effectiveColumnSpan.value
@@ -286,7 +309,7 @@ private fun maxColumnsOf(pattern: Pattern): Int {
     return occupied.coerceAtLeast(10)
 }
 
-private fun colorOrDefault(hex: String?, fallback: Color): Color =
+internal fun colorOrDefault(hex: String?, fallback: Color): Color =
     hex?.let { value ->
         try {
             Color(AndroidColor.parseColor(value))

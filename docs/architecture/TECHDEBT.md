@@ -20,6 +20,7 @@
 - **`mapNotNull` скрывает баги.** При маппинге «много → много» — `Result.Error` при потере.
 - **`StandardTestDispatcher` требует `advanceUntilIdle()`.** `viewModelScope.launch` не выполняется немедленно.
 - **Fresh install не проходит через `MIGRATION_X_Y`.** Триггер/CHECK создаётся только в миграции. Для `onCreate` — `RoomDatabase.Callback`. Регресс P0-1.
+- **`Float.toInt()` — усечение к нулю, не floor.** `(-16f/32f).toInt() = 0`, не `-1`. Для координат Canvas после pan — guard `if (coord < 0f) return`, не полагаться на `toInt()`.
 
 ### Открыто после code review 31.10.2026
 
@@ -56,6 +57,9 @@
 - [x] **P2 #28**: `TimerViewModel` на `Result.Error` от `getAllProjects` шлёт `ShowError(error_load_projects)`. Закрыто в этом коммите.
 - [x] **P2 #34**: повторный `ACTION_START` отменяет предыдущий `collect` уведомления. `handleStop` тоже отменяет его. Закрыто в этом коммите.
 - [ ] **P2**: `PatternEditorScreenTest` не создан: `createComposeRule` в проекте нет. Zoom/pan/tap на устройстве.
+- [x] **P2-A**: `PatternCanvas` рисует номера рядов в header через `TextMeasurer.measure` + `DrawScope.drawText`. Закрыто в этом коммите.
+- [x] **P2-B**: `PatternCanvas` guard `localY < 0f` в `detectTapGestures` — тап «выше первой строки» после pan не попадает в row 0. Закрыто в этом коммите.
+- [ ] **P3**: Номера рядов масштабируются с zoom/pan (MVP). Фиксированный размер шрифта — отдельный `Canvas` в `Row`, синхронизация `offset`/`scale` вручную.
 - [ ] **P2 #9–#23, #26, #29–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026. Ближайшее: бэкап не пишет схемы, но `ProjectDto` пишет FK.
 
 
