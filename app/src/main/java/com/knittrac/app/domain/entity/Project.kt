@@ -51,3 +51,16 @@ data class Project(
         )
     }
 }
+
+/**
+ * Может ли пользователь открыть Pattern Editor для этого проекта.
+ *
+ * Возвращает `true`, только если к проекту привязана схема (`patternId != null`).
+ * Единственная точка проверки для двух входов в редактор:
+ * - `TimerScreen` — иконка Edit в `TopAppBar`;
+ * - `ProjectsListScreen` — LongPress на карточке → «Открыть схему».
+ *
+ * При расширении условий — править здесь (SRP/OCP, G2).
+ */
+fun Project.canOpenPatternEditor(): Boolean = patternId != null
+

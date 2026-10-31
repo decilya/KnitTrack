@@ -1,5 +1,8 @@
 package com.knittrac.app.data.repository
 
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.Flow
+import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.PatternDao
@@ -7,6 +10,7 @@ import com.knittrac.app.data.local.PatternRepeatDao
 import com.knittrac.app.data.local.SymbolDao
 import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
+import com.knittrac.app.data.mapper.toSummary
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
@@ -92,6 +96,41 @@ class PatternRepositoryImpl @Inject constructor(
         Timber.e(e, "getOperationSpansForRow rowId=%d failed", rowId.value)
         Result.Error(AppError.DatabaseError(e))
     }
+
+    /**
+     * Загружает операции ряда и резолвит символы через legend схемы.
+     *
+     * `pattern_operations.symbol_code` — FK на `symbols.code`. Чтобы смапить
+     * `PatternOperationEntity` → `PatternOperation` (с полным `Symbol`),
+     * загружаем legend схемы (`symbolDao.getSymbolsForPattern`) и делаем
+     * lookup по `code`.
+     */
+    override suspend fun getOperationsForRow(
+        patternId: PatternId,
+        rowId: PatternRowId
+    ): Result<List<PatternOperation>> = try {
+        val symbols = symbolDao.getSymbolsForPattern(patternId.value)
+            .map { it.toDomain() }
+            .associateBy { it.code }
+        val entities = patternDao.getOperationsForRow(rowId.value)
+        val operations = entities.mapNotNull { entity ->
+            val symbol = symbols[entity.symbolCode]
+                ?: return@mapNotNull null  // FK RESTRICT гарантирует наличие; defensive
+            val backSymbol = entity.backSymbolCode?.let { symbols[it] }
+            entity.toDomain(symbol, backSymbol)
+        }
+        Result.Success(operations)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "getOperationsForRow patternId=%d rowId=%d failed", patternId.value, rowId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override fun getAllPatternSummaries(): Flow<List<PatternSummary>> =
+        patternDao.getAllPatternsFlow().map { entities ->
+            entities.map { it.toSummary() }
+        }
 
     /**
      * Вставляет операцию в ряд через пакетный [PatternDao.insertOperations].

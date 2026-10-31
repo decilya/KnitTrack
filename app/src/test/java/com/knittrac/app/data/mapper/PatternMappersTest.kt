@@ -48,4 +48,12 @@ class PatternMappersTest {
         assertEquals(3, row.rowNumber.value)
         assertTrue(row.operations.isEmpty())
     }
+
+    @Test
+    fun patternEntity_toSummary_mapsIdAndName() {
+        val summary = entity.toSummary()
+        assertEquals(5L, summary.id.value)
+        assertEquals("Схема", summary.name.value)
+    }
+
 }

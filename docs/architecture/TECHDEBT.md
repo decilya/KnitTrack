@@ -15,6 +15,7 @@
 
 Полная спецификация: [docs/architecture/pattern-tracker-v8.0.md](./pattern-tracker-v8.0.md)
 Семантика рядов и схем: [docs/architecture/rows-and-patterns.md](./rows-and-patterns.md)
+Дизайн Pattern Editor: [docs/architecture/pattern-editor-design.md](./pattern-editor-design.md)
 
 ### Выполнено (Pre-v7)
 - [x] Шаг 5: Добавлены таблицы symbols, pattern_operations, pattern_repeats и PatternDao.
@@ -181,6 +182,7 @@
 
 | Место | Проблема | План |
 |---|---|---|
+| `PatternRepository.getOperationsForRow(patternId, rowId)` | грузит legend схемы (`symbolDao.getSymbolsForPattern`) при каждом вызове. Для Canvas — N вызовов на N видимых рядов = N загрузок legend. | Batch-запрос операций в 7f-B-3 (P3) |
 | TimerViewModel | KDoc устарел: "Проверяет разрешение POST_NOTIFICATIONS перед стартом" - проверка вынесена в `PermissionViewModel` (7g-D) | Править `sed`-патчем или вручную (Cyrillic в heredoc ломается - урок A1) |
 
 ### P2

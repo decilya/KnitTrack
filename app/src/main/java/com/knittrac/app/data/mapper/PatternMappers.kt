@@ -1,5 +1,6 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.data.local.entity.PatternEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.domain.entity.Pattern
@@ -55,4 +56,14 @@ fun PatternRowEntity.toDomain(): PatternRow = PatternRow(
     id = PatternRowId.createOrDefault(id),
     rowNumber = RowNumber.createOrDefault(rowNumber),
     operations = emptyList()
+)
+
+/**
+ * Лёгкая проекция [PatternEntity] → [PatternSummary] для селектора схем (7f-B).
+ *
+ * ISP: только `id + name`. Не загружает `rows`, `legend`, `repeats`.
+ */
+fun PatternEntity.toSummary(): PatternSummary = PatternSummary(
+    id = PatternId.createOrDefault(id),
+    name = PatternName.createOrDefault(name)
 )

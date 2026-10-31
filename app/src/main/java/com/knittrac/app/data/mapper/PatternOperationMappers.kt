@@ -1,5 +1,9 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.domain.entity.Symbol
+import com.knittrac.app.domain.entity.Span
+import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.data.local.entity.PatternOperationEntity
 import com.knittrac.app.domain.entity.PatternOperation
 
@@ -23,5 +27,26 @@ fun PatternOperation.toEntity(): PatternOperationEntity = PatternOperationEntity
     colorHex = colorHex,
     columnSpanOverride = overrideSpan?.value,
     rowSpanOverride = null,
+    repeatCode = repeatCode
+)
+
+/**
+ * Маппер [PatternOperationEntity] (Data) → [PatternOperation] (Domain).
+ *
+ * Требует `symbol` и `backSymbol` параметрами: `PatternOperationEntity`
+ * хранит `symbolCode: String` (FK на `symbols.code`), а `PatternOperation`
+ * — полный [com.knittrac.app.domain.entity.Symbol]. Резолв символов — в
+ * `PatternRepositoryImpl.getOperationsForRow` через legend схемы.
+ */
+fun PatternOperationEntity.toDomain(
+    symbol: Symbol,
+    backSymbol: Symbol? = null
+): PatternOperation = PatternOperation(
+    patternRowId = PatternRowId.createOrDefault(patternRowId),
+    columnStart = ColumnStart.createOrDefault(columnStart),
+    symbol = symbol,
+    backSymbol = backSymbol,
+    colorHex = colorHex,
+    overrideSpan = columnSpanOverride?.let { Span.createOrNull(it) },
     repeatCode = repeatCode
 )
