@@ -10,8 +10,10 @@ import com.knittrac.app.data.local.entity.PatternEntity
 import com.knittrac.app.data.local.entity.PatternOperationEntity
 import com.knittrac.app.data.local.entity.PatternRowEntity
 import com.knittrac.app.data.local.entity.SymbolEntity
+import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternDirection
+import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternName
 import com.knittrac.app.domain.entity.RowCount
@@ -118,6 +120,51 @@ class PatternRepositoryImplRoomTest {
             val result = repository.addPattern(newPattern(), RowCount.create(1))
             assertTrue(result.toString(), result is Result.Error)
             assertTrue((result as Result.Error).error is AppError.DatabaseError)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun deleteOperation_realRoom_deletesRow() = runTest(UnconfinedTestDispatcher()) {
+        val db = openDb()
+        try {
+            db.patternDao().insertPattern(
+                PatternEntity(
+                    id = 1L,
+                    name = "Схема",
+                    technique = "KNITTING",
+                    direction = "LTR",
+                    isReversible = false
+                )
+            )
+            db.patternDao().insertRows(
+                listOf(PatternRowEntity(id = 10L, patternId = 1L, rowNumber = 1))
+            )
+            db.patternDao().insertOperations(
+                listOf(PatternOperationEntity(patternRowId = 10L, columnStart = 3, symbolCode = "K"))
+            )
+            val result = repository(db).deleteOperation(
+                PatternRowId.create(10L),
+                ColumnStart.create(3)
+            )
+            assertTrue(result is Result.Success)
+            assertTrue(db.patternDao().getAllOperations().isEmpty())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun deleteOperation_realRoom_missing_returnsNotFoundError() = runTest(UnconfinedTestDispatcher()) {
+        val db = openDb()
+        try {
+            val result = repository(db).deleteOperation(
+                PatternRowId.create(10L),
+                ColumnStart.create(0)
+            )
+            assertTrue(result is Result.Error)
+            assertTrue((result as Result.Error).error is AppError.NotFoundError)
         } finally {
             db.close()
         }

@@ -389,7 +389,7 @@ Icon-toggle в `TopAppBar`:
 | 1 | `feat(7f-B-1)`: `getOperationsForRow` + `GetPatternByIdService` + `GetAllPatternSummariesService` + `PatternSummary` + `Project.canOpenPatternEditor` + `pattern-editor-design.md` | Domain + Data + Application + docs | 2.5 ч |
 | 2 | `feat(7f-B-2)`: `PatternEditorContract` + `PatternEditorViewModel` + `SymbolLocalizer` | Presentation VM | 1.5 ч |
 | 3 | `feat(7f-B-3)`: `PatternEditorScreen` + Canvas (zoom/pan) + nav + 2 входа | Presentation UI | 2.5 ч |
-| 4 | `feat(7f-B-4)`: sticky + sheet режимы + column picker | Presentation UI + VM | 2 ч |
+| 4 | `feat(7f-B-4)`: sheet mode + undo (стек 25) | закрыт | — |
 | 5 | `docs(7f-B-5)`: `TECHDEBT` + `HANDOVER` | docs | 30 мин |
 | 6 | `feat(7f-C)`: создание схемы, сидер символов, `PatternEditorUseCases` | закрыт | — |
 

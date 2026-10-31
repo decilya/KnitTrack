@@ -60,6 +60,9 @@
     <string name="pattern_editor_ok">OK</string>
     <string name="pattern_editor_cancel">Cancel</string>
     <string name="pattern_editor_create_error">Could not create the pattern</string>
+    <string name="pattern_editor_undo">Undo</string>
+    <string name="pattern_editor_undo_error">Failed to undo operation</string>
+    <string name="pattern_editor_no_symbols">No symbols in legend</string>
     <string name="add_mode_project">Project</string>
     <string name="add_mode_pattern">Pattern</string>
 

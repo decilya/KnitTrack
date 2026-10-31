@@ -342,4 +342,23 @@ class PatternRepositoryImplTest {
         assertEquals(1L, summaries[0].id.value)
         assertEquals("Схема", summaries[0].name.value)
     }
+
+    @Test
+    fun deleteOperation_rows0_returnsNotFoundError() = runTest {
+        coEvery { patternDao.deleteOperation(10L, 0) } returns 0
+
+        val result = repository.deleteOperation(PatternRowId.create(10L), ColumnStart.create(0))
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.NotFoundError)
+    }
+
+    @Test
+    fun deleteOperation_rows1_returnsSuccess() = runTest {
+        coEvery { patternDao.deleteOperation(10L, 0) } returns 1
+
+        val result = repository.deleteOperation(PatternRowId.create(10L), ColumnStart.create(0))
+
+        assertTrue(result is Result.Success)
+    }
 }

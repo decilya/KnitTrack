@@ -7,11 +7,13 @@ import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.findRowById
 import com.knittrac.app.domain.entity.findSymbolByCode
 import com.knittrac.app.domain.model.AddPatternOperationParams
 import com.knittrac.app.domain.service.CreatePatternParams
+import com.knittrac.app.domain.service.DeleteOperationParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -75,13 +77,17 @@ class PatternEditorViewModel @Inject constructor(
     fun onIntent(intent: PatternEditorContract.Intent) {
         when (intent) {
             is PatternEditorContract.Intent.LoadPattern -> loadPattern(intent.patternId)
-            is PatternEditorContract.Intent.SelectPattern -> loadPattern(intent.patternId)
+            is PatternEditorContract.Intent.SelectPattern -> {
+                _state.update { it.copy(lastOperations = emptyList()) }
+                loadPattern(intent.patternId)
+            }
             is PatternEditorContract.Intent.SelectRow -> selectRow(intent.rowId)
             is PatternEditorContract.Intent.SelectColumn -> selectColumn(intent.columnStart)
             is PatternEditorContract.Intent.SelectSymbol -> selectSymbol(intent.symbolCode)
             is PatternEditorContract.Intent.ToggleMode -> toggleMode()
             is PatternEditorContract.Intent.AddOperation -> addOperation(intent)
             is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
+            is PatternEditorContract.Intent.UndoLastOperation -> undoLastOperation()
             is PatternEditorContract.Intent.Retry -> retry()
         }
     }
@@ -152,7 +158,10 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 when (val result = useCases.createPattern(params)) {
-                    is Result.Success -> loadPattern(result.data)
+                    is Result.Success -> {
+                        _state.update { it.copy(lastOperations = emptyList()) }
+                        loadPattern(result.data)
+                    }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to create pattern")
                         _effect.send(
@@ -214,8 +223,8 @@ class PatternEditorViewModel @Inject constructor(
     private suspend fun executeAdd(context: AddContext) {
         when (val result = useCases.addPatternOperation(context.params)) {
             is Result.Success -> {
+                pushToUndoStack(result.data)
                 _effect.send(PatternEditorContract.Effect.OperationAdded(result.data))
-                // Reload: VM — единый source of truth, не мутируем Domain локально.
                 loadPattern(context.patternId)
             }
             is Result.Error -> {
@@ -223,6 +232,39 @@ class PatternEditorViewModel @Inject constructor(
                 _effect.send(
                     PatternEditorContract.Effect.ShowError(R.string.pattern_editor_add_error)
                 )
+            }
+        }
+    }
+
+    private fun pushToUndoStack(operation: PatternOperation) {
+        _state.update {
+            it.copy(lastOperations = (it.lastOperations + operation).takeLast(MAX_UNDO))
+        }
+    }
+
+    private fun undoLastOperation() {
+        if (_state.value.isSaving) return
+        val last = _state.value.lastOperations.lastOrNull() ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                when (val result = useCases.deleteOperation(
+                    DeleteOperationParams(last.patternRowId, last.columnStart)
+                )) {
+                    is Result.Success -> {
+                        _state.update { it.copy(lastOperations = it.lastOperations.dropLast(1)) }
+                        val currentId = _state.value.currentPatternId
+                        if (currentId != null) loadPattern(currentId)
+                    }
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to undo operation")
+                        _effect.send(
+                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_undo_error)
+                        )
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
             }
         }
     }
@@ -242,5 +284,6 @@ class PatternEditorViewModel @Inject constructor(
         const val KEY_SELECTED_COLUMN = "selectedColumn"
         const val KEY_SELECTED_SYMBOL = "selectedSymbolCode"
         const val KEY_IS_STICKY_MODE = "isStickyMode"
+        const val MAX_UNDO = 25
     }
 }

@@ -21,6 +21,9 @@
     <string name="pattern_editor_ok">ОК</string>
     <string name="pattern_editor_cancel">Отмена</string>
     <string name="pattern_editor_create_error">Не удалось создать схему</string>
+    <string name="pattern_editor_undo">Отменить</string>
+    <string name="pattern_editor_undo_error">Не удалось отменить операцию</string>
+    <string name="pattern_editor_no_symbols">В легенде нет символов</string>
     <string name="add_mode_project">Проект</string>
     <string name="add_mode_pattern">Схема</string>
     <string name="save">Сохранить</string>

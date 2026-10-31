@@ -25,6 +25,7 @@ import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.domain.service.AddPatternOperationUseCase
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.domain.service.CreatePatternUseCase
+import com.knittrac.app.domain.service.DeleteOperationUseCase
 import com.knittrac.app.domain.service.GetAllPatternSummariesService
 import com.knittrac.app.domain.service.GetPatternByIdService
 import io.mockk.coEvery
@@ -49,6 +50,7 @@ class PatternEditorViewModelTest : BaseTest() {
     private val getAllPatternSummariesService: GetAllPatternSummariesService = mockk()
     private val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
     private val createPatternUseCase: CreatePatternUseCase = mockk()
+    private val deleteOperationUseCase: DeleteOperationUseCase = mockk()
 
     private fun symbol(code: String = "K"): Symbol = Symbol(
         code = code,
@@ -86,6 +88,7 @@ class PatternEditorViewModelTest : BaseTest() {
                 getPatternByIdService,
                 getAllPatternSummariesService,
                 addPatternOperationUseCase,
+                deleteOperationUseCase,
                 createPatternUseCase
             ),
             savedState
@@ -239,4 +242,118 @@ class PatternEditorViewModelTest : BaseTest() {
         direction = PatternDirection.LTR,
         rowCount = RowCount.create(1)
     )
+
+    private fun operation(column: Int): PatternOperation = PatternOperation(
+        patternRowId = PatternRowId.create(10L),
+        columnStart = ColumnStart.create(column),
+        symbol = symbol()
+    )
+
+    private fun loadedVm(): PatternEditorViewModel {
+        coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
+        val vm = createViewModel()
+        vm.onIntent(PatternEditorContract.Intent.LoadPattern(PatternId.create(1L)))
+        return vm
+    }
+
+    @Test
+    fun `addOperation success pushes to undo stack`() = runTest {
+        coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
+
+        vm.onIntent(PatternEditorContract.Intent.AddOperation(
+            rowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0)
+        ))
+        advanceUntilIdle()
+
+        assertEquals(listOf(operation(0)), vm.state.value.lastOperations)
+    }
+
+    @Test
+    fun `addOperation success stack caps at 25`() = runTest {
+        var column = 0
+        coEvery { addPatternOperationUseCase(any()) } answers {
+            Result.Success(operation(column++))
+        }
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
+
+        repeat(26) { index ->
+            vm.onIntent(PatternEditorContract.Intent.AddOperation(
+                rowId = PatternRowId.create(10L),
+                columnStart = ColumnStart.create(index)
+            ))
+            advanceUntilIdle()
+        }
+
+        val stack = vm.state.value.lastOperations
+        assertEquals(25, stack.size)
+        assertEquals(1, stack.first().columnStart.value)
+        assertEquals(25, stack.last().columnStart.value)
+    }
+
+    @Test
+    fun `undoLastOperation success pops and reloads`() = runTest {
+        coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
+        coEvery { deleteOperationUseCase(any()) } returns Result.Success(Unit)
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
+        vm.onIntent(PatternEditorContract.Intent.AddOperation(
+            rowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0)
+        ))
+        advanceUntilIdle()
+        coVerify(exactly = 2) { getPatternByIdService(any()) }
+
+        vm.onIntent(PatternEditorContract.Intent.UndoLastOperation)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.lastOperations.isEmpty())
+        coVerify(exactly = 3) { getPatternByIdService(any()) }
+    }
+
+    @Test
+    fun `undoLastOperation error emits ShowError and keeps stack`() = runTest {
+        coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
+        coEvery { deleteOperationUseCase(any()) } returns
+            Result.Error(AppError.NotFoundError("нет"))
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
+        vm.onIntent(PatternEditorContract.Intent.AddOperation(
+            rowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0)
+        ))
+        advanceUntilIdle()
+        vm.effect.first()
+        val effectDeferred = async { vm.effect.first() }
+
+        vm.onIntent(PatternEditorContract.Intent.UndoLastOperation)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertEquals(listOf(operation(0)), vm.state.value.lastOperations)
+        assertTrue(effect is PatternEditorContract.Effect.ShowError)
+        assertEquals(
+            R.string.pattern_editor_undo_error,
+            (effect as PatternEditorContract.Effect.ShowError).messageResId
+        )
+    }
+
+    @Test
+    fun `undoLastOperation empty stack does nothing`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.UndoLastOperation)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { deleteOperationUseCase(any()) }
+        assertTrue(vm.state.value.lastOperations.isEmpty())
+    }
 }

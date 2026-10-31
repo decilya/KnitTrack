@@ -3,6 +3,7 @@ package com.knittrac.app.domain.repository
 import kotlinx.coroutines.flow.Flow
 import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
@@ -56,6 +57,12 @@ interface PatternRepository {
     fun getAllPatternSummaries(): Flow<List<PatternSummary>>
 
     suspend fun addOperation(operation: PatternOperation): Result<Unit>
+
+    /**
+     * Удаляет операцию по композитному ключу ряда и колонки.
+     * 0 строк — [com.knittrac.app.core.common.AppError.NotFoundError].
+     */
+    suspend fun deleteOperation(rowId: PatternRowId, columnStart: ColumnStart): Result<Unit>
 
     /**
      * Создаёт схему и [rowCount] пустых рядов.

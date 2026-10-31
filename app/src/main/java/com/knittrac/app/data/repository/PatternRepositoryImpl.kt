@@ -203,6 +203,27 @@ class PatternRepositoryImpl @Inject constructor(
         Result.Error(AppError.DatabaseError(e))
     }
 
+    override suspend fun deleteOperation(
+        rowId: PatternRowId,
+        columnStart: ColumnStart
+    ): Result<Unit> = try {
+        val rows = patternDao.deleteOperation(rowId.value, columnStart.value)
+        if (rows == 0) {
+            Result.Error(
+                AppError.NotFoundError(
+                    "Операция rowId=${rowId.value} column=${columnStart.value} не найдена"
+                )
+            )
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "deleteOperation rowId=%d column=%d failed", rowId.value, columnStart.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
     override suspend fun addPattern(pattern: Pattern, rowCount: RowCount): Result<PatternId> = try {
         val id = database.withTransaction {
             val patternId = patternDao.insertPattern(pattern.toEntity())

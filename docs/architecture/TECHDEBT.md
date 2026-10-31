@@ -167,6 +167,8 @@
 - [ ] **P3**: `CreatePatternDialog` без compose-теста (`createComposeRule` в проекте нет).
 - [ ] **P3**: одинаковые `PatternName` разрешены.
 - [ ] **P3**: после создания схемы маршрут остаётся `pattern_editor_new`. Позже `navigate("pattern_editor/{id}")` с `popUpTo(pattern_editor_new) { inclusive = true }`.
+- [ ] **P3**: undo — стек 25. Redo и сохранение стека через process death позже: `SavedStateHandle` не хранит `PatternOperation`.
+- [ ] **P3**: sheet (`ModalBottomSheet`) без compose-теста: `createComposeRule` в проекте нет.
 - [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
   `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
   При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.

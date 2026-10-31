@@ -43,7 +43,8 @@ object PatternEditorContract {
         val isStickyMode: Boolean = true,
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
-        @StringRes val errorRes: Int? = null
+        @StringRes val errorRes: Int? = null,
+        val lastOperations: List<PatternOperation> = emptyList()
     )
 
     /**
@@ -65,6 +66,8 @@ object PatternEditorContract {
             val columnStart: ColumnStart
         ) : Intent()
         data class CreatePattern(val params: CreatePatternParams) : Intent()
+        /** Снять последнюю операцию со стека undo. */
+        object UndoLastOperation : Intent()
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()
     }

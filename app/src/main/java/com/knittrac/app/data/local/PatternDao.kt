@@ -54,6 +54,11 @@ interface PatternDao {
     @Query("SELECT * FROM pattern_operations WHERE pattern_row_id = :rowId ORDER BY column_start ASC")
     suspend fun getOperationsForRow(rowId: Long): List<PatternOperationEntity>
 
+    @Query(
+        "DELETE FROM pattern_operations WHERE pattern_row_id = :rowId AND column_start = :columnStart"
+    )
+    suspend fun deleteOperation(rowId: Long, columnStart: Int): Int
+
     /**
      * Возвращает интервалы (columnStart + effectiveSpan), занятые операциями
      * в ряду. Эффективная ширина = column_span_override, если задан,

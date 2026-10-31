@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.AdsClick
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.AlertDialog
@@ -32,12 +33,14 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +71,9 @@ import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternDirection
 import com.knittrac.app.domain.entity.PatternName
+import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.entity.Technique
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContract.Intent
@@ -86,6 +91,7 @@ fun PatternEditorScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
     var showCreateDialog by remember { mutableStateOf(false) }
+    var pendingCell by remember { mutableStateOf<Pair<PatternRowId, ColumnStart>?>(null) }
     val pattern = state.pattern
     Scaffold(
         topBar = {
@@ -122,6 +128,15 @@ fun PatternEditorScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.onIntent(Intent.UndoLastOperation) },
+                        enabled = state.lastOperations.isNotEmpty() && !state.isSaving
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
+                            contentDescription = stringResource(R.string.pattern_editor_undo)
+                        )
+                    }
                     IconButton(onClick = { viewModel.onIntent(Intent.ToggleMode) }) {
                         Icon(
                             imageVector = if (state.isStickyMode) {
@@ -158,6 +173,7 @@ fun PatternEditorScreen(
                 pattern = pattern,
                 state = state,
                 onIntent = viewModel::onIntent,
+                onCellTap = { rowId, column -> pendingCell = rowId to column },
                 modifier = Modifier.padding(padding)
             )
         }
@@ -171,6 +187,20 @@ fun PatternEditorScreen(
             }
         )
     }
+    val cell = pendingCell
+    val legend = pattern?.legend
+    if (cell != null && legend != null) {
+        ModalBottomSheet(
+            onDismissRequest = { pendingCell = null },
+            sheetState = rememberModalBottomSheetState()
+        ) {
+            SymbolPickerSheet(symbols = legend) { code ->
+                viewModel.onIntent(Intent.SelectSymbol(code))
+                viewModel.onIntent(Intent.AddOperation(cell.first, cell.second))
+                pendingCell = null
+            }
+        }
+    }
 }
 
 @Composable
@@ -178,6 +208,7 @@ private fun PatternEditorBody(
     pattern: Pattern,
     state: PatternEditorContract.State,
     onIntent: (Intent) -> Unit,
+    onCellTap: (PatternRowId, ColumnStart) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier.fillMaxSize()) {
@@ -197,6 +228,7 @@ private fun PatternEditorBody(
             pattern = pattern,
             state = state,
             onIntent = onIntent,
+            onCellTap = onCellTap,
             modifier = Modifier.weight(1f).fillMaxWidth()
         )
         if (state.isStickyMode && pattern.legend.isNotEmpty()) {
@@ -221,6 +253,7 @@ private fun PatternCanvas(
     pattern: Pattern,
     state: PatternEditorContract.State,
     onIntent: (Intent) -> Unit,
+    onCellTap: (PatternRowId, ColumnStart) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -265,8 +298,12 @@ private fun PatternCanvas(
                     val column = ColumnStart.create(col)
                     onIntent(Intent.SelectRow(row.id))
                     onIntent(Intent.SelectColumn(column))
-                    if (state.isStickyMode && state.selectedSymbolCode != null) {
-                        onIntent(Intent.AddOperation(row.id, column))
+                    if (state.isStickyMode) {
+                        if (state.selectedSymbolCode != null) {
+                            onIntent(Intent.AddOperation(row.id, column))
+                        }
+                    } else {
+                        onCellTap(row.id, column)
                     }
                 }
             }
@@ -391,6 +428,32 @@ private fun parseCreateInput(
         CreatePatternParams(patternName, technique, direction, rowCount)
     } else {
         null
+    }
+}
+
+@Composable
+private fun SymbolPickerSheet(
+    symbols: Set<Symbol>,
+    onSymbolSelected: (String) -> Unit
+) {
+    if (symbols.isEmpty()) {
+        Text(
+            text = stringResource(R.string.pattern_editor_no_symbols),
+            modifier = Modifier.padding(16.dp)
+        )
+        return
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(6),
+        modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp).padding(8.dp)
+    ) {
+        items(symbols.toList(), key = { it.code }) { symbol ->
+            FilterChip(
+                selected = false,
+                onClick = { onSymbolSelected(symbol.code) },
+                label = { Text(symbol.textGlyph) }
+            )
+        }
     }
 }
 

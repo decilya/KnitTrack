@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_pattern_editor
 
 import com.knittrac.app.domain.service.AddPatternOperationUseCase
 import com.knittrac.app.domain.service.CreatePatternUseCase
+import com.knittrac.app.domain.service.DeleteOperationUseCase
 import com.knittrac.app.domain.service.GetAllPatternSummariesService
 import com.knittrac.app.domain.service.GetPatternByIdService
 import javax.inject.Inject
@@ -11,5 +12,6 @@ data class PatternEditorUseCases @Inject constructor(
     val getPatternById: GetPatternByIdService,
     val getAllPatternSummaries: GetAllPatternSummariesService,
     val addPatternOperation: AddPatternOperationUseCase,
+    val deleteOperation: DeleteOperationUseCase,
     val createPattern: CreatePatternUseCase
 )
