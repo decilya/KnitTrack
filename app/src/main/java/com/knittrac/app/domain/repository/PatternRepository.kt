@@ -9,6 +9,7 @@ import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.model.OperationSpan
 
 interface PatternRepository {
@@ -68,6 +69,15 @@ interface PatternRepository {
      * Операции внутри ряда удаляются каскадно на уровне БД.
      * Если ряд используется как текущий в проектах, их прогресс сбрасывается.
      */
+    /**
+     * Перемещает ряд на новый номер, сдвигая соседние (транзакция).
+     */
+    suspend fun getRowCount(patternId: PatternId): Result<Int>
+    suspend fun getRowNumber(rowId: PatternRowId): Result<Int>
+    suspend fun existsRow(patternId: PatternId, rowId: PatternRowId): Result<Boolean>
+
+    suspend fun updateRowNumber(patternId: PatternId, rowId: PatternRowId, newRowNumber: RowNumber): Result<Unit>
+
     suspend fun deleteRow(rowId: PatternRowId): Result<Unit>
 
     suspend fun updateOperation(operation: PatternOperation): Result<Unit>

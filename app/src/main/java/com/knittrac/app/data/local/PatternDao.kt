@@ -58,6 +58,25 @@ interface PatternDao {
      * Удаляет операцию по композитному ключу ряда и колонки.
      * @return Количество удаленных строк.
      */
+    @Query("SELECT COUNT(*) FROM pattern_rows WHERE pattern_id = :patternId")
+    suspend fun getRowCount(patternId: Long): Int
+
+    @Query("SELECT row_number FROM pattern_rows WHERE id = :rowId")
+    suspend fun getRowNumber(rowId: Long): Int?
+
+    @Query("SELECT EXISTS(SELECT 1 FROM pattern_rows WHERE id = :rowId AND pattern_id = :patternId)")
+    suspend fun existsRow(rowId: Long, patternId: Long): Boolean
+
+    @Query("UPDATE pattern_rows SET row_number = :newNumber WHERE id = :rowId")
+    suspend fun updateRowNumber(rowId: Long, newNumber: Int): Int
+
+    @Query("UPDATE pattern_rows SET row_number = row_number - 1 WHERE pattern_id = :patternId AND row_number > :oldNumber AND row_number <= :newNumber")
+    suspend fun shiftRowNumbersDown(patternId: Long, oldNumber: Int, newNumber: Int): Int
+
+    @Query("UPDATE pattern_rows SET row_number = row_number + 1 WHERE pattern_id = :patternId AND row_number >= :newNumber AND row_number < :oldNumber")
+    suspend fun shiftRowNumbersUp(patternId: Long, newNumber: Int, oldNumber: Int): Int
+
+
     @Query("DELETE FROM pattern_rows WHERE id = :rowId")
     suspend fun deleteRow(rowId: Long): Int
 

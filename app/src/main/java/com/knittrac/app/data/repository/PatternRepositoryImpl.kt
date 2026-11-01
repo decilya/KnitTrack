@@ -22,6 +22,7 @@ import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.model.OperationSpan
@@ -188,6 +189,66 @@ class PatternRepositoryImpl @Inject constructor(
     /**
      * Вставляет операцию в ряд через пакетный [PatternDao.insertOperations].
      */
+    override suspend fun getRowCount(patternId: PatternId): Result<Int> = try {
+        Result.Success(patternDao.getRowCount(patternId.value))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "getRowCount patternId=%d failed", patternId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun getRowNumber(rowId: PatternRowId): Result<Int> = try {
+        val number = patternDao.getRowNumber(rowId.value)
+        if (number != null) Result.Success(number) else Result.Error(AppError.NotFoundError("Ряд не найден"))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "getRowNumber rowId=%d failed", rowId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun existsRow(patternId: PatternId, rowId: PatternRowId): Result<Boolean> = try {
+        Result.Success(patternDao.existsRow(rowId.value, patternId.value))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "existsRow patternId=%d rowId=%d failed", patternId.value, rowId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun updateRowNumber(
+        patternId: PatternId,
+        rowId: PatternRowId,
+        newRowNumber: RowNumber
+    ): Result<Unit> = try {
+        database.withTransaction {
+            val oldRowNumber = patternDao.getRowNumber(rowId.value)
+                ?: return@withTransaction Result.Error(AppError.NotFoundError("Ряд не найден"))
+
+            if (oldRowNumber == newRowNumber.value) {
+                return@withTransaction Result.Success(Unit)
+            }
+
+            patternDao.updateRowNumber(rowId.value, TEMP_ROW_NUMBER)
+
+            if (oldRowNumber < newRowNumber.value) {
+                patternDao.shiftRowNumbersDown(patternId.value, oldRowNumber, newRowNumber.value)
+            } else {
+                patternDao.shiftRowNumbersUp(patternId.value, newRowNumber.value, oldRowNumber)
+            }
+
+            patternDao.updateRowNumber(rowId.value, newRowNumber.value)
+
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "updateRowNumber patternId=%d rowId=%d newNum=%d failed", patternId.value, rowId.value, newRowNumber.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
     override suspend fun deleteRow(rowId: PatternRowId): Result<Unit> = try {
         val deletedRows = database.withTransaction {
             // 1. Сбрасываем прогресс в проектах, которые стоят на этом ряду,
@@ -289,4 +350,12 @@ class PatternRepositoryImpl @Inject constructor(
         (1..count).map { index ->
             PatternRowEntity(id = 0L, patternId = patternId, rowNumber = index)
         }
+
+    private companion object {
+        /**
+         * Временный номер ряда, чтобы освободить старую позицию при перемещении.
+         * Должен быть достаточно большим, чтобы не пересечься с реальными рядами.
+         */
+        const val TEMP_ROW_NUMBER = 999_999
+    }
 }
