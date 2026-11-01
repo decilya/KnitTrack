@@ -18,7 +18,7 @@ import javax.inject.Inject
  * - раппорт (если задан) присутствует в [Pattern.repeats];
  * - новая операция не пересекается по колонкам с существующими в ряду.
  *
- * Без Timber и без диспетчера — эталон [AddProjectService] / [ProgressService]
+ * Без Timber и без диспетчера — эталон [AddProjectService] / [RowMarkService] / [NextRowService]
  * (правило HANDOVER §4.5.1: Domain не знает про Timber).
  *
  * @see PatternOperation

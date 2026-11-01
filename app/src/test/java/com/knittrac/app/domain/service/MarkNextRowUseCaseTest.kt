@@ -22,15 +22,15 @@ import org.junit.Test
  * Юнит-тесты для [MarkNextRowUseCase].
  *
  * Проверяют цепочку: загрузка [Project] → делегирование в
- * [ProgressService.markNextRow], проброс ошибок репозитория и сервиса.
+ * [NextRowService.markNextRow], проброс ошибок репозитория и сервиса.
  */
 class MarkNextRowUseCaseTest : BaseTest() {
 
     private val projectRepository: ProjectRepository = mockk()
-    private val progressService: ProgressService = mockk()
+    private val nextRowService: NextRowService = mockk()
     private val useCase = MarkNextRowUseCase(
         projectRepository,
-        progressService,
+        nextRowService,
         coroutineRule.testDispatcher
     )
 
@@ -47,22 +47,22 @@ class MarkNextRowUseCaseTest : BaseTest() {
         MarkNextRowParams(projectId = ProjectId.create(1L))
 
     /**
-     * Успешный путь: проект найден → ProgressService вернул RowNumber.
+     * Успешный путь: проект найден → NextRowService вернул RowNumber.
      */
     @Test
-    fun `execute returns RowNumber from ProgressService`() = runTest {
+    fun `execute returns RowNumber from NextRowService`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
-        coEvery { progressService.markNextRow(any()) } returns Result.Success(RowNumber.create(5))
+        coEvery { nextRowService.markNextRow(any()) } returns Result.Success(RowNumber.create(5))
 
         val result = useCase(params())
 
         assertTrue(result is Result.Success)
         assertEquals(5, (result as Result.Success).data.value)
-        coVerify { progressService.markNextRow(any()) }
+        coVerify { nextRowService.markNextRow(any()) }
     }
 
     /**
-     * Проект не найден — NotFoundError без обращения к ProgressService.
+     * Проект не найден — NotFoundError без обращения к NextRowService.
      */
     @Test
     fun `execute returns NotFoundError when project missing`() = runTest {
@@ -76,13 +76,13 @@ class MarkNextRowUseCaseTest : BaseTest() {
     }
 
     /**
-     * ProgressService вернул ValidationError (нет схемы / последний ряд /
+     * NextRowService вернул ValidationError (нет схемы / последний ряд /
      * пустые rows) — пробрасываем.
      */
     @Test
-    fun `execute returns ValidationError from ProgressService`() = runTest {
+    fun `execute returns ValidationError from NextRowService`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
-        coEvery { progressService.markNextRow(any()) } returns
+        coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.ValidationError("нет схемы"))
 
         val result = useCase(params())
@@ -92,12 +92,12 @@ class MarkNextRowUseCaseTest : BaseTest() {
     }
 
     /**
-     * ProgressService вернул DatabaseError — пробрасываем.
+     * NextRowService вернул DatabaseError — пробрасываем.
      */
     @Test
-    fun `execute returns DatabaseError from ProgressService`() = runTest {
+    fun `execute returns DatabaseError from NextRowService`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
-        coEvery { progressService.markNextRow(any()) } returns
+        coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
 
         val result = useCase(params())

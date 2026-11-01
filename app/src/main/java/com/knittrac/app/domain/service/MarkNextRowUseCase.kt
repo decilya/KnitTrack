@@ -11,16 +11,16 @@ import javax.inject.Inject
 /**
  * UseCase отметки следующего ряда схемы как связанного.
  *
- * Application-слой, тонкая обёртка над [ProgressService.markNextRow]:
+ * Application-слой, тонкая обёртка над [NextRowService.markNextRow]:
  * загружает [Project], делегирует выбор «следующего» ряда и его сохранение.
  * Логика «next = rowNumber + 1» — в Domain Service, не здесь (DDD).
  *
- * @see ProgressService.markNextRow
+ * @see NextRowService.markNextRow
  * @see MarkNextRowParams
  */
 class MarkNextRowUseCase @Inject constructor(
     private val projectRepository: ProjectRepository,
-    private val progressService: ProgressService,
+    private val nextRowService: NextRowService,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : BaseUseCase<MarkNextRowParams, RowNumber>(dispatcher) {
 
@@ -36,7 +36,7 @@ class MarkNextRowUseCase @Inject constructor(
     override suspend fun execute(params: MarkNextRowParams): Result<RowNumber> {
         return when (val projectResult = projectRepository.getProjectById(params.projectId.value)) {
             is Result.Error -> projectResult
-            is Result.Success -> progressService.markNextRow(projectResult.data)
+            is Result.Success -> nextRowService.markNextRow(projectResult.data)
         }
     }
 }

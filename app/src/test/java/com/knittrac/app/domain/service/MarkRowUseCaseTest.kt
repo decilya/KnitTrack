@@ -31,18 +31,18 @@ import org.junit.Test
  * Юнит-тесты для [MarkRowUseCase].
  *
  * Проверяют цепочку: загрузка [Project] → загрузка [Pattern] → поиск
- * [PatternRow] по id → делегирование в [ProgressService.markRow],
+ * [PatternRow] по id → делегирование в [RowMarkService.markRow],
  * а также обработку ошибок на каждом шаге.
  */
 class MarkRowUseCaseTest : BaseTest() {
 
     private val projectRepository: ProjectRepository = mockk()
     private val patternRepository: PatternRepository = mockk()
-    private val progressService: ProgressService = mockk()
+    private val rowMarkService: RowMarkService = mockk()
     private val useCase = MarkRowUseCase(
         projectRepository,
         patternRepository,
-        progressService,
+        rowMarkService,
         coroutineRule.testDispatcher
     )
 
@@ -74,29 +74,29 @@ class MarkRowUseCaseTest : BaseTest() {
         MarkRowParams(projectId = ProjectId.create(1L), rowId = PatternRowId.create(rowId))
 
     /**
-     * Успешный путь: project + pattern + row найдены → ProgressService вернул Added.
+     * Успешный путь: project + pattern + row найдены → RowMarkService вернул Added.
      */
     @Test
     fun `execute returns Added when all aggregates found`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
-        coEvery { progressService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
+        coEvery { rowMarkService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
 
         val result = useCase(params())
 
         assertTrue(result is Result.Success)
         assertEquals(MarkResult.Added, (result as Result.Success).data)
-        coVerify { progressService.markRow(any(), any()) }
+        coVerify { rowMarkService.markRow(any(), any()) }
     }
 
     /**
-     * ProgressService вернул AlreadyExists — пробрасываем как Success.
+     * RowMarkService вернул AlreadyExists — пробрасываем как Success.
      */
     @Test
     fun `execute returns AlreadyExists from ProgressService`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
-        coEvery { progressService.markRow(any(), any()) } returns
+        coEvery { rowMarkService.markRow(any(), any()) } returns
             Result.Success(MarkResult.AlreadyExists)
 
         val result = useCase(params())
@@ -106,7 +106,7 @@ class MarkRowUseCaseTest : BaseTest() {
     }
 
     /**
-     * Проект не найден — NotFoundError без обращения к pattern/ProgressService.
+     * Проект не найден — NotFoundError без обращения к pattern/RowMarkService.
      */
     @Test
     fun `execute returns NotFoundError when project missing`() = runTest {
@@ -163,13 +163,13 @@ class MarkRowUseCaseTest : BaseTest() {
     }
 
     /**
-     * ProgressService вернул ошибку — пробрасываем.
+     * RowMarkService вернул ошибку — пробрасываем.
      */
     @Test
     fun `execute returns ProgressService error`() = runTest {
         coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
-        coEvery { progressService.markRow(any(), any()) } returns
+        coEvery { rowMarkService.markRow(any(), any()) } returns
             Result.Error(AppError.ValidationError("чужой ряд"))
 
         val result = useCase(params())

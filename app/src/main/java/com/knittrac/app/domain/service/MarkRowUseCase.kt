@@ -16,21 +16,21 @@ import javax.inject.Inject
 /**
  * UseCase отметки ряда как связанного.
  *
- * Application-слой, тонкая обёртка над [ProgressService.markRow]:
+ * Application-слой, тонкая обёртка над [RowMarkService.markRow]:
  * загружает агрегаты [Project] и [Pattern], находит [PatternRow] по id
- * и делегирует cross-aggregate проверку в [ProgressService].
+ * и делегирует cross-aggregate проверку в [RowMarkService].
  *
- * ВАЖНО: [ProgressService.markRow] тоже загружает [Pattern] для проверки
+ * ВАЖНО: [RowMarkService.markRow] тоже загружает [Pattern] для проверки
  * принадлежности ряда — в текущей реализации [Pattern] загружается дважды
- * (P2 в TECHDEBT: оптимизация через `ProgressService.markRow(projectId, rowId)`).
+ * (P2 в TECHDEBT: оптимизация через `RowMarkService.markRow(projectId, rowId)`).
  *
- * @see ProgressService
+ * @see RowMarkService
  * @see MarkRowParams
  */
 class MarkRowUseCase @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val patternRepository: PatternRepository,
-    private val progressService: ProgressService,
+    private val rowMarkService: RowMarkService,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : BaseUseCase<MarkRowParams, MarkResult>(dispatcher) {
 
@@ -67,7 +67,7 @@ class MarkRowUseCase @Inject constructor(
     }
 
     /**
-     * Находит [PatternRow] по id и делегирует в [ProgressService.markRow].
+     * Находит [PatternRow] по id и делегирует в [RowMarkService.markRow].
      */
     private suspend fun findRowAndMark(
         project: Project,
@@ -78,6 +78,6 @@ class MarkRowUseCase @Inject constructor(
             ?: return Result.Error(
                 AppError.ValidationError("Ряд id=${params.rowId.value} не найден в схеме")
             )
-        return progressService.markRow(project, row)
+        return rowMarkService.markRow(project, row)
     }
 }

@@ -267,7 +267,7 @@ abstract class AppDatabase : RoomDatabase() {
          *
          * D-инвариант (stitch > 0 → row IS NOT NULL) — P3, включается
          * вместе с per-stitch tracking (7f-B). Сейчас current_stitch в БД
-         * всегда 0 (ProgressService.updateProgress → StitchCount.ZERO).
+         * всегда 0 (RowMarkService.updateProgress → StitchCount.ZERO).
          */
         private const val CREATE_TRIGGER_PROGRESS_INSERT =
             "CREATE TRIGGER trg_progress_check_insert " +

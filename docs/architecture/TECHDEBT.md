@@ -306,13 +306,13 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 **Факт:** коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
 
-### P1-B. `ProgressService` — 9 методов, 2 ответственности
+### P1-B. `ProgressService` — 9 методов, 2 ответственности — **закрыт 02.11.2026**
 
 **Файл:** `domain/service/ProgressService.kt`
 **Факт:** `markRow`, `markNextRow`, `addRow`, `validateMembership`, `updateProgress`, `selectNextRow`, `pickNextRow`, `findAndAdvance`, `markSelectedRow` — **9 методов**, 2 сценария.
 **Проблема:** SRP нарушен. Правка «отметить ряд» рискует сломать «следующий ряд».
-**Решение:** `RowMarkService` (markRow + helpers) + `NextRowService` (markNextRow + helpers).
-**Оценка:** ~2 ч. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService`.
+**Решение (закрыто 02.11.2026):** `RowMarkService` (markRow + addRow + validateMembership + updateProgress) + `NextRowService` (markNextRow + selectNextRow + pickNextRow + pickFromNonEmpty + findAndAdvance + markSelectedRow). Композиция: `NextRowService` инжектит `RowMarkService` (DRY, markSelectedRow делегирует).
+**Факт:** `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
 
 ### P1-C. `TimerViewModel` — 6 deps + `@Suppress`
 

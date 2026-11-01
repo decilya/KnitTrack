@@ -1058,13 +1058,13 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P1-B:** `ProgressService` — 9 методов, 2 ответственности. Разбить на `RowMarkService` + `NextRowService` (~2 ч).
 - **P1-C:** `TimerViewModel` — 6 deps + `@Suppress`. Декомпозиция (~2 ч).
 - **P1-D:** `Session` VO — мигрировать (~1.5 ч).
 - **P1-E:** `Project.id: Long` → `ProjectId` (~1 ч).
 
 ### Закрыто в P1-долге
 - **P1-A (02.11.2026):** `PatternEditorUseCases` (10 полей, God Bag) → 4 группы + `PatternEditorPlatformDeps`. VM — 5 параметров, без `@Suppress`. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
+- **P1-B (02.11.2026):** `ProgressService` (9 методов, 2 ответственности) → `RowMarkService` + `NextRowService`. Композиция через inject, Domain не дублирует логику. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1183,3 +1183,20 @@ DTO (Parameter Object, Урок 26) — это **не** «положить вс�
 **Пример (P1-A, 02.11.2026):** `PatternEditorUseCases` (10 полей) → 4 группы + PlatformDeps. VM: 5 параметров (было 3 + God Bag 10 полей = косвенно 12 зависимостей → 5 прямых). God Bag устранён, `@Suppress` **не понадобился**.
 
 **Правило:** DTO > 5 полей → проверить связность. Разные сценарии → разбить.
+
+### Урок 32. Domain Service — 1 публичный метод на ответственность
+
+Domain Service должен иметь **один публичный метод** (или один сценарий), если это возможно. 9 методов в одном классе (как было в `ProgressService`) — это **God Object** в Domain.
+
+**Признак God Object в Domain Service:**
+- Несколько **независимых** сценариев (`markRow`, `markNextRow` — разные бизнес-процессы).
+- Приватные helpers, которые относятся к **разным** публичным методам (addRow/validateMembership/updateProgress vs selectNextRow/pickNextRow/findAndAdvance).
+- Правка одного сценария рискует сломать другой.
+
+**Решение (P1-B, 02.11.2026):**
+- `RowMarkService` — 1 public (`markRow`) + 3 private (helpers для отметки).
+- `NextRowService` — 1 public (`markNextRow`) + 5 private (helpers для выбора следующего).
+
+**Композиция вместо дублирования:** `NextRowService.markSelectedRow` делегирует в `RowMarkService.markRow` (DRY: addRow + validateMembership + updateProgress — уже там). Domain Service может инжектить другой Domain Service (DDD: композиция Domain Services — норма для сложных процессов).
+
+**Правило:** если в Domain Service >2 public метода — проверить, это 1 причина изменения или 2+? Если 2+ — разбить на 2 сервиса, композиция через inject.

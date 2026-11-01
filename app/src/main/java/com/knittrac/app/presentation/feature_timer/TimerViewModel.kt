@@ -38,7 +38,7 @@ import javax.inject.Inject
  * - [TimerContract.State.rowCount] — локальный счётчик сессии
  *   (в `SavedStateHandle`, идёт в `SaveSessionParams.rowCount`);
  * - [TimerContract.State.currentPatternRowNumber] — текущий ряд по схеме
- *   (в БД через [MarkNextRowUseCase] → [com.knittrac.app.domain.service.ProgressService.markNextRow]).
+ *   (в БД через [MarkNextRowUseCase] → [com.knittrac.app.domain.service.NextRowService.markNextRow]).
  *
  * Защита от double-save: флаг [TimerContract.State.isSaving] устанавливается
  * синхронно в [onIntent] до запуска корутины. Аналогично

@@ -4,7 +4,8 @@ import com.knittrac.app.domain.service.AddPatternOperationService
 import com.knittrac.app.domain.service.AddPatternOperationUseCase
 import com.knittrac.app.domain.service.MarkNextRowUseCase
 import com.knittrac.app.domain.service.MarkRowUseCase
-import com.knittrac.app.domain.service.ProgressService
+import com.knittrac.app.domain.service.RowMarkService
+import com.knittrac.app.domain.service.NextRowService
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -39,7 +40,9 @@ class HiltGraphTest {
     val hiltRule = HiltAndroidRule(this)
 
     @Inject
-    lateinit var progressService: ProgressService
+    lateinit var rowMarkService: RowMarkService
+    @Inject
+    lateinit var nextRowService: NextRowService
 
     @Inject
     lateinit var addPatternOperationService: AddPatternOperationService
@@ -65,7 +68,8 @@ class HiltGraphTest {
      */
     @Test
     fun hiltGraph_constructsAllCoreServices() {
-        assertNotNull(progressService)
+        assertNotNull(rowMarkService)
+        assertNotNull(nextRowService)
         assertNotNull(addPatternOperationService)
         assertNotNull(markNextRowUseCase)
         assertNotNull(markRowUseCase)
