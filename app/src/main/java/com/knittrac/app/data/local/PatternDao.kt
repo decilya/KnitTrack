@@ -54,18 +54,41 @@ interface PatternDao {
     @Query("SELECT * FROM pattern_operations WHERE pattern_row_id = :rowId ORDER BY column_start ASC")
     suspend fun getOperationsForRow(rowId: Long): List<PatternOperationEntity>
 
-    @Query(
-        "DELETE FROM pattern_operations WHERE pattern_row_id = :rowId AND column_start = :columnStart"
-    )
+    /**
+     * Удаляет операцию по композитному ключу ряда и колонки.
+     * @return Количество удаленных строк.
+     */
+    @Query("DELETE FROM pattern_operations WHERE pattern_row_id = :rowId AND column_start = :columnStart")
     suspend fun deleteOperation(rowId: Long, columnStart: Int): Int
 
     /**
-     * Возвращает интервалы (columnStart + effectiveSpan), занятые операциями
-     * в ряду. Эффективная ширина = column_span_override, если задан,
-     * иначе symbols.default_column_span.
-     *
-     * Используется [AddPatternOperationService] для overlap-check в памяти.
+     * Обновляет параметры существующей операции.
+     * Не меняет первичный ключ (pattern_row_id, column_start).
+     * 
+     * @return Количество обновленных строк (0, если операции не было).
      */
+    @Suppress("LongParameterList")
+    @Query(
+        """
+        UPDATE pattern_operations
+        SET symbol_code = :symbolCode,
+            back_symbol_code = :backSymbolCode,
+            color_hex = :colorHex,
+            column_span_override = :columnSpanOverride,
+            repeat_code = :repeatCode
+        WHERE pattern_row_id = :rowId AND column_start = :columnStart
+        """
+    )
+    suspend fun updateOperation(
+        rowId: Long,
+        columnStart: Int,
+        symbolCode: String,
+        backSymbolCode: String?,
+        colorHex: String?,
+        columnSpanOverride: Int?,
+        repeatCode: String?
+    ): Int
+
     @Query("""
         SELECT po.column_start AS columnStart,
                COALESCE(po.column_span_override, s.default_column_span) AS effectiveSpan

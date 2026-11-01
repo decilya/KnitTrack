@@ -188,6 +188,30 @@ class PatternRepositoryImpl @Inject constructor(
     /**
      * Вставляет операцию в ряд через пакетный [PatternDao.insertOperations].
      */
+    override suspend fun updateOperation(operation: PatternOperation): Result<Unit> = try {
+        val rows = patternDao.updateOperation(
+            rowId = operation.patternRowId.value,
+            columnStart = operation.columnStart.value,
+            symbolCode = operation.symbol.code,
+            backSymbolCode = operation.backSymbol?.code,
+            colorHex = operation.colorHex,
+            columnSpanOverride = operation.overrideSpan?.value,
+            repeatCode = operation.repeatCode
+        )
+        
+        // Если 0 строк, значит операции с таким PK не было
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Операция rowId=${operation.patternRowId.value} column=${operation.columnStart.value} не найдена"))
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "updateOperation rowId=%d column=%d failed", operation.patternRowId.value, operation.columnStart.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
     override suspend fun addOperation(operation: PatternOperation): Result<Unit> = try {
         patternDao.insertOperations(listOf(operation.toEntity()))
         Result.Success(Unit)

@@ -56,6 +56,15 @@ interface PatternRepository {
      */
     fun getAllPatternSummaries(): Flow<List<PatternSummary>>
 
+    /**
+     * Обновляет существующую операцию в БД.
+     * 
+     * @param operation Domain-модель обновленной операции.
+     * @return [Result.Success], если операция была найдена и обновлена. 
+     *         [Result.Error] с [com.knittrac.app.core.common.AppError.NotFoundError], если операции нет.
+     */
+    suspend fun updateOperation(operation: PatternOperation): Result<Unit>
+
     suspend fun addOperation(operation: PatternOperation): Result<Unit>
 
     /**
