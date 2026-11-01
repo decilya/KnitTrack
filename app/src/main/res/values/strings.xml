@@ -39,10 +39,10 @@
     <string name="timer_channel_name">KnitTrac Timer</string>
     <string name="timer_channel_description">Notifications about timer operation</string>
     <string name="timer_save_error">Failed to save session</string>
-    <string name="decrease_row_content_description">Уменьшить счётчик рядов сессии</string>
-    <string name="next_pattern_row_content_description">Отметить следующий ряд схемы</string>
-    <string name="pattern_row_label_format">Ряд схемы: %1$d</string>
-    <string name="pattern_row_mark_error">Не удалось отметить ряд схемы</string>
+    <string name="decrease_row_content_description">Decrease session row counter</string>
+    <string name="next_pattern_row_content_description">Mark next pattern row</string>
+    <string name="pattern_row_label_format">Pattern row: %1$d</string>
+    <string name="pattern_row_mark_error">Failed to mark pattern row</string>
     <string name="pattern_editor_load_error">Не удалось загрузить схему</string>
     <string name="pattern_editor_add_error">Не удалось добавить операцию</string>
     <string name="pattern_editor_title">Pattern editor</string>
@@ -114,4 +114,18 @@
     <string name="pattern_editor_delete_error">Failed to delete</string>
     <string name="pattern_editor_tutorial_title">Quick tip</string>
     <string name="pattern_editor_tutorial_message">Long-press a cell to edit an operation, or a row chip to edit the row.</string>
+    <string name="pattern_editor_legend_title">Legend</string>
+    <string name="pattern_editor_legend_open">Open legend</string>
+    <string name="pattern_editor_legend_add">Add symbol</string>
+    <string name="pattern_editor_legend_system">System symbols</string>
+    <string name="pattern_editor_legend_custom">Custom symbols</string>
+    <string name="pattern_editor_legend_code">Code</string>
+    <string name="pattern_editor_legend_name">Display name</string>
+    <string name="pattern_editor_legend_glyph">Glyph</string>
+    <string name="pattern_editor_legend_span">Width (columns)</string>
+    <string name="pattern_editor_legend_delete">Delete symbol</string>
+    <string name="pattern_editor_add_symbol_error">Failed to add symbol</string>
+    <string name="pattern_editor_delete_symbol_error">Failed to delete symbol</string>
+    <string name="settings_pattern_editor">Pattern Editor</string>
+    <string name="settings_legend_add_button">Always show Add button in legend</string>
 </resources>

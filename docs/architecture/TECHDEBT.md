@@ -278,3 +278,5 @@
 - [ ] **P2**: `PatternEditorViewModelTest` — LargeClass (338 строк, >300). Разбить на `PatternEditorViewModelTest` (базовые) + `PatternEditorViewModelEditingTest` (6 новых кейсов 7f-D-6). После 7f-D-8.
 
 - [ ] **P3**: Широкий аудит `Pair`/`Triple` в `app/src/main/` (grep по сигнатурам и локальным переменным). Заменить на явные DTO где читаемость страдает (как `PendingCell` в `PatternEditorScreen`). Правило — Урок 26 (HANDOVER §9).
+
+- [ ] **P3**: Настройки DataStore (`THEME_MODE`, `NOTIFICATIONS_ENABLED`, `LEGEND_ADD_BUTTON_VISIBLE`) не попадают в `ExportDataDto` (backup v1.2). При импорте на новом устройстве пользователь получает defaults. Решение: включить SettingsKeys в backup v1.3 (или отдельный файл). Не блокер — defaults разумны.

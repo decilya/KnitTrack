@@ -110,4 +110,22 @@
     <string name="pattern_editor_delete_error">Не удалось удалить</string>
     <string name="pattern_editor_tutorial_title">Подсказка</string>
     <string name="pattern_editor_tutorial_message">Зажмите ячейку, чтобы изменить операцию, или чип ряда, чтобы изменить ряд.</string>
+    <string name="decrease_row_content_description">Уменьшить счётчик рядов сессии</string>
+    <string name="next_pattern_row_content_description">Отметить следующий ряд схемы</string>
+    <string name="pattern_row_label_format">Ряд схемы: %1$d</string>
+    <string name="pattern_row_mark_error">Не удалось отметить ряд схемы</string>
+    <string name="pattern_editor_legend_title">Легенда</string>
+    <string name="pattern_editor_legend_open">Открыть легенду</string>
+    <string name="pattern_editor_legend_add">Добавить символ</string>
+    <string name="pattern_editor_legend_system">Системные символы</string>
+    <string name="pattern_editor_legend_custom">Кастомные символы</string>
+    <string name="pattern_editor_legend_code">Код</string>
+    <string name="pattern_editor_legend_name">Название</string>
+    <string name="pattern_editor_legend_glyph">Глиф</string>
+    <string name="pattern_editor_legend_span">Ширина (колонки)</string>
+    <string name="pattern_editor_legend_delete">Удалить символ</string>
+    <string name="pattern_editor_add_symbol_error">Не удалось добавить символ</string>
+    <string name="pattern_editor_delete_symbol_error">Не удалось удалить символ</string>
+    <string name="settings_pattern_editor">Редактор схем</string>
+    <string name="settings_legend_add_button">Всегда показывать кнопку «Добавить символ»</string>
 </resources>

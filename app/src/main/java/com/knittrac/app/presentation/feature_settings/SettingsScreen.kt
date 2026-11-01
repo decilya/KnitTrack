@@ -240,6 +240,23 @@ fun SettingsScreen(
 
                 HorizontalDivider(thickness = 0.5.dp)
 
+                // --- Секция: Редактор схем (7f-D-7) ---
+                SettingsSection(title = stringResource(R.string.settings_pattern_editor)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(R.string.settings_legend_add_button))
+                        Switch(
+                            checked = state.legendAddButtonVisible,
+                            onCheckedChange = { viewModel.onAction(SettingsContract.Action.ToggleLegendAddButton(it)) }
+                        )
+                    }
+                }
+
+                HorizontalDivider(thickness = 0.5.dp)
+
                 // --- Секция: Данные (экспорт/импорт) ---
                 SettingsSection(title = stringResource(R.string.settings_data)) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

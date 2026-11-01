@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -64,7 +65,8 @@ class SettingsViewModelTest {
         // Стабы для init-блока ViewModel: combine сразу получает начальные
         // значения, supportedLanguages не пустой вызов к реальному LocaleService.
         every { settingsRepository.themeModeFlow } returns flowOf(ThemeMode.SYSTEM)
-        every { settingsRepository.notificationsEnabledFlow } returns flowOf(true)
+        every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
+            every { settingsRepository.notificationsEnabledFlow } returns flowOf(true)
         every { localeService.supportedLanguages } returns emptyList()
         every { localeService.getCurrentLanguageFlow() } returns flowOf("ru")
 
@@ -114,7 +116,8 @@ class SettingsViewModelTest {
     @Test
     fun init_subscribesToCombineAndClearsIsLoading() = runTest(testDispatcher) {
         every { settingsRepository.themeModeFlow } returns flowOf(ThemeMode.DARK)
-        every { settingsRepository.notificationsEnabledFlow } returns flowOf(false)
+        every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
+            every { settingsRepository.notificationsEnabledFlow } returns flowOf(false)
         every { localeService.getCurrentLanguageFlow() } returns flowOf("en")
 
         val viewModel = createViewModel()
@@ -278,5 +281,22 @@ class SettingsViewModelTest {
         assertEquals(SettingsContract.Effect.ImportError, effect)
         assertEquals(false, viewModel.state.value.isImporting)
         coVerify { importDataService(stream) }
+    }
+
+    @Test
+    fun `toggleLegendAddButton success`() = runTest {
+        coEvery { settingsRepository.setLegendAddButtonVisible(any()) } returns Result.Success(Unit)
+        val vm = SettingsViewModel(
+            settingsRepository,
+            localeService,
+            exportDataService,
+            importDataService
+        )
+        advanceUntilIdle()
+
+        vm.onAction(SettingsContract.Action.ToggleLegendAddButton(false))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { settingsRepository.setLegendAddButtonVisible(false) }
     }
 }

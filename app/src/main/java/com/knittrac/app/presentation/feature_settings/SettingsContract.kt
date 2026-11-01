@@ -29,12 +29,16 @@ object SettingsContract {
          * Список поддерживаемых языков. Читается из resources,
          * статичен в рантайме — меняется только с новым APK.
          */
-        val supportedLanguages: List<LanguageOption> = emptyList()
+        val supportedLanguages: List<LanguageOption> = emptyList(),
+
+        /** Видимость кнопки «Добавить» в LegendEditorSheet (7f-D-7). */
+        val legendAddButtonVisible: Boolean = true
     )
 
     sealed class Action {
         data class ChangeThemeMode(val mode: ThemeMode) : Action()
         data class ToggleNotifications(val enabled: Boolean) : Action()
+        data class ToggleLegendAddButton(val enabled: Boolean) : Action()
         /** Смена языка. Требует recreate() Activity для применения. */
         data class ChangeLanguage(val code: String) : Action()
         data class RequestExport(val outputStream: OutputStream) : Action()

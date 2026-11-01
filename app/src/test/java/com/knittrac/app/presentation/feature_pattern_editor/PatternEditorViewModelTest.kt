@@ -55,6 +55,9 @@ class PatternEditorViewModelTest : BaseTest() {
     private val updatePatternOperationUseCase: com.knittrac.app.domain.service.UpdatePatternOperationUseCase = mockk()
     private val updatePatternRowNumberUseCase: com.knittrac.app.domain.service.UpdatePatternRowNumberUseCase = mockk()
     private val deletePatternRowUseCase: com.knittrac.app.domain.service.DeletePatternRowUseCase = mockk()
+    private val addSymbolUseCase: com.knittrac.app.domain.service.AddSymbolUseCase = mockk()
+    private val deleteSymbolUseCase: com.knittrac.app.domain.service.DeleteSymbolUseCase = mockk()
+    private val settingsRepository: com.knittrac.app.domain.repository.SettingsRepository = mockk()
 
     private fun symbol(code: String = "K"): Symbol = Symbol(
         code = code,
@@ -87,6 +90,7 @@ class PatternEditorViewModelTest : BaseTest() {
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()): PatternEditorViewModel {
         stubSummaries()
+        every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
         return PatternEditorViewModel(
             PatternEditorUseCases(
                 getPatternById = getPatternByIdService,
@@ -96,8 +100,11 @@ class PatternEditorViewModelTest : BaseTest() {
                 createPattern = createPatternUseCase,
                 updatePatternOperation = updatePatternOperationUseCase,
                 updatePatternRowNumber = updatePatternRowNumberUseCase,
-                deletePatternRow = deletePatternRowUseCase
+                deletePatternRow = deletePatternRowUseCase,
+                addSymbol = addSymbolUseCase,
+                deleteSymbol = deleteSymbolUseCase
             ),
+            settingsRepository,
             savedState
         )
     }
@@ -452,5 +459,82 @@ class PatternEditorViewModelTest : BaseTest() {
         advanceUntilIdle()
 
         assertNull(vm.state.value.editingRow)
+    }
+
+    @Test
+    fun `openLegendEditor sets flag`() = runTest {
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.OpenLegendEditor)
+
+        assertTrue(vm.state.value.isLegendEditorOpen)
+    }
+
+    @Test
+    fun `closeLegendEditor clears flag`() = runTest {
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.OpenLegendEditor)
+
+        vm.onIntent(PatternEditorContract.Intent.CloseLegendEditor)
+
+        assertTrue(!vm.state.value.isLegendEditorOpen)
+    }
+
+    @Test
+    fun `addSymbol success reloads pattern`() = runTest {
+        coEvery { addSymbolUseCase(any()) } returns Result.Success(
+            Symbol(
+                code = "NEW",
+                ownerPatternId = 1L,
+                displayName = "New",
+                textGlyph = "X",
+                category = SymbolCategory.CUSTOM
+            )
+        )
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.AddSymbol(
+            code = "NEW",
+            displayName = "New",
+            textGlyph = "X",
+            defaultColumnSpan = Span.ONE
+        ))
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { getPatternByIdService(any()) }
+    }
+
+    @Test
+    fun `addSymbol error emits ShowError`() = runTest {
+        coEvery { addSymbolUseCase(any()) } returns Result.Error(AppError.ValidationError("duplicate"))
+        val vm = loadedVm()
+        advanceUntilIdle()
+        val effectDeferred = async { vm.effect.first() }
+
+        vm.onIntent(PatternEditorContract.Intent.AddSymbol(
+            code = "NEW",
+            displayName = "New",
+            textGlyph = "X",
+            defaultColumnSpan = Span.ONE
+        ))
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is PatternEditorContract.Effect.ShowError)
+    }
+
+    @Test
+    fun `deleteSymbol success reloads pattern`() = runTest {
+        coEvery { deleteSymbolUseCase(any()) } returns Result.Success(Unit)
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.DeleteSymbol("CUSTOM"))
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { getPatternByIdService(any()) }
     }
 }

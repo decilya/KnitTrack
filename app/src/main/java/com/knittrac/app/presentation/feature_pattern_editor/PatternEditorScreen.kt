@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.AdsClick
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -172,6 +173,14 @@ fun PatternEditorScreen(
                             )
                         )
                     }
+                    // 7f-D-7: открывает LegendEditorSheet (управление легендой).
+                    // Иконка Palette — стандарт для «справочника символов» (M3).
+                    IconButton(onClick = { viewModel.onIntent(Intent.OpenLegendEditor) }) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = stringResource(R.string.pattern_editor_legend_open)
+                        )
+                    }
                 }
             )
         }
@@ -236,6 +245,24 @@ fun PatternEditorScreen(
             onDismiss = { viewModel.onIntent(Intent.DismissEditor) },
             onMove = { newNum -> viewModel.onIntent(Intent.UpdateRowNumber(rowToEdit.id, newNum)) },
             onDelete = { viewModel.onIntent(Intent.DeleteRow(rowToEdit.id)) }
+        )
+    }
+
+    // 7f-D-7: LegendEditorSheet — управление легендой.
+    // Открывается по IconButton Palette в TopAppBar. Partial detent по умолчанию.
+    if (state.isLegendEditorOpen && pattern != null) {
+        LegendEditorSheet(
+            pattern = pattern,
+            showAddButton = state.showLegendAddButton,
+            callbacks = LegendEditorCallbacks(
+                onAddSymbol = { code, name, glyph, span ->
+                    viewModel.onIntent(Intent.AddSymbol(code, name, glyph, span))
+                },
+                onDeleteSymbol = { code ->
+                    viewModel.onIntent(Intent.DeleteSymbol(code))
+                },
+                onDismiss = { viewModel.onIntent(Intent.CloseLegendEditor) }
+            )
         )
     }
 

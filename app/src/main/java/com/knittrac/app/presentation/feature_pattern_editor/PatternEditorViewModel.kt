@@ -29,6 +29,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import com.knittrac.app.domain.repository.SettingsRepository
+import com.knittrac.app.domain.service.AddSymbolParams
+import com.knittrac.app.domain.service.DeleteSymbolParams
 
 /**
  * ViewModel экрана Pattern Editor (7f-B).
@@ -46,8 +49,17 @@ import javax.inject.Inject
  */
 @Suppress("LargeClass") // TODO(P2): декомпозиция после 7f-D-8 (см. TECHDEBT)
 @HiltViewModel
+/**
+ * ViewModel экрана Pattern Editor (7f-B, расширен 7f-D-6/7).
+ *
+ * 7f-D-7: инжектит [SettingsRepository] для подписки на настройку
+ * «видимость кнопки Add» в LegendEditorSheet. Обработчики addSymbol /
+ * deleteSymbol делегируют в AddSymbolUseCase / DeleteSymbolUseCase
+ * (Domain-сервисы готовы в 7f-D-4). Domain не меняется.
+ */
 class PatternEditorViewModel @Inject constructor(
     private val useCases: PatternEditorUseCases,
+    private val settingsRepository: SettingsRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -71,6 +83,7 @@ class PatternEditorViewModel @Inject constructor(
 
     init {
         observePatternSummaries()
+        observeLegendAddButtonSetting()
         savedStateHandle.get<Long>(KEY_PATTERN_ID)?.let { raw ->
             PatternId.createOrNull(raw)?.let { loadPattern(it) }
         }
@@ -94,6 +107,10 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
             is PatternEditorContract.Intent.UndoLastOperation -> undoLastOperation()
             is PatternEditorContract.Intent.Retry -> retry()
+            is PatternEditorContract.Intent.OpenLegendEditor -> _state.update { it.copy(isLegendEditorOpen = true) }
+            is PatternEditorContract.Intent.CloseLegendEditor -> _state.update { it.copy(isLegendEditorOpen = false) }
+            is PatternEditorContract.Intent.AddSymbol -> addSymbol(intent)
+            is PatternEditorContract.Intent.DeleteSymbol -> deleteSymbol(intent.code)
             is PatternEditorContract.Intent.EditOperation -> _state.update { it.copy(editingOperation = intent.operation) }
             is PatternEditorContract.Intent.EditRow -> _state.update { it.copy(editingRow = intent.row) }
             is PatternEditorContract.Intent.DismissEditor -> _state.update { it.copy(editingOperation = null, editingRow = null) }
@@ -114,6 +131,21 @@ class PatternEditorViewModel @Inject constructor(
                         _state.update { it.copy(errorRes = R.string.pattern_editor_load_error) }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Подписка на настройку видимости кнопки «Добавить» в LegendEditorSheet (7f-D-7).
+     *
+     * Источник — [SettingsRepository.legendAddButtonVisibleFlow] (DataStore).
+     * При смене в SettingsScreen State обновится автоматически.
+     * Кнопка всегда видна по умолчанию (default = true в SettingsKeys).
+     */
+    private fun observeLegendAddButtonSetting() {
+        viewModelScope.launch {
+            settingsRepository.legendAddButtonVisibleFlow.collect { visible ->
+                _state.update { it.copy(showLegendAddButton = visible) }
             }
         }
     }
@@ -412,6 +444,79 @@ class PatternEditorViewModel @Inject constructor(
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to delete row")
                         _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_error))
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    /**
+     * Добавляет кастомный символ в легенду схемы (7f-D-7).
+     *
+     * Guard [State.isSaving] — от double-tap. Делегирует в
+     * [PatternEditorUseCases.addSymbol] (AddSymbolService). После успеха
+     * перезагружает схему — легенда обновляется на Canvas и в палитре.
+     *
+     * @param intent Параметры: code, displayName, textGlyph, defaultColumnSpan.
+     */
+    private fun addSymbol(intent: PatternEditorContract.Intent.AddSymbol) {
+        if (_state.value.isSaving) return
+        val patternId = _state.value.currentPatternId ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                val params = AddSymbolParams(
+                    patternId = patternId,
+                    code = intent.code,
+                    displayName = intent.displayName,
+                    textGlyph = intent.textGlyph,
+                    defaultColumnSpan = intent.defaultColumnSpan
+                )
+                when (val result = useCases.addSymbol(params)) {
+                    // Успех — перезагружаем схему, чтобы legend обновилась.
+                    is Result.Success -> loadPattern(patternId)
+                    // ValidationError (код занят) или DatabaseError — показываем snackbar.
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to add symbol")
+                        _effect.send(
+                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_add_symbol_error)
+                        )
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    /**
+     * Удаляет кастомный символ из легенды схемы (7f-D-7).
+     *
+     * Guard [State.isSaving]. Делегирует в [PatternEditorUseCases.deleteSymbol]
+     * (DeleteSymbolService). Валидация:
+     * - Системный символ (ownerPatternId = null) → ValidationError («Нельзя удалить системный»).
+     * - Символ используется в операциях (FK RESTRICT) → ValidationError от репозитория.
+     *
+     * @param code Код символа (PK в symbols).
+     */
+    private fun deleteSymbol(code: String) {
+        if (_state.value.isSaving) return
+        val patternId = _state.value.currentPatternId ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                val params = DeleteSymbolParams(patternId = patternId, code = code)
+                when (val result = useCases.deleteSymbol(params)) {
+                    // Успех — перезагружаем схему (легенда обновится).
+                    is Result.Success -> loadPattern(patternId)
+                    // ValidationError или DatabaseError — показываем snackbar.
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to delete symbol")
+                        _effect.send(
+                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_symbol_error)
+                        )
                     }
                 }
             } finally {

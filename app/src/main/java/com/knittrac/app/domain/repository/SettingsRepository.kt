@@ -35,4 +35,10 @@ interface SettingsRepository {
      * @return [Result.Success] или [Result.Error].
      */
     suspend fun setNotificationsEnabled(enabled: Boolean): Result<Unit>
+
+    /** Реактивный поток флага видимости кнопки «Добавить» в легенде (7f-D-7). */
+    val legendAddButtonVisibleFlow: Flow<Boolean>
+
+    /** Сохраняет флаг видимости кнопки «Добавить» в легенде. */
+    suspend fun setLegendAddButtonVisible(enabled: Boolean): Result<Unit>
 }

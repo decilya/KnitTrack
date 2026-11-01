@@ -1046,7 +1046,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-**Текущий шаг:** 7f-D-7 (UI: `LegendEditorScreen` + nav).
+**Текущий шаг:** 7f-D-8 (docs-закрытие серии 7f-D).
 
 ### Закрытые шаги (7f-D)
 - **7f-D-1:** `UpdatePatternOperationService` — обновление операции (символ/span/цвет), валидация legend + overlap + self-exclusion, `PatternDao.updateOperation`.
@@ -1055,9 +1055,9 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-4:** `AddSymbolService` / `DeleteSymbolService` — кастомные символы, защита от удаления системных и используемых в операциях.
 - **7f-D-5:** D-инвариант (`stitch > 0 → row IS NOT NULL`), `MIGRATION_7_8`, триггеры v8. Domain-проверка — P2 в TECHDEBT.
 - **7f-D-6:** `EditOperationDialog` + `RowEditorSheet` + Long-press на ячейке (операция) и на чипе ряда (ряд) + Haptic + туториал (первый запуск). `PatternEditorCallbacks` + `PendingCell` DTO. `PatternEditorUseCases` → 8 полей.
+- **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **7f-D-7** — UI: `LegendEditorScreen` + nav.
 - **7f-D-8** — docs-закрытие серии 7f-D.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
@@ -1102,3 +1102,53 @@ gradle/libs.versions.toml — НЕ существует.
 - «Много возвращаемых» (2+) → data class-result.
 - `Pair`/`Triple` в публичных сигнатурах — запрещены (только локально, если тривиально).
 - Именованные аргументы — обязательны при >3 параметрах.
+
+### Урок 27. Настройки — DataStore, не Room
+
+Если настройка — про UI/поведение (тема, язык, видимость элементов), храни в **DataStore Preferences**, не в Room. Причины:
+- Нет миграции БД (Room version не растёт).
+- Нет `@Entity` + `@Dao` + `@Query` + таблица.
+- Flow<Boolean>/Flow<String> — идиоматично для UI.
+- SettingsScreen уже использует DataStore (паттерн проекта).
+
+**Пример (7f-D-7):** `LEGEND_ADD_BUTTON_VISIBLE` в `SettingsKeys` (booleanPreferencesKey) + `SettingsRepository.legendAddButtonVisibleFlow` + `setLegendAddButtonVisible(enabled)`. `PatternEditorViewModel` подписывается на Flow в `init`, State обновляется автоматически при смене настройки в SettingsScreen. Room не тронут — миграции не нужны.
+
+**Правило:** UI-настройка → DataStore. Бизнес-данные (проекты, схемы, сессии) → Room.
+
+### Урок 28. Android `<string>`: кавычки требуют escape
+
+В Android `strings.xml` апостроф `'` **нельзя** писать без escape:
+- ✅ `'` — корректно.
+- ✅ `"..."` — корректно (двойные кавычки работают как escape в Android XML).
+- ❌ `'` (сырой) или `'` — aapt2 упадёт с `Invalid unicode escape sequence`.
+- ❌ `&apos;` — работает нестабильно (зависит от версии aapt2, может падать на flatten).
+
+**Пример (7f-D-7):**
+- Плохо: `<string name="settings_legend_add_button">Always show 'Add symbol' button</string>`
+- Хорошо: `<string name="settings_legend_add_button">Always show Add button in legend</string>` (переформулировали без кавычек — самый безопасный вариант)
+
+**Правило:** если строка содержит `'`, либо переформулировать без него, либо `'`. `&apos;` — не использовать.
+
+### Урок 29. Идемпотентность патча — точный синтаксис, не голое имя
+
+При проверке `if marker in text` для SKIP — использовать **полный синтаксис**, не голое имя:
+- ❌ `if "OpenLegendEditor" in text` — сработает ложно, если имя упомянуто в KDoc/комментарии.
+- ✅ `if "object OpenLegendEditor : Intent()" in text` — точный синтаксис.
+- ✅ `if "data class AddSymbol(" in text` — для data class.
+
+**Пример (7f-D-7):** `if "OpenLegendEditor" in text` → `SKIP` (ложно: имя было в KDoc строки 53). `if "object OpenLegendEditor : Intent()" in text` → правильно.
+
+**Правило:** для SKIP-проверок — совпадение по **полному объявлению** (object + тип + имя + инициализация), не по имени.
+
+### Урок 30. Test-helpers imports при добавлении теста в существующий файл
+
+При добавлении нового теста в **существующий** тест-файл — проверять импорты test-helpers:
+- `kotlinx.coroutines.test.advanceUntilIdle` — нужен для `runTest` + `viewModelScope.launch` (если тест проверяет эффекты после `onAction`).
+- `kotlinx.coroutines.test.UnconfinedTestDispatcher` — если нет `StandardTestDispatcher`.
+- `io.mockk.coVerify` — если проверяем вызов suspend-метода.
+- `kotlinx.coroutines.async` — если нужен параллельный запуск.
+- `kotlinx.coroutines.flow.flowOf` — для стабов Flow.
+
+**Пример (7f-D-7):** новый тест `toggleLegendAddButton success` использовал `advanceUntilIdle`, но импорт отсутствовал (старые тесты писались синхронно без него). Сборка упала на `Unresolved reference: advanceUntilIdle`.
+
+**Правило:** перед `write_file` для тест-файла — `grep` по используемым helper'ам. Если нет — добавить импорт.

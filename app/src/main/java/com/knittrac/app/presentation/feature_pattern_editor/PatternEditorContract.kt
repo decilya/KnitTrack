@@ -46,7 +46,20 @@ object PatternEditorContract {
         @StringRes val errorRes: Int? = null,
         val lastOperations: List<PatternOperation> = emptyList(),
         val editingOperation: PatternOperation? = null,
-        val editingRow: com.knittrac.app.domain.entity.PatternRow? = null
+        val editingRow: com.knittrac.app.domain.entity.PatternRow? = null,
+
+        /**
+         * Открыт ли [LegendEditorSheet] (7f-D-7).
+         * Управляется Intent.OpenLegendEditor / CloseLegendEditor.
+         */
+        val isLegendEditorOpen: Boolean = false,
+
+        /**
+         * Видимость кнопки «Добавить» в [LegendEditorSheet] (7f-D-7).
+         * Читается из SettingsRepository.legendAddButtonVisibleFlow
+         * (настройка в SettingsScreen). Default = true.
+         */
+        val showLegendAddButton: Boolean = true
     )
 
     /**
@@ -92,6 +105,38 @@ object PatternEditorContract {
         ) : Intent()
         /** Удалить ряд. */
         data class DeleteRow(val rowId: PatternRowId) : Intent()
+        /**
+         * Открыть [LegendEditorSheet] (7f-D-7).
+         * Sheet показывает системные (read-only) и кастомные (с кнопкой удаления) символы.
+         */
+        object OpenLegendEditor : Intent()
+
+        /**
+         * Закрыть [LegendEditorSheet] (7f-D-7).
+         * Свайп вниз или крестик.
+         */
+        object CloseLegendEditor : Intent()
+
+        /**
+         * Добавить кастомный символ в легенду схемы (7f-D-7).
+         * Делегирует в AddSymbolUseCase → AddSymbolService → SymbolDao.insertSymbol.
+         * Символ создаётся с category = CUSTOM, ownerPatternId = patternId.
+         */
+        data class AddSymbol(
+            val code: String,
+            val displayName: String,
+            val textGlyph: String,
+            val defaultColumnSpan: com.knittrac.app.domain.entity.Span
+        ) : Intent()
+
+        /**
+         * Удалить кастомный символ из легенды схемы (7f-D-7).
+         * Делегирует в DeleteSymbolUseCase → DeleteSymbolService → SymbolDao.deleteSymbol.
+         * Системные символы (ownerPatternId = null) удалить нельзя → ValidationError.
+         * Если символ используется в операциях (FK RESTRICT) → ValidationError от репозитория.
+         */
+        data class DeleteSymbol(val code: String) : Intent()
+
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()
     }

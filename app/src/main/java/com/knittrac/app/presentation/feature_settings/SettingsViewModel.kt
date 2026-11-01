@@ -61,14 +61,16 @@ class SettingsViewModel @Inject constructor(
             combine(
                 settingsRepository.themeModeFlow,
                 settingsRepository.notificationsEnabledFlow,
-                localeService.getCurrentLanguageFlow()
-            ) { theme, enabled, lang -> Triple(theme, enabled, lang) }
-                .collect { (theme, enabled, lang) ->
+                localeService.getCurrentLanguageFlow(),
+                settingsRepository.legendAddButtonVisibleFlow
+            ) { theme, enabled, lang, legendAdd -> SettingsSnapshot(theme, enabled, lang, legendAdd) }
+                .collect { snapshot ->
                     _state.update {
                         it.copy(
-                            themeMode = theme,
-                            notificationsEnabled = enabled,
-                            currentLanguage = lang,
+                            themeMode = snapshot.theme,
+                            notificationsEnabled = snapshot.notificationsEnabled,
+                            currentLanguage = snapshot.language,
+                            legendAddButtonVisible = snapshot.legendAddButtonVisible,
                             isLoading = false
                         )
                     }
@@ -95,6 +97,17 @@ class SettingsViewModel @Inject constructor(
                         is Result.Success -> Unit
                         is Result.Error -> {
                             Timber.e(r.error.cause, "Failed to toggle notifications: %b", action.enabled)
+                            _effect.emit(SettingsContract.Effect.ShowError)
+                        }
+                    }
+                }
+
+            is SettingsContract.Action.ToggleLegendAddButton ->
+                viewModelScope.launch {
+                    when (val r = settingsRepository.setLegendAddButtonVisible(action.enabled)) {
+                        is Result.Success -> Unit
+                        is Result.Error -> {
+                            Timber.e(r.error.cause, "Failed to toggle legend add button: %b", action.enabled)
                             _effect.emit(SettingsContract.Effect.ShowError)
                         }
                     }
@@ -154,4 +167,16 @@ class SettingsViewModel @Inject constructor(
             _state.update { it.copy(isImporting = false) }
         }
     }
+
+
+    /**
+     * Снапшот настроек для combine (4 потока -> 4 поля).
+     * Используем DTO вместо Triple (Урок 26).
+     */
+    private data class SettingsSnapshot(
+        val theme: com.knittrac.app.domain.entity.ThemeMode,
+        val notificationsEnabled: Boolean,
+        val language: String,
+        val legendAddButtonVisible: Boolean
+    )
 }
