@@ -410,6 +410,42 @@ Icon-toggle в `TopAppBar`:
 - **R7.** `Project.canOpenPatternEditor` — extension в Domain, не в Presentation.
 - **R8.** Создание схемы — **7f-C, закрыто**. При `patternId == null` в `PatternEditorScreen` кнопка «Создать», FAB-меню на `ProjectsListScreen` («Новый проект» / «Новая схема»).
 
+## 13. UX-решение редактирования (7f-D-6, ноябрь 2026)
+
+**Контекст:** после двух консилиумов и анализа конкурентов (KnitCompanion, Pattern Keeper, Knit & Crochet, Knit&Note, Loopsy) и отзывов пользователей выбрано решение для редактирования операций и рядов.
+
+### 13.1. Принятое решение
+
+| Действие | Жест | Диалог | Domain UseCase |
+|---|---|---|---|
+| Изменить операцию (символ/цвет/span) | Long-press на ячейке Canvas | `EditOperationDialog` | `UpdatePatternOperationUseCase` |
+| Удалить операцию | Кнопка «Удалить» в `EditOperationDialog` | — | `DeleteOperationUseCase` |
+| Переместить ряд | Long-press на `FilterChip` ряда | `RowEditorSheet` (ввод номера) | `UpdatePatternRowNumberUseCase` |
+| Удалить ряд | Кнопка «Удалить» в `RowEditorSheet` (с подтверждением) | — | `DeletePatternRowUseCase` |
+
+### 13.2. Компенсация скрытого жеста
+
+- **Haptic feedback** (`HapticFeedbackType.LongPress`) — при срабатывании long-press.
+- **Туториал** при первом открытии Pattern Editor (один раз, `DataStore`): «Зажмите ячейку, чтобы изменить операцию».
+- **Accessibility (P3):** иконка `List` в `TopAppBar` — альтернативный вход в список всех операций (для пользователей с моторными нарушениями, которые не могут long-press).
+
+### 13.3. Почему не Edit Mode
+
+KnitCompanion использует **Edit Mode** (явный переключатель в TopAppBar). Пользователи хвалят наличие Edit Mode, но ругают UX: «simple tasks take way more tapping and figuring out than they should».
+
+**Отказ от Edit Mode по трём причинам:**
+
+1. **OCP (SOLID):** `onCellTap` превращается в switch по режиму — нарушение open/closed. Long-press — отдельный коллбэк `onCellLongPress`, `onCellTap` не меняется.
+2. **UX (поток):** Edit Mode — модальность. Пользователь забывает, в каком режиме, и его тап в Edit Mode открывает диалог вместо добавления операции. Это ломает рабочий поток вязания.
+3. **Тестируемость:** Edit Mode — boolean в State (легко). Long-press — `performTouchInput { longClick() }` (Robolectric). Оба тестируемы, но Long-press ближе к реальному UX (без состояния).
+
+### 13.4. Что НЕ входит в 7f-D-6
+
+- **Color picker** для цвета операции — только HEX-поле. Color picker (M3 `Palette`) — P3.
+- **Drag-and-drop** для перемещения ряда — только ввод числа. Drag-and-drop — P3.
+- **Список всех операций** для accessibility — P3.
+- **Туториал** при первом открытии — реализуется в 7f-D-6, но без UI-теста (Compose-тесты в проекте не настроены, `createComposeRule` отсутствует — P3).
+
 ## 12. Ссылки
 
 - ТЗ v8.0 §3.1 — инварианты прогресса

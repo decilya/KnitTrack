@@ -1060,6 +1060,20 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7** — UI: `LegendEditorScreen` + nav.
 - **7f-D-8** — docs-закрытие серии 7f-D.
 
+### UX-решение 7f-D-6 (утверждено 01.11.2026)
+
+После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
+
+- **Long-press** на ячейке Canvas → `EditOperationDialog` (смена символа, HEX-цвет, span override, удаление операции).
+- **Long-press** на `FilterChip` ряда → `RowEditorSheet` (перемещение через ввод номера, удаление с подтверждением).
+- **Haptic feedback** (`HapticFeedbackType.LongPress`) при срабатывании long-press.
+- **Туториал** при первом открытии Pattern Editor (один раз, `DataStore`): «Зажмите ячейку, чтобы изменить операцию».
+- **Accessibility (P3):** иконка `List` в `TopAppBar` — альтернативный вход в список всех операций для пользователей, которым недоступен long-press.
+
+**Причина выбора:** Edit Mode (подход KnitCompanion) нарушает OCP — `onCellTap` превращается в switch по режиму, ломает поток пользователя (тап в Edit Mode = редактирование, а не добавление). Long-press — отдельный коллбэк `onCellLongPress: (PatternRowId, ColumnStart) -> Unit` (чисто по SOLID, не трогает `onCellTap`), одно действие (быстро), привычно для Android. Скрытый жест компенсируется haptic + туториалом.
+
+**Domain не меняется:** `UpdatePatternOperationService` (7f-D-1), `UpdatePatternRowNumberService` (7f-D-3), `DeletePatternRowService` (7f-D-2) — готовы. UI только вызывает UseCase через `PatternEditorUseCases` (расширится до 8 полей: `getPatternById`, `getAllPatternSummaries`, `addPatternOperation`, `deleteOperation`, `createPattern`, `updatePatternOperation`, `updatePatternRowNumber`, `deletePatternRow`).
+
 ### Открытые задачи
 - **P2:** D-инвариант в Domain, `rowSpanOverride` (P2 #7), VO в `Session`, VO в `Project`.
 - **P3:** ~15 в `TECHDEBT.md`.

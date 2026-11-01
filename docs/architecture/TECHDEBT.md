@@ -272,3 +272,5 @@
 
 - [ ] **P3**: Правило D (`stitch > 0 → row IS NOT NULL`) дублируется в двух SQL-константах (`CREATE_TRIGGER_PROGRESS_INSERT_V8`, `CREATE_TRIGGER_PROGRESS_UPDATE_V8`). При изменении правила нужно править оба. Причина — SQLite не поддерживает `INSERT OR UPDATE` в одном триггере.
 - [ ] **P2**: D-инвариант (`stitch > 0 → row IS NOT NULL`) защищён только в БД (триггер). В Domain (`Project.markRow` / `ProgressService`) проверки нет. Нужно добавить, чтобы инвариант был primary в Domain (DDD). Иначе `ImportDataService` или другие пути записи могут обойти триггер.
+
+- [ ] **P3**: Альтернативный вход для accessibility — иконка `List` в `TopAppBar` PatternEditorScreen (список всех операций для пользователей, которым недоступен long-press). Нужна для WCAG 2.1 (2.5.1 Pointer Gestures). Отложено до 7f-D-6+.
