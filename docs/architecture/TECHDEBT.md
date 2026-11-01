@@ -280,3 +280,69 @@
 - [ ] **P3**: Широкий аудит `Pair`/`Triple` в `app/src/main/` (grep по сигнатурам и локальным переменным). Заменить на явные DTO где читаемость страдает (как `PendingCell` в `PatternEditorScreen`). Правило — Урок 26 (HANDOVER §9).
 
 - [ ] **P3**: Настройки DataStore (`THEME_MODE`, `NOTIFICATIONS_ENABLED`, `LEGEND_ADD_BUTTON_VISIBLE`) не попадают в `ExportDataDto` (backup v1.2). При импорте на новом устройстве пользователь получает defaults. Решение: включить SettingsKeys в backup v1.3 (или отдельный файл). Не блокер — defaults разумны.
+
+## Открытые P1 после 7f-D (ревью 02.11.2026)
+
+По результатам глубокого код-ревью серии 7f-D (11 коммитов, `90172d6..ab76eb6`). P0 — нет. Новые P1-нумерация — буквы (чтобы не путать с закрытыми `P1 #1..#8`).
+
+### P1-A. `PatternEditorUseCases` — God Bag (10 полей)
+
+**Файл:** `presentation/feature_pattern_editor/PatternEditorUseCases.kt`
+**Факт:** в 7f-D-6 → 8 полей, в 7f-D-7 → **10 полей** (`getPatternById`, `getAllPatternSummaries`, `addPatternOperation`, `deleteOperation`, `createPattern`, `updatePatternOperation`, `updatePatternRowNumber`, `deletePatternRow`, `addSymbol`, `deleteSymbol`).
+
+**Проблема:**
+- **SRP:** группа отвечает за **всё** — чтение, операции, ряды, символы. Одна причина изменения → любая фича Pattern Editor.
+- **ISP:** `PatternEditorViewModel` зависит от **всех 10**, даже если использует 2–3.
+- **Рост:** каждый новый UseCase → +1 поле. Через 2 фичи → 15–20 полей. God Bag.
+
+**Решение:** разбить на 4 группы:
+- `PatternEditorReadUseCases` (getPatternById, getAllPatternSummaries)
+- `PatternEditorOperationUseCases` (addOperation, updateOperation, deleteOperation)
+- `PatternEditorRowUseCases` (updateRowNumber, deleteRow)
+- `PatternEditorSymbolUseCases` (addSymbol, deleteSymbol)
+
+VM: 4 группы + `savedStateHandle` = **5 параметров** (порог 6, не растёт).
+
+**Оценка:** ~1.5 ч. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups`.
+
+### P1-B. `ProgressService` — 9 методов, 2 ответственности
+
+**Файл:** `domain/service/ProgressService.kt`
+**Факт:** `markRow`, `markNextRow`, `addRow`, `validateMembership`, `updateProgress`, `selectNextRow`, `pickNextRow`, `findAndAdvance`, `markSelectedRow` — **9 методов**, 2 сценария.
+**Проблема:** SRP нарушен. Правка «отметить ряд» рискует сломать «следующий ряд».
+**Решение:** `RowMarkService` (markRow + helpers) + `NextRowService` (markNextRow + helpers).
+**Оценка:** ~2 ч. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService`.
+
+### P1-C. `TimerViewModel` — 6 deps + `@Suppress`
+
+**Файл:** `presentation/feature_timer/TimerViewModel.kt`
+**Факт:** `timerManager`, `saveSessionService`, `getAllProjectsService`, `markNextRowUseCase`, `permissionChecker`, `savedStateHandle` — **6 параметров** (равенство threshold=6 → detekt валит без `@Suppress`).
+**Проблема:** God Object. `@Suppress` — маркер долга.
+**Решение:** `RowProgressCoordinator` (markNext + state), `TimerSessionCoordinator` (start/pause/reset/save). VM → 3 deps.
+**Оценка:** ~2 ч. Коммит `refactor(presentation): decompose TimerViewModel`.
+
+### P1-D. `Session` VO не мигрированы
+
+**Файл:** `domain/entity/Session.kt`
+**Факт:** `id: Long`, `projectId: Long`, `rowCount: Int` — примитивы. VO (`SessionId`, `ProjectId`, `RowCount`) **существуют**, но не используются в `Session`.
+**Проблема:** primitive obsession, P2 аудита Grok #9.
+**Решение:** `SessionId` VO (создать), `projectId: ProjectId`, `rowCount: RowCount`. Миграции **не нужны** (VO разворачивается в примитивы на границе).
+**Оценка:** ~1.5 ч. Коммит `refactor(domain): Session — VO migration`.
+
+### P1-E. `Project.id: Long` — не VO
+
+**Файл:** `domain/entity/Project.kt`
+**Факт:** `id: Long = 0L` при существующем `ProjectId` VO. `GetProjectByIdService` / `DeleteProjectService` принимают `Long`.
+**Проблема:** P2 аудита Grok #10. Асимметрия: `Pattern.id: PatternId`, `Project.id: Long`.
+**Решение:** `Project.id: ProjectId`, `ProjectRepository.getProjectById(id: ProjectId)`, `DeleteProjectService(ProjectId)`. Миграции **не нужны**.
+**Оценка:** ~1 ч. Коммит `refactor(domain): Project.id — ProjectId VO`.
+
+### P2 после 7f-D
+
+- **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?`. ~30 мин.
+- **P2-4:** D-инвариант (`stitch > 0 → row IS NOT NULL`) — только в БД. Добавить в `ProgressService.updateProgress` / `Project.markRow` → `ValidationError`. ~30 мин.
+- **P2-5:** `TEMP_ROW_NUMBER = 999999` в `UpdatePatternRowNumberService` — заменить на `Int.MAX_VALUE`. ~10 мин.
+- **P2-7:** Большие коммиты (`84b3b65` 969 additions, `158add4` 672, `ab76eb6` 736) — нарушение атомарности. Правило: ≤300 строк. Процессный урок.
+
+**Итого P1-долг:** ~10 ч, 5-6 атомарных коммитов. **Не новая фича.**
+

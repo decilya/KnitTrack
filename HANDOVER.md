@@ -1046,7 +1046,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-**Текущий шаг:** 7f-D-8 (docs-закрытие серии 7f-D).
+**Серия 7f-D закрыта** (7f-D-1..7): 11 коммитов, detekt 0. P1-долг после 7f-D — см. `TECHDEBT.md` §«Открытые P1 после 7f-D».
 
 ### Закрытые шаги (7f-D)
 - **7f-D-1:** `UpdatePatternOperationService` — обновление операции (символ/span/цвет), валидация legend + overlap + self-exclusion, `PatternDao.updateOperation`.
@@ -1058,7 +1058,7 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **7f-D-8** — docs-закрытие серии 7f-D.
+- **P1-долг** после 7f-D (см. `TECHDEBT.md` §«Открытые P1 после 7f-D»): P1-A (God Bag), P1-B (ProgressService), P1-C (TimerViewModel), P1-D (Session VO), P1-E (Project.id VO).
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1072,7 +1072,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 **Причина выбора:** Edit Mode (подход KnitCompanion) нарушает OCP — `onCellTap` превращается в switch по режиму, ломает поток пользователя (тап в Edit Mode = редактирование, а не добавление). Long-press — отдельный коллбэк `onCellLongPress: (PatternRowId, ColumnStart) -> Unit` (чисто по SOLID, не трогает `onCellTap`), одно действие (быстро), привычно для Android. Скрытый жест компенсируется haptic + туториалом.
 
-**Domain не меняется:** `UpdatePatternOperationService` (7f-D-1), `UpdatePatternRowNumberService` (7f-D-3), `DeletePatternRowService` (7f-D-2) — готовы. UI только вызывает UseCase через `PatternEditorUseCases` (расширится до 8 полей: `getPatternById`, `getAllPatternSummaries`, `addPatternOperation`, `deleteOperation`, `createPattern`, `updatePatternOperation`, `updatePatternRowNumber`, `deletePatternRow`).
+**Domain не меняется:** `UpdatePatternOperationService` (7f-D-1), `UpdatePatternRowNumberService` (7f-D-3), `DeletePatternRowService` (7f-D-2) — готовы. UI только вызывает UseCase через `PatternEditorUseCases` → **10 полей** (7f-D-7). God Bag, разбить на 4 группы — см. P1-A в `TECHDEBT.md`.
 
 ### Открытые задачи
 - **P2:** D-инвариант в Domain, `rowSpanOverride` (P2 #7), VO в `Session`, VO в `Project`.
