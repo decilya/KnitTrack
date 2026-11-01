@@ -1058,7 +1058,13 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P1-долг** после 7f-D (см. `TECHDEBT.md` §«Открытые P1 после 7f-D»): P1-A (God Bag), P1-B (ProgressService), P1-C (TimerViewModel), P1-D (Session VO), P1-E (Project.id VO).
+- **P1-B:** `ProgressService` — 9 методов, 2 ответственности. Разбить на `RowMarkService` + `NextRowService` (~2 ч).
+- **P1-C:** `TimerViewModel` — 6 deps + `@Suppress`. Декомпозиция (~2 ч).
+- **P1-D:** `Session` VO — мигрировать (~1.5 ч).
+- **P1-E:** `Project.id: Long` → `ProjectId` (~1 ч).
+
+### Закрыто в P1-долге
+- **P1-A (02.11.2026):** `PatternEditorUseCases` (10 полей, God Bag) → 4 группы + `PatternEditorPlatformDeps`. VM — 5 параметров, без `@Suppress`. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1152,3 +1158,28 @@ gradle/libs.versions.toml — НЕ существует.
 **Пример (7f-D-7):** новый тест `toggleLegendAddButton success` использовал `advanceUntilIdle`, но импорт отсутствовал (старые тесты писались синхронно без него). Сборка упала на `Unresolved reference: advanceUntilIdle`.
 
 **Правило:** перед `write_file` для тест-файла — `grep` по используемым helper'ам. Если нет — добавить импорт.
+
+### Урок 31. DTO — про связность, не про «свалку всего»
+
+DTO (Parameter Object, Урок 26) — это **не** «положить все зависимости в один data class». Если в DTO **>5 полей** и они **разнородны** (разные сценарии) — это **God Bag**, а не Parameter Object.
+
+**Признак God Bag:**
+- Одна причина изменения покрывает несколько **разных** сценариев (чтение + запись + удаление + спец-операции).
+- Каждый новый метод → +1 поле. Через 2–3 фичи — 15–20 полей.
+- VM зависит от **всех** полей, даже если использует 2–3.
+
+**Как отличить от правильного DTO:**
+- Правильный DTO: все поля **одного** сценария (например, `UpdatePatternOperationParams` — все поля для update одной операции).
+- God Bag: поля из **разных** сценариев (например, `PatternEditorUseCases` — read + operation + row + symbol).
+
+**Решение:** разбить по **причине изменения** (SRP):
+- `PatternEditorPatternUseCases` — get/list/create (жизненный цикл Pattern).
+- `PatternEditorOperationUseCases` — add/update/delete operation.
+- `PatternEditorRowUseCases` — updateRowNumber/deleteRow.
+- `PatternEditorSymbolUseCases` — addSymbol/deleteSymbol.
+
+Платформенные зависимости — тоже в отдельный DTO (`PatternEditorPlatformDeps`: `settingsRepository`, `savedStateHandle`). Это позволяет держать конструктор VM 5 параметров — **без** `@Suppress("LongParameterList")`.
+
+**Пример (P1-A, 02.11.2026):** `PatternEditorUseCases` (10 полей) → 4 группы + PlatformDeps. VM: 5 параметров (было 3 + God Bag 10 полей = косвенно 12 зависимостей → 5 прямых). God Bag устранён, `@Suppress` **не понадобился**.
+
+**Правило:** DTO > 5 полей → проверить связность. Разные сценарии → разбить.

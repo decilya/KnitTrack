@@ -285,9 +285,9 @@
 
 По результатам глубокого код-ревью серии 7f-D (11 коммитов, `90172d6..ab76eb6`). P0 — нет. Новые P1-нумерация — буквы (чтобы не путать с закрытыми `P1 #1..#8`).
 
-### P1-A. `PatternEditorUseCases` — God Bag (10 полей)
+### P1-A. `PatternEditorUseCases` — God Bag (10 полей) — **закрыт 02.11.2026**
 
-**Файл:** `presentation/feature_pattern_editor/PatternEditorUseCases.kt`
+**Файл:** `presentation/feature_pattern_editor/PatternEditorUseCases.kt` (удалён)
 **Факт:** в 7f-D-6 → 8 полей, в 7f-D-7 → **10 полей** (`getPatternById`, `getAllPatternSummaries`, `addPatternOperation`, `deleteOperation`, `createPattern`, `updatePatternOperation`, `updatePatternRowNumber`, `deletePatternRow`, `addSymbol`, `deleteSymbol`).
 
 **Проблема:**
@@ -295,15 +295,16 @@
 - **ISP:** `PatternEditorViewModel` зависит от **всех 10**, даже если использует 2–3.
 - **Рост:** каждый новый UseCase → +1 поле. Через 2 фичи → 15–20 полей. God Bag.
 
-**Решение:** разбить на 4 группы:
-- `PatternEditorReadUseCases` (getPatternById, getAllPatternSummaries)
-- `PatternEditorOperationUseCases` (addOperation, updateOperation, deleteOperation)
-- `PatternEditorRowUseCases` (updateRowNumber, deleteRow)
-- `PatternEditorSymbolUseCases` (addSymbol, deleteSymbol)
+**Решение (закрыто 02.11.2026):** разбито на 4 группы + PlatformDeps:
+- `PatternEditorPatternUseCases` — `getPatternById`, `getAllPatternSummaries`, `createPattern` (жизненный цикл Pattern).
+- `PatternEditorOperationUseCases` — `addPatternOperation`, `updatePatternOperation`, `deleteOperation` (операции в рядах).
+- `PatternEditorRowUseCases` — `updatePatternRowNumber`, `deletePatternRow` (ряды).
+- `PatternEditorSymbolUseCases` — `addSymbol`, `deleteSymbol` (легенда).
+- `PatternEditorPlatformDeps` — `settingsRepository`, `savedStateHandle` (платформенные).
 
-VM: 4 группы + `savedStateHandle` = **5 параметров** (порог 6, не растёт).
+VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@Suppress("LongParameterList")` **не нужен**). God Bag устранён.
 
-**Оценка:** ~1.5 ч. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups`.
+**Факт:** коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
 
 ### P1-B. `ProgressService` — 9 методов, 2 ответственности
 

@@ -1,6 +1,5 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.R
@@ -29,7 +28,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.service.AddSymbolParams
 import com.knittrac.app.domain.service.DeleteSymbolParams
 
@@ -50,27 +48,36 @@ import com.knittrac.app.domain.service.DeleteSymbolParams
 @Suppress("LargeClass") // TODO(P2): декомпозиция после 7f-D-8 (см. TECHDEBT)
 @HiltViewModel
 /**
- * ViewModel экрана Pattern Editor (7f-B, расширен 7f-D-6/7).
+ * ViewModel экрана Pattern Editor (7f-B, расширен 7f-D-6/7, декомпозиция P1-A 02.11.2026).
  *
- * 7f-D-7: инжектит [SettingsRepository] для подписки на настройку
- * «видимость кнопки Add» в LegendEditorSheet. Обработчики addSymbol /
- * deleteSymbol делегируют в AddSymbolUseCase / DeleteSymbolUseCase
- * (Domain-сервисы готовы в 7f-D-4). Domain не меняется.
+ * UseCase разбиты на 4 группы по причине изменения (SRP, P1-A):
+ * - [PatternEditorPatternUseCases] — жизненный цикл Pattern (read + create).
+ * - [PatternEditorOperationUseCases] — операции в рядах (add/update/delete).
+ * - [PatternEditorRowUseCases] — ряды (update rowNumber, delete).
+ * - [PatternEditorSymbolUseCases] — легенда (add/delete CUSTOM).
+ *
+ * [PatternEditorPlatformDeps] — платформенные зависимости
+ * (DataStore + SavedStateHandle).
+ *
+ * 5 параметров (< порога Detekt LongParameterList = 6) — @Suppress("LongParameterList")
+ * не нужен. Domain не меняется.
  */
 class PatternEditorViewModel @Inject constructor(
-    private val useCases: PatternEditorUseCases,
-    private val settingsRepository: SettingsRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val patternUseCases: PatternEditorPatternUseCases,
+    private val operationUseCases: PatternEditorOperationUseCases,
+    private val rowUseCases: PatternEditorRowUseCases,
+    private val symbolUseCases: PatternEditorSymbolUseCases,
+    private val platformDeps: PatternEditorPlatformDeps
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
         PatternEditorContract.State(
-            selectedRowId = savedStateHandle.get<Long>(KEY_SELECTED_ROW_ID)
+            selectedRowId = platformDeps.savedStateHandle.get<Long>(KEY_SELECTED_ROW_ID)
                 ?.let { PatternRowId.createOrNull(it) },
-            selectedColumn = savedStateHandle.get<Int>(KEY_SELECTED_COLUMN)
+            selectedColumn = platformDeps.savedStateHandle.get<Int>(KEY_SELECTED_COLUMN)
                 ?.let { ColumnStart.createOrNull(it) },
-            selectedSymbolCode = savedStateHandle.get<String>(KEY_SELECTED_SYMBOL),
-            isStickyMode = savedStateHandle.get<Boolean>(KEY_IS_STICKY_MODE) ?: true
+            selectedSymbolCode = platformDeps.savedStateHandle.get<String>(KEY_SELECTED_SYMBOL),
+            isStickyMode = platformDeps.savedStateHandle.get<Boolean>(KEY_IS_STICKY_MODE) ?: true
         )
     )
     val state: StateFlow<PatternEditorContract.State> = _state.asStateFlow()
@@ -84,7 +91,7 @@ class PatternEditorViewModel @Inject constructor(
     init {
         observePatternSummaries()
         observeLegendAddButtonSetting()
-        savedStateHandle.get<Long>(KEY_PATTERN_ID)?.let { raw ->
+        platformDeps.savedStateHandle.get<Long>(KEY_PATTERN_ID)?.let { raw ->
             PatternId.createOrNull(raw)?.let { loadPattern(it) }
         }
     }
@@ -123,7 +130,7 @@ class PatternEditorViewModel @Inject constructor(
 
     private fun observePatternSummaries() {
         viewModelScope.launch {
-            useCases.getAllPatternSummaries(Unit).collect { result ->
+            patternUseCases.getAllPatternSummaries(Unit).collect { result ->
                 when (result) {
                     is Result.Success -> _state.update { it.copy(availablePatterns = result.data) }
                     is Result.Error -> {
@@ -144,7 +151,7 @@ class PatternEditorViewModel @Inject constructor(
      */
     private fun observeLegendAddButtonSetting() {
         viewModelScope.launch {
-            settingsRepository.legendAddButtonVisibleFlow.collect { visible ->
+            platformDeps.settingsRepository.legendAddButtonVisibleFlow.collect { visible ->
                 _state.update { it.copy(showLegendAddButton = visible) }
             }
         }
@@ -154,9 +161,9 @@ class PatternEditorViewModel @Inject constructor(
         loadJob?.cancel()
         _state.update { it.copy(isLoading = true, errorRes = null) }
         loadJob = viewModelScope.launch {
-            when (val result = useCases.getPatternById(id)) {
+            when (val result = patternUseCases.getPatternById(id)) {
                 is Result.Success -> {
-                    savedStateHandle[KEY_PATTERN_ID] = id.value
+                    platformDeps.savedStateHandle[KEY_PATTERN_ID] = id.value
                     _state.update {
                         it.copy(
                             pattern = result.data,
@@ -176,23 +183,23 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private fun selectRow(rowId: PatternRowId) {
-        savedStateHandle[KEY_SELECTED_ROW_ID] = rowId.value
+        platformDeps.savedStateHandle[KEY_SELECTED_ROW_ID] = rowId.value
         _state.update { it.copy(selectedRowId = rowId) }
     }
 
     private fun selectColumn(columnStart: ColumnStart) {
-        savedStateHandle[KEY_SELECTED_COLUMN] = columnStart.value
+        platformDeps.savedStateHandle[KEY_SELECTED_COLUMN] = columnStart.value
         _state.update { it.copy(selectedColumn = columnStart) }
     }
 
     private fun selectSymbol(symbolCode: String) {
-        savedStateHandle[KEY_SELECTED_SYMBOL] = symbolCode
+        platformDeps.savedStateHandle[KEY_SELECTED_SYMBOL] = symbolCode
         _state.update { it.copy(selectedSymbolCode = symbolCode) }
     }
 
     private fun toggleMode() {
         val next = !_state.value.isStickyMode
-        savedStateHandle[KEY_IS_STICKY_MODE] = next
+        platformDeps.savedStateHandle[KEY_IS_STICKY_MODE] = next
         _state.update { it.copy(isStickyMode = next) }
     }
 
@@ -201,7 +208,7 @@ class PatternEditorViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                when (val result = useCases.createPattern(params)) {
+                when (val result = patternUseCases.createPattern(params)) {
                     is Result.Success -> {
                         _state.update { it.copy(lastOperations = emptyList()) }
                         loadPattern(result.data)
@@ -265,7 +272,7 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private suspend fun executeAdd(context: AddContext) {
-        when (val result = useCases.addPatternOperation(context.params)) {
+        when (val result = operationUseCases.addPatternOperation(context.params)) {
             is Result.Success -> {
                 pushToUndoStack(result.data)
                 _effect.send(PatternEditorContract.Effect.OperationAdded(result.data))
@@ -292,7 +299,7 @@ class PatternEditorViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                when (val result = useCases.deleteOperation(
+                when (val result = operationUseCases.deleteOperation(
                     DeleteOperationParams(last.patternRowId, last.columnStart)
                 )) {
                     is Result.Success -> {
@@ -370,7 +377,7 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private suspend fun executeUpdate(context: UpdateContext) {
-        when (val result = useCases.updatePatternOperation(context.params)) {
+        when (val result = operationUseCases.updatePatternOperation(context.params)) {
             is Result.Success -> {
                 _state.update { it.copy(editingOperation = null) }
                 loadPattern(context.patternId)
@@ -390,7 +397,7 @@ class PatternEditorViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                when (val result = useCases.deleteOperation(DeleteOperationParams(operation.patternRowId, operation.columnStart))) {
+                when (val result = operationUseCases.deleteOperation(DeleteOperationParams(operation.patternRowId, operation.columnStart))) {
                     is Result.Success -> {
                         _state.update { it.copy(editingOperation = null) }
                         loadPattern(patternId)
@@ -413,7 +420,7 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val params = UpdatePatternRowNumberParams(patternId, intent.rowId, intent.newRowNumber)
-                when (val result = useCases.updatePatternRowNumber(params)) {
+                when (val result = rowUseCases.updatePatternRowNumber(params)) {
                     is Result.Success -> {
                         _state.update { it.copy(editingRow = null) }
                         loadPattern(patternId)
@@ -436,7 +443,7 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val params = DeletePatternRowParams(patternId, rowId)
-                when (val result = useCases.deletePatternRow(params)) {
+                when (val result = rowUseCases.deletePatternRow(params)) {
                     is Result.Success -> {
                         _state.update { it.copy(editingRow = null) }
                         loadPattern(patternId)
@@ -456,7 +463,7 @@ class PatternEditorViewModel @Inject constructor(
      * Добавляет кастомный символ в легенду схемы (7f-D-7).
      *
      * Guard [State.isSaving] — от double-tap. Делегирует в
-     * [PatternEditorUseCases.addSymbol] (AddSymbolService). После успеха
+     * [PatternEditorSymbolUseCases.addSymbol] (AddSymbolService). После успеха
      * перезагружает схему — легенда обновляется на Canvas и в палитре.
      *
      * @param intent Параметры: code, displayName, textGlyph, defaultColumnSpan.
@@ -474,7 +481,7 @@ class PatternEditorViewModel @Inject constructor(
                     textGlyph = intent.textGlyph,
                     defaultColumnSpan = intent.defaultColumnSpan
                 )
-                when (val result = useCases.addSymbol(params)) {
+                when (val result = symbolUseCases.addSymbol(params)) {
                     // Успех — перезагружаем схему, чтобы legend обновилась.
                     is Result.Success -> loadPattern(patternId)
                     // ValidationError (код занят) или DatabaseError — показываем snackbar.
@@ -494,7 +501,7 @@ class PatternEditorViewModel @Inject constructor(
     /**
      * Удаляет кастомный символ из легенды схемы (7f-D-7).
      *
-     * Guard [State.isSaving]. Делегирует в [PatternEditorUseCases.deleteSymbol]
+     * Guard [State.isSaving]. Делегирует в [PatternEditorSymbolUseCases.deleteSymbol]
      * (DeleteSymbolService). Валидация:
      * - Системный символ (ownerPatternId = null) → ValidationError («Нельзя удалить системный»).
      * - Символ используется в операциях (FK RESTRICT) → ValidationError от репозитория.
@@ -508,7 +515,7 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val params = DeleteSymbolParams(patternId = patternId, code = code)
-                when (val result = useCases.deleteSymbol(params)) {
+                when (val result = symbolUseCases.deleteSymbol(params)) {
                     // Успех — перезагружаем схему (легенда обновится).
                     is Result.Success -> loadPattern(patternId)
                     // ValidationError или DatabaseError — показываем snackbar.

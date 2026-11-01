@@ -92,20 +92,28 @@ class PatternEditorViewModelTest : BaseTest() {
         stubSummaries()
         every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
         return PatternEditorViewModel(
-            PatternEditorUseCases(
+            patternUseCases = PatternEditorPatternUseCases(
                 getPatternById = getPatternByIdService,
                 getAllPatternSummaries = getAllPatternSummariesService,
+                createPattern = createPatternUseCase
+            ),
+            operationUseCases = PatternEditorOperationUseCases(
                 addPatternOperation = addPatternOperationUseCase,
-                deleteOperation = deleteOperationUseCase,
-                createPattern = createPatternUseCase,
                 updatePatternOperation = updatePatternOperationUseCase,
+                deleteOperation = deleteOperationUseCase
+            ),
+            rowUseCases = PatternEditorRowUseCases(
                 updatePatternRowNumber = updatePatternRowNumberUseCase,
-                deletePatternRow = deletePatternRowUseCase,
+                deletePatternRow = deletePatternRowUseCase
+            ),
+            symbolUseCases = PatternEditorSymbolUseCases(
                 addSymbol = addSymbolUseCase,
                 deleteSymbol = deleteSymbolUseCase
             ),
-            settingsRepository,
-            savedState
+            platformDeps = PatternEditorPlatformDeps(
+                settingsRepository = settingsRepository,
+                savedStateHandle = savedState
+            )
         )
     }
 
