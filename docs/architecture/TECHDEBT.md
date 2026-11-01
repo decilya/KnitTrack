@@ -267,3 +267,5 @@
 
 - [ ] **P2 #7 (rowSpanOverride)**: `UpdatePatternOperationService` (7f-D-1) работает в текущей модели (`overrideSpan` -> `columnSpanOverride`), `rowSpanOverride` = `null`. Не трогаем до появления вертикального span в Domain.
 - [ ] **P3**: Перемещение ряда использует временный номер `999999` (`TEMP_ROW_NUMBER`) для обхода `UNIQUE(pattern_id, row_number)` при сдвиге. Альтернатива: `MAX(row_number) + 1` или удаление+вставка. Текущий вариант быстрый и работает, но магическое число.
+
+- [ ] **P3**: `ownerPatternId` в `Symbol` — это `Long?`, а не `PatternId?`. Символы нельзя проверить на принадлежность схеме через VO. Нужно будет отрефакторить при внедрении `PatternId` во все места.

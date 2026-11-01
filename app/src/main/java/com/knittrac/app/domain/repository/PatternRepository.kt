@@ -10,6 +10,7 @@ import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.RowNumber
+import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.model.OperationSpan
 
 interface PatternRepository {
@@ -81,6 +82,10 @@ interface PatternRepository {
     suspend fun deleteRow(rowId: PatternRowId): Result<Unit>
 
     suspend fun updateOperation(operation: PatternOperation): Result<Unit>
+
+    suspend fun getSymbolsForPattern(patternId: PatternId): Result<List<Symbol>>
+    suspend fun addSymbol(symbol: Symbol): Result<Unit>
+    suspend fun deleteSymbol(patternId: PatternId, code: String): Result<Unit>
 
     suspend fun addOperation(operation: PatternOperation): Result<Unit>
 

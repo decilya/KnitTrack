@@ -29,6 +29,7 @@ Pattern Editor — экран редактирования схемы вязан
 - Удаление операции — **7f-B-4, закрыто**: `DeleteOperationUseCase`.
 - Удаление ряда — **7f-D-2, закрыто**: `DeletePatternRowService` + атомарный сброс прогресса.
 - Перемещение ряда (изменение rowNumber) — **7f-D-3, закрыто**: `UpdatePatternRowNumberService`.
+- Редактирование легенды (add/delete CUSTOM) — **7f-D-4, закрыто**: `AddSymbolService` / `DeleteSymbolService`.
 - Редактирование существующей операции — **7f-D-1 (Domain) / 7f-D-6 (UI)**.
 - Undo — **7f-B-4, закрыто**: стек 25. Redo — **P3**.
 - Сохранение zoom/pan между сессиями (только process death, не app restart) — **P3**.

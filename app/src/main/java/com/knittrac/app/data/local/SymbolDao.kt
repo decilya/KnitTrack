@@ -34,5 +34,11 @@ interface SymbolDao {
     suspend fun getAllSymbols(): List<SymbolEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSymbol(symbol: SymbolEntity)
+
+    @Query("DELETE FROM symbols WHERE code = :code AND owner_pattern_id = :patternId")
+    suspend fun deleteSymbol(code: String, patternId: Long): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSymbols(symbols: List<SymbolEntity>)
 }

@@ -153,6 +153,45 @@ class PatternRepositoryImpl @Inject constructor(
      * загружаем legend схемы (`symbolDao.getSymbolsForPattern`) и делаем
      * lookup по `code`.
      */
+    override suspend fun getSymbolsForPattern(patternId: PatternId): Result<List<Symbol>> = try {
+        val entities = symbolDao.getSymbolsForPattern(patternId.value)
+        Result.Success(entities.map { it.toDomain() })
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "getSymbolsForPattern patternId=%d failed", patternId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun addSymbol(symbol: Symbol): Result<Unit> = try {
+        symbolDao.insertSymbol(symbol.toEntity())
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "addSymbol code=%s failed", symbol.code)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
+    override suspend fun deleteSymbol(patternId: PatternId, code: String): Result<Unit> = try {
+        val rows = symbolDao.deleteSymbol(code, patternId.value)
+        if (rows == 0) {
+            Result.Error(AppError.NotFoundError("Символ %s не найден".format(code)))
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        // FK ON DELETE RESTRICT выбросит SQLiteConstraintException, если символ используется
+        Timber.e(e, "deleteSymbol code=%s failed (likely in use)", code)
+        if (e.message?.contains("FOREIGN KEY constraint failed") == true) {
+            Result.Error(AppError.ValidationError("Нельзя удалить символ $code: он используется в операциях схемы"))
+        } else {
+            Result.Error(AppError.DatabaseError(e))
+        }
+    }
+
     override suspend fun getOperationsForRow(
         patternId: PatternId,
         rowId: PatternRowId
