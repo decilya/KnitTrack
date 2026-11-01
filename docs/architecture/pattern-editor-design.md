@@ -23,12 +23,12 @@ Pattern Editor — экран редактирования схемы вязан
 
 ### НЕ входит (YAGNI / P3 / 7f-C)
 
-- Создание схемы — **7f-C** (отдельная фича). В 7f-B при `patternId == null`
-  иконка Edit и LongPress-пункт скрыты; создание схемы недоступно — это
-  осознанное ограничение MVP, не баг.
-- Удаление операции — **P3** (`DeleteOperationUseCase`).
-- Редактирование существующей операции (изменить символ/span) — **P3**.
-- Undo/redo — **P3**.
+- Создание схемы — **7f-C, закрыто**: `CreatePatternUseCase` + диалог
+  (`CreatePatternDialog`) + route `pattern_editor_new` + FAB-меню на
+  `ProjectsListScreen` («Новый проект» / «Новая схема»).
+- Удаление операции — **7f-B-4, закрыто**: `DeleteOperationUseCase`.
+- Редактирование существующей операции (изменить символ/span) — **7f-D**.
+- Undo — **7f-B-4, закрыто**: стек 25. Redo — **P3**.
 - Сохранение zoom/pan между сессиями (только process death, не app restart) — **P3**.
 - Кнопки `+`/`-` и «Zoom to canvas» — **P3**.
 - URL-based switching схем (сейчас — internal state, URL не меняется) — **P3**.
@@ -405,7 +405,7 @@ Icon-toggle в `TopAppBar`:
 - **R5.** `PatternSummary` — лёгкая модель; расширение полей (`technique`, `direction`) — **P3**.
 - **R6.** Zoom/pan — `rememberSaveable` через process death. Дольше (app restart) — **P3**.
 - **R7.** `Project.canOpenPatternEditor` — extension в Domain, не в Presentation.
-- **R8.** Создание схемы — **7f-C**. В 7f-B при `patternId == null` кнопки скрыты.
+- **R8.** Создание схемы — **7f-C, закрыто**. При `patternId == null` в `PatternEditorScreen` кнопка «Создать», FAB-меню на `ProjectsListScreen` («Новый проект» / «Новая схема»).
 
 ## 12. Ссылки
 

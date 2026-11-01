@@ -62,7 +62,6 @@
 - [ ] **P2**: `PatternEditorScreenTest` не создан: `createComposeRule` в проекте нет. Zoom/pan/tap на устройстве.
 - [x] **P2-A**: `PatternCanvas` рисует номера рядов в header через `TextMeasurer.measure` + `DrawScope.drawText`. Закрыто в этом коммите.
 - [x] **P2-B**: `PatternCanvas` guard `localY < 0f` в `detectTapGestures` — тап «выше первой строки» после pan не попадает в row 0. Закрыто в этом коммите.
-- [ ] **P3**: Номера рядов масштабируются с zoom/pan (MVP). Фиксированный размер шрифта — отдельный `Canvas` в `Row`, синхронизация `offset`/`scale` вручную.
 - [x] **P2 #30**: backup `1.2` пишет patterns, patternRows, symbols, patternRepeats, patternOperations. Импорт `1.0`/`1.1` обнуляет patternId, currentPatternRowId и currentRowNumber. Закрыто в этом коммите.
 - [ ] **P3-A**: `Reset`/`SessionSaved` шлют `startService(ACTION_STOP)` даже если сервис не запущен — лишний onCreate/onDestroy.
 - [ ] **P3-B**: `handleSystemRestart` показывает `00:00:00`, таймер при этом на паузе.
@@ -70,6 +69,22 @@
 - [ ] **P2 #9–#23, #26, #29, #31–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026.
 
 
+
+## Открытые P3 после 7f-B/7f-C (ноябрь 2026)
+
+### Pattern Editor
+
+- [ ] **P3**: `getPatternById` грузит operations всех рядов. Отложенная загрузка видимых рядов — P3.
+- [ ] **P3**: `getPatternById` мапит `PatternRowEntity` дважды (`attachOperations` и `PatternEntity.toDomain`). Оптимизация: передать уже собранные ряды в `toDomain`.
+- [ ] **P3**: подписи техники и направления в диалоге создания схемы — `enum.name`. Локализация отдельно.
+- [ ] **P3**: `CreatePatternDialog` без compose-теста (`createComposeRule` в проекте нет).
+- [ ] **P3**: одинаковые `PatternName` разрешены.
+- [ ] **P3**: после создания схемы маршрут остаётся `pattern_editor_new`. Позже `navigate("pattern_editor/{id}")` с `popUpTo(pattern_editor_new) { inclusive = true }`.
+- [ ] **P3**: undo — стек 25. Redo и сохранение стека через process death позже: `SavedStateHandle` не хранит `PatternOperation`.
+- [ ] **P3**: sheet (`ModalBottomSheet`) без compose-теста: `createComposeRule` в проекте нет.
+- [ ] **P3**: номера рядов масштабируются с zoom/pan (MVP). Фиксированный размер шрифта — отдельный `Canvas` в `Row`, синхронизация `offset`/`scale` вручную.
+
+---
 
 ## Pattern Tracker v8.0 (утверждено 19.10.2026)
 
@@ -161,14 +176,6 @@
 - [ ] `PatternRepositoryImpl.getPatternById` выполняет 5 запросов
   (`pattern` + `rows` + `operations` + `symbols` + `repeats`). Операции — один SQL, не N+1.
   Для единичного вызова — ок; при загрузке списка patterns потребуется batch/projection.
-- [ ] **P3**: `getPatternById` грузит operations всех рядов. Отложенная загрузка видимых рядов — не сейчас.
-- [ ] **P3**: `getPatternById` мапит `PatternRowEntity` дважды (`attachOperations` и `PatternEntity.toDomain`). Оптимизация: передать уже собранные ряды в `toDomain`.
-- [ ] **P3**: подписи техники и направления в диалоге создания схемы — `enum.name`. Локализация отдельно.
-- [ ] **P3**: `CreatePatternDialog` без compose-теста (`createComposeRule` в проекте нет).
-- [ ] **P3**: одинаковые `PatternName` разрешены.
-- [ ] **P3**: после создания схемы маршрут остаётся `pattern_editor_new`. Позже `navigate("pattern_editor/{id}")` с `popUpTo(pattern_editor_new) { inclusive = true }`.
-- [ ] **P3**: undo — стек 25. Redo и сохранение стека через process death позже: `SavedStateHandle` не хранит `PatternOperation`.
-- [ ] **P3**: sheet (`ModalBottomSheet`) без compose-теста: `createComposeRule` в проекте нет.
 - [ ] `pattern_repeats` без CHECK-констрейнта на `stitch_count > 0` и
   `row_count > 0` (в `PatternRepeat.init` — `require`, но БД не защищает).
   При повреждённых данных маппинг упадёт в init. Добавить CHECK в миграции v5->v6.
@@ -181,17 +188,16 @@
   row_number), C (row IS NULL → number = 0). Миграция 5→6 с санитизацией
   (A+B → B-fix → C). `Migration5To6Test` — 8 кейсов. Семантика —
   `rows-and-patterns.md`.
-- [ ] D-инвариант (`stitch > 0 → row IS NOT NULL`) — P3. Включить с per-stitch
-  tracking (7f-B). Сейчас `current_stitch` в БД всегда 0
+- [ ] D-инвариант (`stitch > 0 → row IS NOT NULL`) — P3. Не входил в 7c-2.
+  Включить с per-stitch tracking (7f-D). Сейчас `current_stitch` в БД всегда 0
   (`ProgressService.updateProgress` → `StitchCount.ZERO`).
 
 ### Шаг 7c — открытые P2
 
-- [ ] `AppErrorMapper.map(SQLException)` -> `UnknownError` вместо `DatabaseError` (DATA).
-  `ProjectRepositoryImpl` / `PatternRepositoryImpl` вынуждены явно создавать
-  `AppError.DatabaseError(ex)` в catch-блоках.
-- [ ] Timber-политика в Domain не унифицирована (ARCH): `SaveSessionService`
-  использует `Timber.e`, `AddProjectService` — нет. Выбрать единый стиль.
+- [x] `AppErrorMapper.map(android.database.SQLException)` -> `DatabaseError` (P1 #2, `e13e255`).
+  Suspend-репозитории явно создают `AppError.DatabaseError(ex)` в catch-блоках.
+- [x] Timber убран из `SaveSessionService` (P1 #1, `e13e255`). `Timber` в
+  `SessionRepositoryImpl` (Data).
 
 ### Шаг 7b — открытые P2 (SOLID)
 - [ ] `Pattern` — God Class (13 полей + 1 метод). Кандидат на разделение (7e+):
@@ -248,10 +254,7 @@
 
 ### P3
 
-| Место | Проблема | План |
-|---|---|---|
-| `PatternRepository.getOperationsForRow(patternId, rowId)` | грузит legend схемы (`symbolDao.getSymbolsForPattern`) при каждом вызове. Для Canvas — N вызовов на N видимых рядов = N загрузок legend. | Batch-запрос операций в 7f-B-3 (P3) |
-| TimerViewModel | KDoc устарел: "Проверяет разрешение POST_NOTIFICATIONS перед стартом" - проверка вынесена в `PermissionViewModel` (7g-D) | Править `sed`-патчем или вручную (Cyrillic в heredoc ломается - урок A1) |
+Пусто после сессии 31.10.2026. Открытые P3 — в секции «Открытые P3 после 7f-B/7f-C (ноябрь 2026)».
 
 ### P2
 
