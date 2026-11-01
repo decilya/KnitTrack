@@ -53,7 +53,8 @@ class Migration5To6Test {
             .addMigrations(
                 AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
                 AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6
+                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8
             )
             .build()
         room.openHelper.writableDatabase.close()
@@ -78,7 +79,7 @@ class Migration5To6Test {
     /** Открывает через Room с MIGRATION_5_6 — триггер создаётся, санитизация. */
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7)
+            .addMigrations(AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8)
             .build()
         room.openHelper.writableDatabase  // forces migration
         return room

@@ -61,7 +61,7 @@ class Migration6To7Test {
 
     private fun openCurrent(): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_6_7)
+            .addMigrations(AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8)
             .addCallback(AppDatabase.DATABASE_CALLBACK)
             .build()
             .also { it.openHelper.writableDatabase }

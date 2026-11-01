@@ -188,7 +188,7 @@
   row_number), C (row IS NULL → number = 0). Миграция 5→6 с санитизацией
   (A+B → B-fix → C). `Migration5To6Test` — 8 кейсов. Семантика —
   `rows-and-patterns.md`.
-- [ ] D-инвариант (`stitch > 0 → row IS NOT NULL`) — P3. Не входил в 7c-2.
+- [x] D-инвариант (`stitch > 0 → row IS NOT NULL`) — закрыт в 7f-D-5 (MIGRATION_7_8).
   Включить с per-stitch tracking (7f-D). Сейчас `current_stitch` в БД всегда 0
   (`ProgressService.updateProgress` → `StitchCount.ZERO`).
 
@@ -269,3 +269,6 @@
 - [ ] **P3**: Перемещение ряда использует временный номер `999999` (`TEMP_ROW_NUMBER`) для обхода `UNIQUE(pattern_id, row_number)` при сдвиге. Альтернатива: `MAX(row_number) + 1` или удаление+вставка. Текущий вариант быстрый и работает, но магическое число.
 
 - [ ] **P3**: `ownerPatternId` в `Symbol` — это `Long?`, а не `PatternId?`. Символы нельзя проверить на принадлежность схеме через VO. Нужно будет отрефакторить при внедрении `PatternId` во все места.
+
+- [ ] **P3**: Правило D (`stitch > 0 → row IS NOT NULL`) дублируется в двух SQL-константах (`CREATE_TRIGGER_PROGRESS_INSERT_V8`, `CREATE_TRIGGER_PROGRESS_UPDATE_V8`). При изменении правила нужно править оба. Причина — SQLite не поддерживает `INSERT OR UPDATE` в одном триггере.
+- [ ] **P2**: D-инвариант (`stitch > 0 → row IS NOT NULL`) защищён только в БД (триггер). В Domain (`Project.markRow` / `ProgressService`) проверки нет. Нужно добавить, чтобы инвариант был primary в Domain (DDD). Иначе `ImportDataService` или другие пути записи могут обойти триггер.

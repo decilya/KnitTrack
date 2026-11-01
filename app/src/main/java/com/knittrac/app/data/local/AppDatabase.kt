@@ -37,7 +37,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
         PatternOperationEntity::class,
         PatternRepeatEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -287,6 +287,47 @@ abstract class AppDatabase : RoomDatabase() {
                 "AND NEW.current_row_number != 0; " +
                 "END"
 
+        private const val CREATE_TRIGGER_PROGRESS_INSERT_V8 =
+            "CREATE TRIGGER trg_progress_check_insert " +
+                "BEFORE INSERT ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND row_number = NEW.current_row_number); " +
+                "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                "WHERE NEW.current_pattern_row_id IS NULL " +
+                "AND NEW.current_row_number != 0; " +
+                "SELECT RAISE(ABORT, 'Петли без ряда невозможны') " +
+                "WHERE NEW.current_stitch > 0 AND NEW.current_pattern_row_id IS NULL; " +
+                "END"
+
+        private const val CREATE_TRIGGER_PROGRESS_UPDATE_V8 =
+            "CREATE TRIGGER trg_progress_check_update " +
+                "BEFORE UPDATE OF current_pattern_row_id, current_row_number, " +
+                "current_stitch, pattern_id ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Номер ряда не соответствует денормализации') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND row_number = NEW.current_row_number); " +
+                "SELECT RAISE(ABORT, 'Прогресс без ряда должен иметь номер 0') " +
+                "WHERE NEW.current_pattern_row_id IS NULL " +
+                "AND NEW.current_row_number != 0; " +
+                "SELECT RAISE(ABORT, 'Петли без ряда невозможны') " +
+                "WHERE NEW.current_stitch > 0 AND NEW.current_pattern_row_id IS NULL; " +
+                "END"
+
         private const val CREATE_TRIGGER_PROGRESS_UPDATE =
             "CREATE TRIGGER trg_progress_check_update " +
                 "BEFORE UPDATE OF current_pattern_row_id, current_row_number, " +
@@ -331,8 +372,8 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(CREATE_INDEX_SESSIONS_PROJECT_ID)
                 db.execSQL(CREATE_INDEX_SESSIONS_START_TIME)
                 db.execSQL("PRAGMA foreign_keys = ON")
-                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT)
-                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V8)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V8)
                 db.execSQL(DEFAULT_SYMBOLS_INSERT)
             }
         }
@@ -394,6 +435,24 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Санитизация D: stitch > 0 при row IS NULL -> 0
+                db.execSQL(
+                    "UPDATE projects SET current_stitch = 0 " +
+                    "WHERE current_pattern_row_id IS NULL AND current_stitch > 0"
+                )
+
+                // 2. DROP старых триггеров (без правила D)
+                db.execSQL("DROP TRIGGER IF EXISTS trg_progress_check_insert")
+                db.execSQL("DROP TRIGGER IF EXISTS trg_progress_check_update")
+
+                // 3. CREATE новых триггеров (с правилом D)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V8)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V8)
+            }
+        }
+
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(DEFAULT_SYMBOLS_INSERT)
@@ -409,7 +468,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .addMigrations(
                         MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
-                        MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7
+                        MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
                     )
                     .addCallback(DATABASE_CALLBACK)
                     .build()
