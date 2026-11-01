@@ -188,6 +188,27 @@ class PatternRepositoryImpl @Inject constructor(
     /**
      * Вставляет операцию в ряд через пакетный [PatternDao.insertOperations].
      */
+    override suspend fun deleteRow(rowId: PatternRowId): Result<Unit> = try {
+        val deletedRows = database.withTransaction {
+            // 1. Сбрасываем прогресс в проектах, которые стоят на этом ряду,
+            // чтобы не сработал триггер и не упало удаление.
+            database.projectDao().clearProgressForRow(rowId.value)
+            // 2. Удаляем сам ряд (операции удалятся каскадно).
+            patternDao.deleteRow(rowId.value)
+        }
+        
+        if (deletedRows == 0) {
+            Result.Error(AppError.NotFoundError("Ряд id=${rowId.value} не найден"))
+        } else {
+            Result.Success(Unit)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "deleteRow rowId=%d failed", rowId.value)
+        Result.Error(AppError.DatabaseError(e))
+    }
+
     override suspend fun updateOperation(operation: PatternOperation): Result<Unit> = try {
         val rows = patternDao.updateOperation(
             rowId = operation.patternRowId.value,

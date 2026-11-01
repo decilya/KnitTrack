@@ -27,7 +27,8 @@ Pattern Editor — экран редактирования схемы вязан
   (`CreatePatternDialog`) + route `pattern_editor_new` + FAB-меню на
   `ProjectsListScreen` («Новый проект» / «Новая схема»).
 - Удаление операции — **7f-B-4, закрыто**: `DeleteOperationUseCase`.
-- Редактирование существующей операции (изменить символ/span) — **7f-D**.
+- Удаление ряда — **7f-D-2, закрыто**: `DeletePatternRowService` + атомарный сброс прогресса.
+- Редактирование существующей операции — **7f-D-1 (Domain) / 7f-D-6 (UI)**.
 - Undo — **7f-B-4, закрыто**: стек 25. Redo — **P3**.
 - Сохранение zoom/pan между сессиями (только process death, не app restart) — **P3**.
 - Кнопки `+`/`-` и «Zoom to canvas» — **P3**.

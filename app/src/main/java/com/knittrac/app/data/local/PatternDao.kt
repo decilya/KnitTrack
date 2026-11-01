@@ -58,6 +58,9 @@ interface PatternDao {
      * Удаляет операцию по композитному ключу ряда и колонки.
      * @return Количество удаленных строк.
      */
+    @Query("DELETE FROM pattern_rows WHERE id = :rowId")
+    suspend fun deleteRow(rowId: Long): Int
+
     @Query("DELETE FROM pattern_operations WHERE pattern_row_id = :rowId AND column_start = :columnStart")
     suspend fun deleteOperation(rowId: Long, columnStart: Int): Int
 

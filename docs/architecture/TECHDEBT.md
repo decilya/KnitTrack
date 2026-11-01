@@ -264,3 +264,5 @@
 | TimerScreen.kt | `formatTime` использует `Locale.US` — неочевидно для RU-локали | `Locale.ROOT` или комментарий, почему US |
 | SessionDao / DailyStat | `getDailyStats` возвращает `com.knittrac.app.domain.entity.DailyStat` — утечка Domain-модели в Data | Projection-класс в `data/local/`, маппинг в репозитории |
 | TimerViewModelTest | `mockk<Project>` bypasses `init { require(...) }` — ложно-зелёные тесты при будущих правках | Реальный `data class` конструктор в тестах |
+
+- [ ] **P2 #7 (rowSpanOverride)**: `UpdatePatternOperationService` (7f-D-1) работает в текущей модели (`overrideSpan` -> `columnSpanOverride`), `rowSpanOverride` = `null`. Не трогаем до появления вертикального span в Domain.

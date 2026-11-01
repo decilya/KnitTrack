@@ -63,6 +63,13 @@ interface PatternRepository {
      * @return [Result.Success], если операция была найдена и обновлена. 
      *         [Result.Error] с [com.knittrac.app.core.common.AppError.NotFoundError], если операции нет.
      */
+    /**
+     * Удаляет ряд по его ID.
+     * Операции внутри ряда удаляются каскадно на уровне БД.
+     * Если ряд используется как текущий в проектах, их прогресс сбрасывается.
+     */
+    suspend fun deleteRow(rowId: PatternRowId): Result<Unit>
+
     suspend fun updateOperation(operation: PatternOperation): Result<Unit>
 
     suspend fun addOperation(operation: PatternOperation): Result<Unit>

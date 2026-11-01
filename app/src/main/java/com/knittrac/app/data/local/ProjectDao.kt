@@ -50,6 +50,9 @@ interface ProjectDao {
      *   Репозиторий трактует 0 как NotFoundError. Идемпотентность —
      *   на уровне вызывающего кода.
      */
+    @Query("UPDATE projects SET current_pattern_row_id = NULL, current_row_number = 0, current_stitch = 0 WHERE current_pattern_row_id = :rowId")
+    suspend fun clearProgressForRow(rowId: Long): Int
+
     @Query("DELETE FROM projects WHERE id = :id")
     suspend fun deleteProjectById(id: Long): Int
 
