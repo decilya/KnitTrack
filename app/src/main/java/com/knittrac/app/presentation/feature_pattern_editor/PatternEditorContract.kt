@@ -44,7 +44,9 @@ object PatternEditorContract {
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
         @StringRes val errorRes: Int? = null,
-        val lastOperations: List<PatternOperation> = emptyList()
+        val lastOperations: List<PatternOperation> = emptyList(),
+        val editingOperation: PatternOperation? = null,
+        val editingRow: com.knittrac.app.domain.entity.PatternRow? = null
     )
 
     /**
@@ -68,6 +70,28 @@ object PatternEditorContract {
         data class CreatePattern(val params: CreatePatternParams) : Intent()
         /** Снять последнюю операцию со стека undo. */
         object UndoLastOperation : Intent()
+        /** Открыть диалог редактирования операции. */
+        data class EditOperation(val operation: PatternOperation) : Intent()
+        /** Открыть диалог редактирования ряда. */
+        data class EditRow(val row: com.knittrac.app.domain.entity.PatternRow) : Intent()
+        /** Закрыть диалог редактирования. */
+        object DismissEditor : Intent()
+        /** Обновить операцию. */
+        data class UpdateOperation(
+            val oldOperation: PatternOperation,
+            val newSymbolCode: String,
+            val newOverrideSpan: com.knittrac.app.domain.entity.Span?,
+            val newColorHex: String?
+        ) : Intent()
+        /** Удалить операцию (из диалога). */
+        data class DeleteOperationFromDialog(val operation: PatternOperation) : Intent()
+        /** Обновить номер ряда. */
+        data class UpdateRowNumber(
+            val rowId: PatternRowId,
+            val newRowNumber: com.knittrac.app.domain.entity.RowNumber
+        ) : Intent()
+        /** Удалить ряд. */
+        data class DeleteRow(val rowId: PatternRowId) : Intent()
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()
     }

@@ -93,4 +93,21 @@
     <string name="error_load_projects_description">Проверьте подключение и попробуйте снова</string>
     <string name="error_load_stats_description">Проверьте подключение и попробуйте снова</string>
     <string name="error_retry">Повторить</string>
+    <string name="pattern_editor_load_error">Не удалось загрузить схему</string>
+    <string name="pattern_editor_add_error">Не удалось добавить операцию</string>
+    <string name="pattern_editor_edit_operation_title">Редактировать операцию</string>
+    <string name="pattern_editor_edit_operation_symbol">Символ</string>
+    <string name="pattern_editor_edit_operation_span">Ширина (override)</string>
+    <string name="pattern_editor_edit_operation_color">Цвет (HEX)</string>
+    <string name="pattern_editor_edit_operation_delete">Удалить</string>
+    <string name="pattern_editor_edit_operation_delete_confirm">Удалить операцию?</string>
+    <string name="pattern_editor_row_editor_title">Редактировать ряд</string>
+    <string name="pattern_editor_row_editor_number">Новый номер ряда</string>
+    <string name="pattern_editor_row_editor_delete">Удалить ряд</string>
+    <string name="pattern_editor_row_editor_delete_confirm">Удалить ряд? Прогресс на этом ряду будет сброшен.</string>
+    <string name="pattern_editor_operation_not_found">Операция не найдена</string>
+    <string name="pattern_editor_update_error">Не удалось обновить</string>
+    <string name="pattern_editor_delete_error">Не удалось удалить</string>
+    <string name="pattern_editor_tutorial_title">Подсказка</string>
+    <string name="pattern_editor_tutorial_message">Зажмите ячейку, чтобы изменить операцию, или чип ряда, чтобы изменить ряд.</string>
 </resources>

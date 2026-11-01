@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
+import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
@@ -14,6 +15,9 @@ import com.knittrac.app.domain.entity.findSymbolByCode
 import com.knittrac.app.domain.model.AddPatternOperationParams
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.domain.service.DeleteOperationParams
+import com.knittrac.app.domain.model.UpdatePatternOperationParams
+import com.knittrac.app.domain.service.DeletePatternRowParams
+import com.knittrac.app.domain.service.UpdatePatternRowNumberParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -40,6 +44,7 @@ import javax.inject.Inject
  *
  * @see PatternEditorContract
  */
+@Suppress("LargeClass") // TODO(P2): декомпозиция после 7f-D-8 (см. TECHDEBT)
 @HiltViewModel
 class PatternEditorViewModel @Inject constructor(
     private val useCases: PatternEditorUseCases,
@@ -89,6 +94,13 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
             is PatternEditorContract.Intent.UndoLastOperation -> undoLastOperation()
             is PatternEditorContract.Intent.Retry -> retry()
+            is PatternEditorContract.Intent.EditOperation -> _state.update { it.copy(editingOperation = intent.operation) }
+            is PatternEditorContract.Intent.EditRow -> _state.update { it.copy(editingRow = intent.row) }
+            is PatternEditorContract.Intent.DismissEditor -> _state.update { it.copy(editingOperation = null, editingRow = null) }
+            is PatternEditorContract.Intent.UpdateOperation -> updateOperation(intent)
+            is PatternEditorContract.Intent.DeleteOperationFromDialog -> deleteOperationFromDialog(intent.operation)
+            is PatternEditorContract.Intent.UpdateRowNumber -> updateRowNumber(intent)
+            is PatternEditorContract.Intent.DeleteRow -> deleteRow(intent.rowId)
         }
     }
 
@@ -268,6 +280,150 @@ class PatternEditorViewModel @Inject constructor(
             }
         }
     }
+
+
+    private fun updateOperation(intent: PatternEditorContract.Intent.UpdateOperation) {
+        if (_state.value.isSaving) return
+        val context = resolveUpdateContext(intent) ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                executeUpdate(context)
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    /**
+     * Валидирует вход и строит [UpdateContext]. null — вход невалиден
+     * (нет pattern / patternId).
+     */
+    private fun resolveUpdateContext(
+        intent: PatternEditorContract.Intent.UpdateOperation
+    ): UpdateContext? {
+        val pattern = _state.value.pattern
+        val patternId = _state.value.currentPatternId
+        if (pattern == null || patternId == null) return null
+        return buildUpdateContext(pattern, patternId, intent)
+    }
+
+    /**
+     * Ищет символ в легенде и строит [UpdateContext].
+     * null — символ не найден в легенде (с ShowError).
+     */
+    private fun buildUpdateContext(
+        pattern: Pattern,
+        patternId: PatternId,
+        intent: PatternEditorContract.Intent.UpdateOperation
+    ): UpdateContext? {
+        val newSymbol = pattern.findSymbolByCode(intent.newSymbolCode)
+        if (newSymbol == null) {
+            runError(R.string.pattern_editor_operation_not_found)
+            return null
+        }
+        return UpdateContext(
+            patternId = patternId,
+            params = UpdatePatternOperationParams(
+                patternId = patternId,
+                rowId = intent.oldOperation.patternRowId,
+                columnStart = intent.oldOperation.columnStart,
+                symbol = newSymbol,
+                backSymbol = intent.oldOperation.backSymbol,
+                colorHex = intent.newColorHex,
+                overrideSpan = intent.newOverrideSpan,
+                repeatCode = intent.oldOperation.repeatCode
+            )
+        )
+    }
+
+    private suspend fun executeUpdate(context: UpdateContext) {
+        when (val result = useCases.updatePatternOperation(context.params)) {
+            is Result.Success -> {
+                _state.update { it.copy(editingOperation = null) }
+                loadPattern(context.patternId)
+            }
+            is Result.Error -> {
+                Timber.e(result.error.cause, "Failed to update operation")
+                _effect.send(
+                    PatternEditorContract.Effect.ShowError(R.string.pattern_editor_update_error)
+                )
+            }
+        }
+    }
+
+    private fun deleteOperationFromDialog(operation: PatternOperation) {
+        if (_state.value.isSaving) return
+        val patternId = _state.value.currentPatternId ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                when (val result = useCases.deleteOperation(DeleteOperationParams(operation.patternRowId, operation.columnStart))) {
+                    is Result.Success -> {
+                        _state.update { it.copy(editingOperation = null) }
+                        loadPattern(patternId)
+                    }
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to delete operation")
+                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_error))
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private fun updateRowNumber(intent: PatternEditorContract.Intent.UpdateRowNumber) {
+        if (_state.value.isSaving) return
+        val patternId = _state.value.currentPatternId ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                val params = UpdatePatternRowNumberParams(patternId, intent.rowId, intent.newRowNumber)
+                when (val result = useCases.updatePatternRowNumber(params)) {
+                    is Result.Success -> {
+                        _state.update { it.copy(editingRow = null) }
+                        loadPattern(patternId)
+                    }
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to update row number")
+                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_update_error))
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private fun deleteRow(rowId: PatternRowId) {
+        if (_state.value.isSaving) return
+        val patternId = _state.value.currentPatternId ?: return
+        _state.update { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            try {
+                val params = DeletePatternRowParams(patternId, rowId)
+                when (val result = useCases.deletePatternRow(params)) {
+                    is Result.Success -> {
+                        _state.update { it.copy(editingRow = null) }
+                        loadPattern(patternId)
+                    }
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to delete row")
+                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_error))
+                    }
+                }
+            } finally {
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private data class UpdateContext(
+        val patternId: PatternId,
+        val params: UpdatePatternOperationParams
+    )
 
     private data class AddContext(
         val patternId: PatternId,

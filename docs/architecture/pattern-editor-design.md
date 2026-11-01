@@ -410,7 +410,7 @@ Icon-toggle в `TopAppBar`:
 - **R7.** `Project.canOpenPatternEditor` — extension в Domain, не в Presentation.
 - **R8.** Создание схемы — **7f-C, закрыто**. При `patternId == null` в `PatternEditorScreen` кнопка «Создать», FAB-меню на `ProjectsListScreen` («Новый проект» / «Новая схема»).
 
-## 13. UX-решение редактирования (7f-D-6, ноябрь 2026)
+## 13. UX-решение редактирования (7f-D-6, ноябрь 2026) — **закрыто**
 
 **Контекст:** после двух консилиумов и анализа конкурентов (KnitCompanion, Pattern Keeper, Knit & Crochet, Knit&Note, Loopsy) и отзывов пользователей выбрано решение для редактирования операций и рядов.
 

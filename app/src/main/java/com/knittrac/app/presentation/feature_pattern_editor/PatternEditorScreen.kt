@@ -57,6 +57,8 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextStyle
@@ -91,8 +93,25 @@ fun PatternEditorScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
     var showCreateDialog by remember { mutableStateOf(false) }
-    var pendingCell by remember { mutableStateOf<Pair<PatternRowId, ColumnStart>?>(null) }
+    var pendingCell by remember { mutableStateOf<PendingCell?>(null) }
     val pattern = state.pattern
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE) }
+    var showTutorial by remember { mutableStateOf(!prefs.getBoolean("tutorial_shown", false)) }
+
+    if (showTutorial) {
+        AlertDialog(
+            onDismissRequest = { showTutorial = false; prefs.edit().putBoolean("tutorial_shown", true).apply() },
+            title = { Text(stringResource(R.string.pattern_editor_tutorial_title)) },
+            text = { Text(stringResource(R.string.pattern_editor_tutorial_message)) },
+            confirmButton = {
+                TextButton(onClick = { showTutorial = false; prefs.edit().putBoolean("tutorial_shown", true).apply() }) {
+                    Text(stringResource(R.string.pattern_editor_ok))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -172,8 +191,18 @@ fun PatternEditorScreen(
             else -> PatternEditorBody(
                 pattern = pattern,
                 state = state,
-                onIntent = viewModel::onIntent,
-                onCellTap = { rowId, column -> pendingCell = rowId to column },
+                callbacks = PatternEditorCallbacks(
+                    onIntent = viewModel::onIntent,
+                    onCellTap = { rowId, column -> pendingCell = PendingCell(rowId, column) },
+                    onCellLongPress = { rowId, column ->
+                        val row = pattern.rows.find { it.id == rowId }
+                        val op = row?.operations?.find { it.columnStart == column }
+                        when {
+                            op != null -> viewModel.onIntent(Intent.EditOperation(op))
+                            row != null -> viewModel.onIntent(Intent.EditRow(row))
+                        }
+                    }
+                ),
                 modifier = Modifier.padding(padding)
             )
         }
@@ -187,6 +216,29 @@ fun PatternEditorScreen(
             }
         )
     }
+    val opToEdit = state.editingOperation
+    if (opToEdit != null && pattern != null) {
+        EditOperationDialog(
+            operation = opToEdit,
+            legend = pattern.legend,
+            onDismiss = { viewModel.onIntent(Intent.DismissEditor) },
+            onUpdate = { code, span, color ->
+                viewModel.onIntent(Intent.UpdateOperation(opToEdit, code, span, color))
+            },
+            onDelete = { viewModel.onIntent(Intent.DeleteOperationFromDialog(opToEdit)) }
+        )
+    }
+
+    val rowToEdit = state.editingRow
+    if (rowToEdit != null) {
+        RowEditorSheet(
+            row = rowToEdit,
+            onDismiss = { viewModel.onIntent(Intent.DismissEditor) },
+            onMove = { newNum -> viewModel.onIntent(Intent.UpdateRowNumber(rowToEdit.id, newNum)) },
+            onDelete = { viewModel.onIntent(Intent.DeleteRow(rowToEdit.id)) }
+        )
+    }
+
     val cell = pendingCell
     val legend = pattern?.legend
     if (cell != null && legend != null) {
@@ -196,19 +248,39 @@ fun PatternEditorScreen(
         ) {
             SymbolPickerSheet(symbols = legend) { code ->
                 viewModel.onIntent(Intent.SelectSymbol(code))
-                viewModel.onIntent(Intent.AddOperation(cell.first, cell.second))
+                viewModel.onIntent(Intent.AddOperation(cell.rowId, cell.column))
                 pendingCell = null
             }
         }
     }
 }
 
+/**
+ * Коллбэки экрана Pattern Editor (Parameter Object).
+ *
+ * ISP: 3 коллбэка сгруппированы в data class, чтобы уменьшить LongParameterList
+ * на PatternEditorBody/PatternCanvas. SRP: одна ответственность — передача событий.
+ */
+/**
+ * DTO для ожидающей ячейки (sheet-mode).
+ * Явный DTO вместо Pair: читателю не нужно помнить, что first = rowId, second = column.
+ */
+private data class PendingCell(
+    val rowId: PatternRowId,
+    val column: ColumnStart
+)
+
+private data class PatternEditorCallbacks(
+    val onIntent: (Intent) -> Unit,
+    val onCellTap: (PatternRowId, ColumnStart) -> Unit,
+    val onCellLongPress: (PatternRowId, ColumnStart) -> Unit
+)
+
 @Composable
 private fun PatternEditorBody(
     pattern: Pattern,
     state: PatternEditorContract.State,
-    onIntent: (Intent) -> Unit,
-    onCellTap: (PatternRowId, ColumnStart) -> Unit,
+    callbacks: PatternEditorCallbacks,
     modifier: Modifier = Modifier
 ) {
     Column(modifier.fillMaxSize()) {
@@ -216,7 +288,7 @@ private fun PatternEditorBody(
             items(pattern.rows, key = { it.id.value }) { row ->
                 FilterChip(
                     selected = row.id == state.selectedRowId,
-                    onClick = { onIntent(Intent.SelectRow(row.id)) },
+                    onClick = { callbacks.onIntent(Intent.SelectRow(row.id)) },
                     label = {
                         Text(stringResource(R.string.pattern_editor_row_prefix, row.rowNumber.value))
                     },
@@ -227,8 +299,7 @@ private fun PatternEditorBody(
         PatternCanvas(
             pattern = pattern,
             state = state,
-            onIntent = onIntent,
-            onCellTap = onCellTap,
+            callbacks = callbacks,
             modifier = Modifier.weight(1f).fillMaxWidth()
         )
         if (state.isStickyMode && pattern.legend.isNotEmpty()) {
@@ -239,7 +310,7 @@ private fun PatternEditorBody(
                 items(pattern.legend.toList(), key = { it.code }) { symbol ->
                     FilterChip(
                         selected = symbol.code == state.selectedSymbolCode,
-                        onClick = { onIntent(Intent.SelectSymbol(symbol.code)) },
+                        onClick = { callbacks.onIntent(Intent.SelectSymbol(symbol.code)) },
                         label = { Text(symbol.textGlyph) }
                     )
                 }
@@ -252,8 +323,7 @@ private fun PatternEditorBody(
 private fun PatternCanvas(
     pattern: Pattern,
     state: PatternEditorContract.State,
-    onIntent: (Intent) -> Unit,
-    onCellTap: (PatternRowId, ColumnStart) -> Unit,
+    callbacks: PatternEditorCallbacks,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -264,6 +334,7 @@ private fun PatternCanvas(
     val stitchColor = MaterialTheme.colorScheme.primary
     val gridColor = MaterialTheme.colorScheme.outline
     val highlight = MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
+    val haptic = LocalHapticFeedback.current
     val maxColumns = maxColumnsOf(pattern)
     val textMeasurer = rememberTextMeasurer()
     val rowNumberStyle = TextStyle(
@@ -286,26 +357,40 @@ private fun PatternCanvas(
                 state.isStickyMode,
                 state.selectedSymbolCode
             ) {
-                detectTapGestures { tap ->
-                    val localX = (tap.x - offset.x) / scale
-                    val localY = (tap.y - offset.y) / scale
-                    if (localX < headerPx) return@detectTapGestures
-                    if (localY < 0f) return@detectTapGestures
-                    val col = ((localX - headerPx) / cellPx).toInt()
-                    val rowIndex = (localY / cellPx).toInt()
-                    val row = pattern.rows.getOrNull(rowIndex) ?: return@detectTapGestures
-                    if (col !in 0 until maxColumns) return@detectTapGestures
-                    val column = ColumnStart.create(col)
-                    onIntent(Intent.SelectRow(row.id))
-                    onIntent(Intent.SelectColumn(column))
-                    if (state.isStickyMode) {
-                        if (state.selectedSymbolCode != null) {
-                            onIntent(Intent.AddOperation(row.id, column))
+                detectTapGestures(
+                    onLongPress = { tap ->
+                        val localX = (tap.x - offset.x) / scale
+                        val localY = (tap.y - offset.y) / scale
+                        if (localX < headerPx || localY < 0f) return@detectTapGestures
+                        val col = ((localX - headerPx) / cellPx).toInt()
+                        val rowIndex = (localY / cellPx).toInt()
+                        val row = pattern.rows.getOrNull(rowIndex) ?: return@detectTapGestures
+                        if (col !in 0 until maxColumns) return@detectTapGestures
+                        val column = ColumnStart.create(col)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        callbacks.onCellLongPress(row.id, column)
+                    },
+                    onTap = { tap ->
+                        val localX = (tap.x - offset.x) / scale
+                        val localY = (tap.y - offset.y) / scale
+                        if (localX < headerPx) return@detectTapGestures
+                        if (localY < 0f) return@detectTapGestures
+                        val col = ((localX - headerPx) / cellPx).toInt()
+                        val rowIndex = (localY / cellPx).toInt()
+                        val row = pattern.rows.getOrNull(rowIndex) ?: return@detectTapGestures
+                        if (col !in 0 until maxColumns) return@detectTapGestures
+                        val column = ColumnStart.create(col)
+                        callbacks.onIntent(Intent.SelectRow(row.id))
+                        callbacks.onIntent(Intent.SelectColumn(column))
+                        if (state.isStickyMode) {
+                            if (state.selectedSymbolCode != null) {
+                                callbacks.onIntent(Intent.AddOperation(row.id, column))
+                            }
+                        } else {
+                            callbacks.onCellTap(row.id, column)
                         }
-                    } else {
-                        onCellTap(row.id, column)
                     }
-                }
+                )
             }
     ) {
         translate(left = offset.x, top = offset.y) {

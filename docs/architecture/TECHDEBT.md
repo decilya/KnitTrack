@@ -274,3 +274,7 @@
 - [ ] **P2**: D-инвариант (`stitch > 0 → row IS NOT NULL`) защищён только в БД (триггер). В Domain (`Project.markRow` / `ProgressService`) проверки нет. Нужно добавить, чтобы инвариант был primary в Domain (DDD). Иначе `ImportDataService` или другие пути записи могут обойти триггер.
 
 - [ ] **P3**: Альтернативный вход для accessibility — иконка `List` в `TopAppBar` PatternEditorScreen (список всех операций для пользователей, которым недоступен long-press). Нужна для WCAG 2.1 (2.5.1 Pointer Gestures). Отложено до 7f-D-6+.
+
+- [ ] **P2**: `PatternEditorViewModelTest` — LargeClass (338 строк, >300). Разбить на `PatternEditorViewModelTest` (базовые) + `PatternEditorViewModelEditingTest` (6 новых кейсов 7f-D-6). После 7f-D-8.
+
+- [ ] **P3**: Широкий аудит `Pair`/`Triple` в `app/src/main/` (grep по сигнатурам и локальным переменным). Заменить на явные DTO где читаемость страдает (как `PendingCell` в `PatternEditorScreen`). Правило — Урок 26 (HANDOVER §9).

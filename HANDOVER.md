@@ -1046,7 +1046,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
-**Текущий шаг:** 7f-D-6 (UI: `EditOperationDialog` + `RowEditorSheet`).
+**Текущий шаг:** 7f-D-7 (UI: `LegendEditorScreen` + nav).
 
 ### Закрытые шаги (7f-D)
 - **7f-D-1:** `UpdatePatternOperationService` — обновление операции (символ/span/цвет), валидация legend + overlap + self-exclusion, `PatternDao.updateOperation`.
@@ -1054,9 +1054,9 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-3:** `UpdatePatternRowNumberService` — сдвиг рядов через транзакцию, `TEMP_ROW_NUMBER = 999999`.
 - **7f-D-4:** `AddSymbolService` / `DeleteSymbolService` — кастомные символы, защита от удаления системных и используемых в операциях.
 - **7f-D-5:** D-инвариант (`stitch > 0 → row IS NOT NULL`), `MIGRATION_7_8`, триггеры v8. Domain-проверка — P2 в TECHDEBT.
+- **7f-D-6:** `EditOperationDialog` + `RowEditorSheet` + Long-press на ячейке (операция) и на чипе ряда (ряд) + Haptic + туториал (первый запуск). `PatternEditorCallbacks` + `PendingCell` DTO. `PatternEditorUseCases` → 8 полей.
 
 ### Next
-- **7f-D-6** — UI: `EditOperationDialog` + `RowEditorSheet`.
 - **7f-D-7** — UI: `LegendEditorScreen` + nav.
 - **7f-D-8** — docs-закрытие серии 7f-D.
 
@@ -1083,3 +1083,22 @@ gradle/libs.versions.toml — НЕ существует.
 
 **Полная история** — `git log --oneline`. Записи о HEAD и числе тестов в этом документе не поддерживаются (§12.11 П1).
 
+
+
+## 25. УРОКИ КОДА (сессия 01.11.2026)
+
+### Урок 26. Много параметров / много возвращаемых → DTO
+
+>3 параметров или много возвращаемых → data class с именованными аргументами. `Pair`/`Triple` в публичных сигнатурах запрещены.
+
+**Примеры (7f-D-6):**
+- `PatternEditorUseCases(getPatternById = ..., getAllPatternSummaries = ..., ...)` — 8 полей в data class, именованные аргументы в тесте.
+- `PendingCell(rowId, column)` — вместо `Pair<PatternRowId, ColumnStart>`.
+- `PatternEditorCallbacks(onIntent, onCellTap, onCellLongPress)` — вместо 3 позиционных в Composable.
+- `UpdateContext(patternId, params)`, `AddContext(patternId, params)` — DTO для промежуточных результатов.
+
+**Правило:**
+- >3 параметров → data class + именованные аргументы при вызове (включая тесты).
+- «Много возвращаемых» (2+) → data class-result.
+- `Pair`/`Triple` в публичных сигнатурах — запрещены (только локально, если тривиально).
+- Именованные аргументы — обязательны при >3 параметрах.

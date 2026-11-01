@@ -99,4 +99,19 @@
     <string name="error_load_projects_description">Check your connection and try again</string>
     <string name="error_load_stats_description">Check your connection and try again</string>
     <string name="error_retry">Retry</string>
+    <string name="pattern_editor_edit_operation_title">Edit operation</string>
+    <string name="pattern_editor_edit_operation_symbol">Symbol</string>
+    <string name="pattern_editor_edit_operation_span">Span override</string>
+    <string name="pattern_editor_edit_operation_color">Color (HEX)</string>
+    <string name="pattern_editor_edit_operation_delete">Delete</string>
+    <string name="pattern_editor_edit_operation_delete_confirm">Delete operation?</string>
+    <string name="pattern_editor_row_editor_title">Edit row</string>
+    <string name="pattern_editor_row_editor_number">New row number</string>
+    <string name="pattern_editor_row_editor_delete">Delete row</string>
+    <string name="pattern_editor_row_editor_delete_confirm">Delete row? Progress on this row will be reset.</string>
+    <string name="pattern_editor_operation_not_found">Operation not found</string>
+    <string name="pattern_editor_update_error">Failed to update</string>
+    <string name="pattern_editor_delete_error">Failed to delete</string>
+    <string name="pattern_editor_tutorial_title">Quick tip</string>
+    <string name="pattern_editor_tutorial_message">Long-press a cell to edit an operation, or a row chip to edit the row.</string>
 </resources>

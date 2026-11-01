@@ -44,6 +44,7 @@ import org.junit.Test
  * Юнит-тесты для [PatternEditorViewModel] (7f-B-2).
  */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass") // TODO(P2): разбить тест-класс (338 строк) — после 7f-D-8
 class PatternEditorViewModelTest : BaseTest() {
 
     private val getPatternByIdService: GetPatternByIdService = mockk()
@@ -51,6 +52,9 @@ class PatternEditorViewModelTest : BaseTest() {
     private val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
     private val createPatternUseCase: CreatePatternUseCase = mockk()
     private val deleteOperationUseCase: DeleteOperationUseCase = mockk()
+    private val updatePatternOperationUseCase: com.knittrac.app.domain.service.UpdatePatternOperationUseCase = mockk()
+    private val updatePatternRowNumberUseCase: com.knittrac.app.domain.service.UpdatePatternRowNumberUseCase = mockk()
+    private val deletePatternRowUseCase: com.knittrac.app.domain.service.DeletePatternRowUseCase = mockk()
 
     private fun symbol(code: String = "K"): Symbol = Symbol(
         code = code,
@@ -85,11 +89,14 @@ class PatternEditorViewModelTest : BaseTest() {
         stubSummaries()
         return PatternEditorViewModel(
             PatternEditorUseCases(
-                getPatternByIdService,
-                getAllPatternSummariesService,
-                addPatternOperationUseCase,
-                deleteOperationUseCase,
-                createPatternUseCase
+                getPatternById = getPatternByIdService,
+                getAllPatternSummaries = getAllPatternSummariesService,
+                addPatternOperation = addPatternOperationUseCase,
+                deleteOperation = deleteOperationUseCase,
+                createPattern = createPatternUseCase,
+                updatePatternOperation = updatePatternOperationUseCase,
+                updatePatternRowNumber = updatePatternRowNumberUseCase,
+                deletePatternRow = deletePatternRowUseCase
             ),
             savedState
         )
@@ -355,5 +362,95 @@ class PatternEditorViewModelTest : BaseTest() {
 
         coVerify(exactly = 0) { deleteOperationUseCase(any()) }
         assertTrue(vm.state.value.lastOperations.isEmpty())
+    }
+    @Test
+    fun `editOperation opens dialog`() = runTest {
+        val op = operation(0)
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.EditOperation(op))
+
+        assertEquals(op, vm.state.value.editingOperation)
+    }
+
+    @Test
+    fun `dismissEditor clears editing state`() = runTest {
+        val op = operation(0)
+        val vm = loadedVm()
+        advanceUntilIdle()
+        vm.onIntent(PatternEditorContract.Intent.EditOperation(op))
+
+        vm.onIntent(PatternEditorContract.Intent.DismissEditor)
+
+        assertNull(vm.state.value.editingOperation)
+        assertNull(vm.state.value.editingRow)
+    }
+
+    @Test
+    fun `updateOperation success reloads pattern`() = runTest {
+        coEvery { updatePatternOperationUseCase(any()) } returns
+            Result.Success(operation(0))
+        val vm = loadedVm()
+        advanceUntilIdle()
+        coVerify(exactly = 1) { getPatternByIdService(any()) }
+
+        vm.onIntent(PatternEditorContract.Intent.UpdateOperation(
+            oldOperation = operation(0),
+            newSymbolCode = "K",
+            newOverrideSpan = null,
+            newColorHex = null
+        ))
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.editingOperation)
+        coVerify(exactly = 2) { getPatternByIdService(any()) }
+    }
+
+    @Test
+    fun `updateOperation error emits ShowError`() = runTest {
+        coEvery { updatePatternOperationUseCase(any()) } returns
+            Result.Error(AppError.ValidationError("overlap"))
+        val vm = loadedVm()
+        advanceUntilIdle()
+        val effectDeferred = async { vm.effect.first() }
+
+        vm.onIntent(PatternEditorContract.Intent.UpdateOperation(
+            oldOperation = operation(0),
+            newSymbolCode = "K",
+            newOverrideSpan = null,
+            newColorHex = null
+        ))
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is PatternEditorContract.Effect.ShowError)
+    }
+
+    @Test
+    fun `deleteRow success reloads`() = runTest {
+        coEvery { deletePatternRowUseCase(any()) } returns Result.Success(Unit)
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.DeleteRow(PatternRowId.create(10L)))
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.editingRow)
+    }
+
+    @Test
+    fun `updateRowNumber success reloads`() = runTest {
+        coEvery { updatePatternRowNumberUseCase(any()) } returns Result.Success(Unit)
+        val vm = loadedVm()
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.UpdateRowNumber(
+            rowId = PatternRowId.create(10L),
+            newRowNumber = RowNumber.create(2)
+        ))
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.editingRow)
     }
 }
