@@ -13,16 +13,16 @@
 
 ## Ревью 05.11.2026 (Архитектурный анализ)
 
-- [ ] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое (`BackupRepositoryImpl`). Нарушение Clean Arch: бизнес-логика в Repository. Нужно перенести в `DataImporterImpl` и возвращать `ValidationError` (чтобы не терять данные пользователя молча).
+- [x] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое. **Закрыт 05.11.2026**. `BackupRepositoryImpl` очищен от бизнес-логики, ошибка БД маппится в `ValidationError` в `DataImporterImpl`.
 - [ ] **P2 (LIN/BIZ):** Оркестрация в `PatternEditorViewModel.retry()`. Вызов `patternUseCases.getAllPatternSummaries(Unit).first()` внутри VM нарушает SRP. Плюс автозагрузка `firstAvailable` при Retry может сбить пользователя с толку. Вынести в UseCase / Coordinator.
 - [ ] **P3 (LIN):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
 - [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
 
 ## Ревью 05.11.2026 (Строгий код-ревью, все линзы)
 
-- [ ] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое (`BackupRepositoryImpl`). Нарушение Clean Arch: бизнес-логика в Repository. Нужно перенести в `DataImporterImpl` и возвращать `ValidationError` (чтобы не терять данные пользователя молча).
+- [x] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое. **Закрыт 05.11.2026**. `BackupRepositoryImpl` очищен от бизнес-логики, ошибка БД маппится в `ValidationError` в `DataImporterImpl`.
 - [ ] **P2 (LIN/KOT):** Оркестрация в `PatternEditorViewModel.retry()`. Вызов `patternUseCases.getAllPatternSummaries(Unit).first()` внутри VM нарушает SRP. Блокирующий `first()` может подвесить корутину. Вынести в UseCase / Coordinator.
-- [ ] **P2 (BIZ/UX):** Молчаливое удаление данных при импорте. Если бэкап содержит `repeatCode`, которого нет в схеме, код просто зануляется с логом `Timber.w` (пользователь не видит). Нужно возвращать ошибку или показывать диалог.
+- [x] **P2 (BIZ/UX):** Молчаливое удаление данных при импорте. **Закрыт 05.11.2026**. Теперь при orphan `repeatCode` импорт прерывается с `ValidationError` (данные не теряются молча).
 - [ ] **P2 (AND/QA):** `PatternEditorViewModelTest` — LargeClass (338+ строк) и хрупкие тесты из-за `coEvery` в `setUpMocks`. Разбить на `PatternEditorViewModelTest` (базовые) + `PatternEditorViewModelEditingTest`.
 - [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
 - [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).

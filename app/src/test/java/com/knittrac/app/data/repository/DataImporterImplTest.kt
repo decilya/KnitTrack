@@ -1,25 +1,29 @@
 package com.knittrac.app.data.repository
 
-import com.knittrac.app.domain.entity.RowCount
-import com.google.gson.Gson
+import android.database.sqlite.SQLiteConstraintException
+import com.google.gson.GsonBuilder
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.repository.BackupRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.io.ByteArrayInputStream
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.ByteArrayInputStream
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class DataImporterImplTest {
 
     private val backupRepository = mockk<BackupRepository>(relaxed = true)
-    private val gson = Gson()
+    private val gson = GsonBuilder().create()
     private val importer = DataImporterImpl(backupRepository, gson, UnconfinedTestDispatcher())
 
     private val testJson = """
@@ -82,5 +86,35 @@ class DataImporterImplTest {
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.IoError)
+    }
+
+    /**
+     * P2 (LIN/BIZ): Проверяет, что при импорте бэкапа с битым repeatCode
+     * (orphan) возвращается ValidationError, а не DatabaseError.
+     */
+    @Test
+    fun importFrom_returnsValidationError_onOrphanRepeatCode() = runTest {
+        val backupRepo = mockk<BackupRepository>()
+        
+        coEvery { backupRepo.withTransaction<Unit>(any()) } throws 
+            SQLiteConstraintException("Раппорт не принадлежит схеме")
+
+        val importer = DataImporterImpl(backupRepo, GsonBuilder().create(), UnconfinedTestDispatcher())
+        
+        val json = """
+            {
+              "version": "1.2",
+              "patternOperations": [
+                { "patternRowId": 1, "columnStart": 0, "symbolCode": "K", "repeatCode": "ORPHAN" }
+              ]
+            }
+        """.trimIndent()
+
+        val result = importer.importFrom(json.byteInputStream())
+        
+        assertTrue(result is Result.Error)
+        val error = (result as Result.Error).error
+        assertTrue(error is AppError.ValidationError)
+        assertTrue(error.message.contains("несуществующими раппортами"))
     }
 }

@@ -1093,6 +1093,11 @@ gradle/libs.versions.toml — НЕ существует.
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
 - **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
+- **P2-баг (05.11.2026):** Архитектурный рефакторинг импорта бэкапа. 
+  Убрана бизнес-логика (санитизация) из `BackupRepositoryImpl`. Теперь репозиторий просто пишет данные. 
+  В `DataImporterImpl` добавлен маппинг `SQLiteConstraintException` (триггер БД) в `AppError.ValidationError` с понятным текстом. 
+  Импорт битого бэкапа прерывается, данные не теряются молча. Коммит `fix(data): map orphan repeat_code to ValidationError on import`.
+
 - **P2-баг (05.11.2026):** `PatternEditorViewModel.retry()` — перезапускает `observePatternSummaries`, сбрасывает `errorRes`, fallback на первую схему. Коммит `fix(presentation): PatternEditorViewModel retry restart summaries`.
 
 - **P2-баг (05.11.2026):** Санитизация `repeatCode` при импорте бэкапа. 
