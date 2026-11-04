@@ -1086,6 +1086,8 @@ gradle/libs.versions.toml — НЕ существует.
 
 - **P2-4 (04.11.2026):** D-инвариант (`stitch > 0 → row IS NOT NULL`) — закрыт в Domain (`Project.markRow`). `RowMarkService.updateProgress` не тронут — пишет `StitchCount.ZERO`, D-проверка там недостижима (§11.7 Overengineering). Defense-in-depth к триггеру v8. Коммит `refactor(domain): D-инвариант в Project.markRow (P2-4)`.
 
+- **P2-гигиена (05.11.2026):** закрыто 6 пунктов аудита Grok. **#16** Settings `Channel(BUFFERED)` + guard `isExporting/isImporting` + `try/finally`, **#23** `collectAsStateWithLifecycle` × 5, **#26** guard. Коммит `6643f09`. **#12** `StatsViewModel` через `GetProjectStatisticsService`, **#14** `SaveSessionService : BaseUseCase` + `@param:IoDispatcher`. Коммит `bb963c1`. **#17** `AppDatabase` без `INSTANCE`/`getDatabase`, `DatabaseModule` строит Room напрямую (`[Owner-approved]`). Коммит `54fa33d`. Recon 05.11.2026: **#9/#10** закрыты P1-D/E, **#13/#29/#35–40** — нечего делать, **#11** — enum (ТЗ §4), **#19** — миграция отдельно, **#31–33** — в P3.
+
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
@@ -1374,3 +1376,17 @@ ViewModel с >4 зависимостями — кандидат на деком�
 4. **Где константа** — grep по обоим путям: `domain/service/` и `data/repository/` (HANDOVER §24 может указывать не на тот файл).
 
 **Пример (P2-5, 02.11.2026):** HANDOVER §24 указывал `UpdatePatternRowNumberService`, реально — `PatternRepositoryImpl.kt:398` (companion). UNIQUE/CHECK отсутствуют, арифметики нет, shift-запросы корректно исключают TEMP. Fix — 1 строка + KDoc.
+
+
+### Урок 43. Unused-import: проверять `grep "^import X$"`, не `"X." in text`
+
+**Симптом:** скрипт удаления `import androidx.room.Room` падает по `if "Room." not in text`, хотя импорт больше нигде не используется.
+
+**Причина:** `"Room."` матчит KDoc-строку `* Главная конфигурация базы данных приложения Room.` — конец предложения, не импорт. Detekt `UnusedImports` на реальный импорт сработал бы, а скрипт — нет.
+
+**Пример (P2 #17, 05.11.2026):** в `AppDatabase.kt` после удаления `getDatabase` проверка `if "Room." not in text` дала ложный FAIL — `Room.` в KDoc строки 19. Fix: `grep "^import androidx.room.Room$"`, отдельно от текста.
+
+**Правило:**
+- Для unused-import: `text.count("import X\n")` или `line == "import X"`, не `"X." in text`.
+- Detekt `UnusedImports` — финальная проверка; но до неё — точечный grep по `^import`.
+- `KDoc`, `SQL`, `String.format` могут содержать паттерн, ломающий `in`-проверку.

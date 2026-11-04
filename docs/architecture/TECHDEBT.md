@@ -66,7 +66,20 @@
 - [ ] **P3-A**: `Reset`/`SessionSaved` шлют `startService(ACTION_STOP)` даже если сервис не запущен — лишний onCreate/onDestroy.
 - [ ] **P3-B**: `handleSystemRestart` показывает `00:00:00`, таймер при этом на паузе.
 - [ ] **P3**: `project_progress` в бэкап не входит. В коде нет INSERT в эту таблицу.
-- [ ] **P2 #9–#23, #26, #29, #31–#33, #35–#40** и **P3 #41–#48** — из аудита 31.10.2026.
+- [x] **P2 #9, #10** — закрыты попутно: `Session` VO (P1-D), `Project` VO (P1-E).
+- [x] **P2 #12** — `StatsViewModel` через `GetProjectStatisticsService` (не `SessionRepository`). Коммит `bb963c1`.
+- [x] **P2 #14** — `SaveSessionService : BaseUseCase<SaveSessionParams, SessionId>` + `@param:IoDispatcher`. Коммит `bb963c1`.
+- [x] **P2 #16** — `SettingsViewModel`: `MutableSharedFlow(DROP_OLDEST)` → `Channel(BUFFERED)` + `receiveAsFlow`, `emit`→`send`. Коммит `6643f09`.
+- [x] **P2 #17** — `AppDatabase`: `INSTANCE`/`getDatabase`/`@Volatile` удалены; `DatabaseModule.provideAppDatabase` строит `Room.databaseBuilder` напрямую. `[Owner-approved]`. Коммит `54fa33d`.
+- [x] **P2 #23** — `collectAsState()` → `collectAsStateWithLifecycle()` на 5 экранах (AddProject, ProjectsList, Settings, Stats, Timer). Коммит `6643f09`.
+- [x] **P2 #26** — `SettingsViewModel`: guard `isExporting`/`isImporting` до `launch`, `try/finally`. Коммит `6643f09`.
+- [ ] **P2 #11** — `getDirectionForRow` `when` по enum. Сознательное решение ТЗ §4 (`rows-and-patterns.md §4`, TECHDEBT 7b): enum, не sealed — P3.
+- [x] **P2 #13** — уже валидируется: `ProjectName.createOrNull` + `RowCount.create` (throws → catch → ValidationError).
+- [ ] **P2 #19** — `repeat_code` без FK. Миграция 8→9, `Owner-approved: AppDatabase.kt`, отдельный заход.
+- [x] **P2 #29** — не применимо: тика, перезаписывающего State, нет. Guard `isMarkingRow`/`isSaving` на месте (P1-C).
+- [ ] **P2 #31–#33** — backup edge cases. Детали в handover v5 §5 отсутствуют; `grep TODO/FIXME/HACK/XXX` по backup-файлам = 0. Переклассифицировать в P3.
+- [x] **P2 #35–#40** — косметика: `grep TODO/FIXME/HACK/XXX` по main = 0. Закрыто.
+- [ ] **P3 #41–#48** — из аудита 31.10.2026, в P3-секции `TECHDEBT`.
 
 
 
