@@ -2,6 +2,7 @@ package com.knittrac.app.data.mapper
 
 import com.knittrac.app.data.local.entity.PatternRepeatEntity
 import com.knittrac.app.data.local.entity.SymbolEntity
+import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternRepeat
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.Span
@@ -16,12 +17,12 @@ import com.knittrac.app.domain.entity.SymbolCategory
  * неизвестная категория → [SymbolCategory.STANDARD], невалидный span → [Span.ONE].
  * Это защищает от повреждённых данных в БД и не падает на устаревших бэкапах.
  *
- * ВАЖНО: `ownerPatternId` в Domain остаётся `Long?` (P2 #1 в TECHDEBT,
- * миграция на `PatternId?` отложена до 7d+).
+ * `ownerPatternId` — `PatternId?` (P2-1, 02.11.2026): системные символы
+ * имеют `null`, кастомные — VO-идентификатор схемы-владельца.
  */
 fun Symbol.toEntity(): SymbolEntity = SymbolEntity(
     code = code,
-    ownerPatternId = ownerPatternId,
+    ownerPatternId = ownerPatternId?.value,
     displayName = displayName,
     textGlyph = textGlyph,
     category = category.name,
@@ -31,7 +32,7 @@ fun Symbol.toEntity(): SymbolEntity = SymbolEntity(
 
 fun SymbolEntity.toDomain(): Symbol = Symbol(
     code = code,
-    ownerPatternId = ownerPatternId,
+    ownerPatternId = ownerPatternId?.let { PatternId.createOrNull(it) },
     displayName = displayName,
     textGlyph = textGlyph,
     category = SymbolCategory.fromNameOrDefault(category),

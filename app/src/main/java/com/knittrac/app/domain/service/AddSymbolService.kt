@@ -46,7 +46,7 @@ class AddSymbolService @Inject constructor(
         // Шаг 3. Формируем Domain-объект кастомного символа.
         val symbol = Symbol(
             code = params.code,
-            ownerPatternId = params.patternId.value,
+            ownerPatternId = params.patternId,
             displayName = params.displayName,
             textGlyph = params.textGlyph,
             category = SymbolCategory.CUSTOM,

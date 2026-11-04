@@ -43,7 +43,7 @@ class DeleteSymbolService @Inject constructor(
         // Шаг 3. Валидация: символ должен существовать и быть кастомным.
         return when {
             symbol == null -> Result.Error(AppError.NotFoundError("Символ ${params.code} не найден в схеме"))
-            symbol.ownerPatternId != params.patternId.value -> Result.Error(
+            symbol.ownerPatternId != params.patternId -> Result.Error(
                 AppError.ValidationError("Нельзя удалить системный символ ${params.code}")
             )
             else -> {

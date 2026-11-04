@@ -23,7 +23,7 @@ class DeleteSymbolServiceTest {
      */
     @Test
     fun `delete custom symbol success`() = runTest {
-        val custom = Symbol("CUSTOM", 1L, "Мой", "X", SymbolCategory.CUSTOM)
+        val custom = Symbol("CUSTOM", PatternId.create(1L), "Мой", "X", SymbolCategory.CUSTOM)
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(custom))
         coEvery { repo.deleteSymbol(any(), any()) } returns Result.Success(Unit)
 
@@ -52,7 +52,7 @@ class DeleteSymbolServiceTest {
      */
     @Test
     fun `delete symbol in use propagates ValidationError`() = runTest {
-        val custom = Symbol("CUSTOM", 1L, "Мой", "X", SymbolCategory.CUSTOM)
+        val custom = Symbol("CUSTOM", PatternId.create(1L), "Мой", "X", SymbolCategory.CUSTOM)
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(custom))
         coEvery { repo.deleteSymbol(any(), any()) } returns Result.Error(AppError.ValidationError("используется"))
 

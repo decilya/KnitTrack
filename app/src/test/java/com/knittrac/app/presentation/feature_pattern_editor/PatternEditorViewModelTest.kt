@@ -495,7 +495,7 @@ class PatternEditorViewModelTest : BaseTest() {
         coEvery { addSymbolUseCase(any()) } returns Result.Success(
             Symbol(
                 code = "NEW",
-                ownerPatternId = 1L,
+                ownerPatternId = PatternId.create(1L),
                 displayName = "New",
                 textGlyph = "X",
                 category = SymbolCategory.CUSTOM

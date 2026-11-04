@@ -1071,7 +1071,6 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?` (~30 мин).
 - **P2-4:** D-инвариант в Domain (~30 мин).
 - **P2-5:** `TEMP_ROW_NUMBER = 999999` → `Int.MAX_VALUE` (~10 мин).
 
@@ -1082,6 +1081,8 @@ gradle/libs.versions.toml — НЕ существует.
 - **P1-D (02.11.2026):** `Session` VO (`SessionId`, `ProjectId`, `RowCount`), `SaveSessionParams` — VO, `SessionRepository` на границе VO, `SessionRepositoryImpl` разворачивает `.value`, `DtoMappers` обновлён (`Owner-approved §1.1`). Коммит `refactor(domain): Session — VO migration (P1-D)`.
 
 - **P1-E (02.11.2026):** `Project.id: ProjectId`, `ProjectRepository` (+ `addProject: Result<ProjectId>`, `updateTotalTime` удалён — 0 usages), `ProjectRepositoryImpl`, `Add/GetProjectById/DeleteProjectService` — VO, `EntityMappers`/`DtoMappers` (`Owner-approved §1.1`), `RowMarkService`/`MarkRowUseCase`/`MarkNextRowUseCase`, `ProjectsListViewModel.toUiModel` — `id.value` (UI-слой Long). Коммит `refactor(domain): Project — VO migration (P1-E)`.
+
+- **P2-1 (02.11.2026):** `Symbol.ownerPatternId: Long?` → `PatternId?`. `SymbolMappers`/`SymbolDtoMappers` — `.value` / `?.let { PatternId.createOrNull(it) }`. `AddSymbolService`/`DeleteSymbolService` — VO, без `.value`. Системные символы = `null`, кастомные = VO. Коммит `refactor(domain): Symbol.ownerPatternId — VO migration (P2-1)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 

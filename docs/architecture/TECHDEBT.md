@@ -342,7 +342,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 ### P2 после 7f-D
 
-- **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?`. ~30 мин.
+- [x] **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?` — **закрыт 02.11.2026**. **Факт:** `refactor(domain): Symbol.ownerPatternId — VO migration (P2-1)`.
 - **P2-4:** D-инвариант (`stitch > 0 → row IS NOT NULL`) — только в БД. Добавить в `ProgressService.updateProgress` / `Project.markRow` → `ValidationError`. ~30 мин.
 - **P2-5:** `TEMP_ROW_NUMBER = 999999` в `UpdatePatternRowNumberService` — заменить на `Int.MAX_VALUE`. ~10 мин.
 - **P2-7:** Большие коммиты (`84b3b65` 969 additions, `158add4` 672, `ab76eb6` 736) — нарушение атомарности. Правило: ≤300 строк. Процессный урок.

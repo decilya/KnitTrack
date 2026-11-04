@@ -33,7 +33,7 @@ import androidx.annotation.Keep
 @Keep
 data class Symbol(
     val code: String,
-    val ownerPatternId: Long? = null,
+    val ownerPatternId: PatternId? = null,
     val displayName: String,
     val textGlyph: String,
     val category: SymbolCategory,
