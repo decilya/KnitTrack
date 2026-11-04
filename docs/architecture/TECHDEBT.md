@@ -322,13 +322,13 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 **Решение:** `RowProgressCoordinator` (markNext + state), `TimerSessionCoordinator` (start/pause/reset/save). VM → 3 deps.
 **Оценка:** ~2 ч. Коммит `refactor(presentation): decompose TimerViewModel`.
 
-### P1-D. `Session` VO не мигрированы
+### P1-D. `Session` VO не мигрированы — **закрыт 02.11.2026**
 
 **Файл:** `domain/entity/Session.kt`
 **Факт:** `id: Long`, `projectId: Long`, `rowCount: Int` — примитивы. VO (`SessionId`, `ProjectId`, `RowCount`) **существуют**, но не используются в `Session`.
 **Проблема:** primitive obsession, P2 аудита Grok #9.
-**Решение:** `SessionId` VO (создать), `projectId: ProjectId`, `rowCount: RowCount`. Миграции **не нужны** (VO разворачивается в примитивы на границе).
-**Оценка:** ~1.5 ч. Коммит `refactor(domain): Session — VO migration`.
+**Решение (закрыто 02.11.2026):** `SessionId` VO создан. `Session.id: SessionId`, `projectId: ProjectId`, `rowCount: RowCount`. `SaveSessionParams` — VO. `SessionRepository` на границе VO, `SessionRepositoryImpl` разворачивает в примитивы (`.value`). `DtoMappers` обновлён (`Owner-approved §1.1`). Миграции не нужны.
+**Факт:** `refactor(domain): Session — VO migration (P1-D)`.
 
 ### P1-E. `Project.id: Long` — не VO
 

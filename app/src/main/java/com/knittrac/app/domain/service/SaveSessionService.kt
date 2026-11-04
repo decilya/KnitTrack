@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
+import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.domain.repository.SessionRepository
 import javax.inject.Inject
 
@@ -30,7 +31,7 @@ class SaveSessionService @Inject constructor(
      * @return [Result.Success] с ID новой сессии или [Result.Error] при сбое
      *   валидации или БД.
      */
-    suspend operator fun invoke(params: SaveSessionParams): Result<Long> {
+    suspend operator fun invoke(params: SaveSessionParams): Result<SessionId> {
         // 1. Валидация: длительность должна быть строго больше нуля секунд.
         val durationSeconds = (params.endTimestamp - params.startTimestamp) / 1000L
         if (durationSeconds <= 0L) {

@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_stats
 
+import com.knittrac.app.domain.entity.ProjectId
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
@@ -67,7 +68,7 @@ class StatsViewModelTest {
         val mockStats = listOf(
             DailyStat(dayTimestamp = 1000L, totalSeconds = 3600L)
         )
-        coEvery { sessionRepository.getDailyStats(1L) } returns Result.Success(mockStats)
+        coEvery { sessionRepository.getDailyStats(ProjectId.create(1L)) } returns Result.Success(mockStats)
 
         // --- Act ---
         viewModel = StatsViewModel(sessionRepository, savedStateHandle)
@@ -94,7 +95,7 @@ class StatsViewModelTest {
     fun `loadStats sets errorRes when repository returns Error`() = runTest {
         // --- Arrange ---
         val cause = RuntimeException("test db error")
-        coEvery { sessionRepository.getDailyStats(1L) } returns
+        coEvery { sessionRepository.getDailyStats(ProjectId.create(1L)) } returns
             Result.Error(AppError.UnknownError(cause))
 
         // --- Act ---
@@ -133,7 +134,7 @@ class StatsViewModelTest {
         val first = listOf(DailyStat(dayTimestamp = 1L, totalSeconds = 1L))
         val second = listOf(DailyStat(dayTimestamp = 2L, totalSeconds = 2L))
         var calls = 0
-        coEvery { sessionRepository.getDailyStats(1L) } coAnswers {
+        coEvery { sessionRepository.getDailyStats(ProjectId.create(1L)) } coAnswers {
             calls += 1
             if (calls == 1) {
                 delay(60_000)
@@ -148,6 +149,6 @@ class StatsViewModelTest {
 
         assertEquals(second, viewModel.state.value.dailyStats)
         assertEquals(false, viewModel.state.value.isLoading)
-        coVerify(exactly = 2) { sessionRepository.getDailyStats(1L) }
+        coVerify(exactly = 2) { sessionRepository.getDailyStats(ProjectId.create(1L)) }
     }
 }

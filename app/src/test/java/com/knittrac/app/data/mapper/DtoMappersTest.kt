@@ -1,5 +1,8 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.dto.ExportDataDto
 import com.knittrac.app.data.dto.ProjectDto
@@ -140,12 +143,12 @@ class DtoMappersTest {
     @Test
     fun sessionToDto_mapsAllFields() {
         val domain = Session(
-            id = 10L,
-            projectId = 5L,
+            id = SessionId.create(10L),
+            projectId = ProjectId.create(5L),
             startTimestamp = 10000L,
             endTimestamp = 20000L,
             durationSeconds = Duration.create(10L),
-            rowCount = 15,
+            rowCount = RowCount.create(15),
             updatedAt = 21000L,
             syncStatus = SyncStatus.PENDING
         )
@@ -178,12 +181,12 @@ class DtoMappersTest {
 
         val domain = dto.toDomain()
 
-        assertEquals(20L, domain.id)
-        assertEquals(6L, domain.projectId)
+        assertEquals(SessionId.create(20L), domain.id)
+        assertEquals(ProjectId.create(6L), domain.projectId)
         assertEquals(30000L, domain.startTimestamp)
         assertEquals(40000L, domain.endTimestamp)
         assertEquals(10L, domain.durationSeconds.seconds)
-        assertEquals(20, domain.rowCount)
+        assertEquals(RowCount.create(20), domain.rowCount)
         assertEquals(41000L, domain.updatedAt)
         assertEquals(SyncStatus.SYNCED, domain.syncStatus)
     }
@@ -192,12 +195,12 @@ class DtoMappersTest {
     @Test
     fun sessionRoundTrip_preservesAllFields() {
         val original = Session(
-            id = 99L,
-            projectId = 77L,
+            id = SessionId.create(99L),
+            projectId = ProjectId.create(77L),
             startTimestamp = 1_000_000L,
             endTimestamp = 2_000_000L,
             durationSeconds = Duration.create(1000L),
-            rowCount = 42,
+            rowCount = RowCount.create(42),
             updatedAt = 2_000_001L,
             syncStatus = SyncStatus.PENDING
         )

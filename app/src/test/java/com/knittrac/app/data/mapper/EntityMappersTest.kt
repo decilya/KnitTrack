@@ -1,5 +1,8 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.data.local.entity.SessionEntity
@@ -149,12 +152,12 @@ class EntityMappersTest {
             syncStatus = "PENDING"
         )
         val domain = entity.toDomain()
-        assertEquals(10L, domain.id)
-        assertEquals(5L, domain.projectId)
+        assertEquals(SessionId.create(10L), domain.id)
+        assertEquals(ProjectId.create(5L), domain.projectId)
         assertEquals(10000L, domain.startTimestamp)
         assertEquals(20000L, domain.endTimestamp)
         assertEquals(10L, domain.durationSeconds.seconds)
-        assertEquals(15, domain.rowCount)
+        assertEquals(RowCount.create(15), domain.rowCount)
         assertEquals(21000L, domain.updatedAt)
         assertEquals(SyncStatus.PENDING, domain.syncStatus)
     }
@@ -165,12 +168,12 @@ class EntityMappersTest {
     @Test
     fun sessionToEntity_mapsAllFields() {
         val domain = Session(
-            id = 20L,
-            projectId = 6L,
+            id = SessionId.create(20L),
+            projectId = ProjectId.create(6L),
             startTimestamp = 30000L,
             endTimestamp = 40000L,
             durationSeconds = Duration.create(10L),
-            rowCount = 20,
+            rowCount = RowCount.create(20),
             updatedAt = 41000L,
             syncStatus = SyncStatus.SYNCED
         )

@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.domain.entity.RowCount
 import com.google.gson.Gson
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -65,7 +66,7 @@ class DataImporterImplTest {
                 }
             )
         }
-        coVerify { backupRepository.saveSessionsBatch(match { it.size == 1 && it[0].rowCount == 10 }) }
+        coVerify { backupRepository.saveSessionsBatch(match { it.size == 1 && it[0].rowCount == RowCount.create(10) }) }
     }
 
     @Test

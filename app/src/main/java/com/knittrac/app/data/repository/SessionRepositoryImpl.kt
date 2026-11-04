@@ -10,6 +10,8 @@ import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.DailyStat
 import com.knittrac.app.domain.entity.Session
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.domain.repository.SessionRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -40,8 +42,8 @@ class SessionRepositoryImpl @Inject constructor(
      * @param projectId Идентификатор проекта.
      * @return Flow списка Domain-сессий.
      */
-    override fun getSessionsByProjectIdFlow(projectId: Long): Flow<List<Session>> =
-        sessionDao.getSessionsByProjectIdFlow(projectId).map { list ->
+    override fun getSessionsByProjectIdFlow(projectId: ProjectId): Flow<List<Session>> =
+        sessionDao.getSessionsByProjectIdFlow(projectId.value).map { list ->
             list.map { it.toDomain() }
         }
 
@@ -50,12 +52,12 @@ class SessionRepositoryImpl @Inject constructor(
      *
      * @return [Result.Success] со списком или [Result.Error].
      */
-    override suspend fun getSessionsByProjectId(projectId: Long): Result<List<Session>> = try {
-        Result.Success(sessionDao.getSessionsByProjectId(projectId).map { it.toDomain() })
+    override suspend fun getSessionsByProjectId(projectId: ProjectId): Result<List<Session>> = try {
+        Result.Success(sessionDao.getSessionsByProjectId(projectId.value).map { it.toDomain() })
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "getSessionsByProjectId projectId=%d failed", projectId)
+        Timber.e(e, "getSessionsByProjectId projectId=%d failed", projectId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -98,7 +100,7 @@ class SessionRepositoryImpl @Inject constructor(
      *   [AppError.NotFoundError], если проект не найден;
      *   [AppError.DatabaseError] при прочих сбоях БД.
      */
-    override suspend fun addSessionAtomically(session: Session): Result<Long> = try {
+    override suspend fun addSessionAtomically(session: Session): Result<SessionId> = try {
         val entity = session.toEntity().copy(
             updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
@@ -108,14 +110,14 @@ class SessionRepositoryImpl @Inject constructor(
             durationSeconds = session.durationSeconds.seconds,
             updatedAt = entity.updatedAt
         )
-        Result.Success(newRowId)
+        Result.Success(SessionId.create(newRowId))
     } catch (e: CancellationException) {
         throw e
     } catch (e: ProjectNotFoundException) {
-        Timber.e(e, "addSessionAtomically projectId=%d not found", session.projectId)
+        Timber.e(e, "addSessionAtomically projectId=%d not found", session.projectId.value)
         Result.Error(AppError.NotFoundError(e.message ?: "Проект не найден"))
     } catch (e: Exception) {
-        Timber.e(e, "addSessionAtomically projectId=%d failed", session.projectId)
+        Timber.e(e, "addSessionAtomically projectId=%d failed", session.projectId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -143,14 +145,14 @@ class SessionRepositoryImpl @Inject constructor(
         )
         val rows = sessionDao.updateSession(entity)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Сессия id=${session.id} не найдена"))
+            Result.Error(AppError.NotFoundError("Сессия id=${session.id.value} не найдена"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateSession id=%d failed", session.id)
+        Timber.e(e, "updateSession id=%d failed", session.id.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -162,36 +164,36 @@ class SessionRepositoryImpl @Inject constructor(
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
      *   или [AppError.DatabaseError].
      */
-    override suspend fun updateSyncStatus(sessionId: Long, status: SyncStatus): Result<Unit> = try {
-        val rows = sessionDao.updateSyncStatus(sessionId, status.name)
+    override suspend fun updateSyncStatus(sessionId: SessionId, status: SyncStatus): Result<Unit> = try {
+        val rows = sessionDao.updateSyncStatus(sessionId.value, status.name)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Сессия id=$sessionId не найдена"))
+            Result.Error(AppError.NotFoundError("Сессия id=${sessionId.value} не найдена"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateSyncStatus sessionId=%d failed", sessionId)
+        Timber.e(e, "updateSyncStatus sessionId=%d failed", sessionId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
     /**
      * Атомарно удаляет сессию и декрементирует тоталы проекта.
      */
-    override suspend fun deleteSessionAndDecrementProjectTotals(sessionId: Long): Result<Unit> = try {
+    override suspend fun deleteSessionAndDecrementProjectTotals(sessionId: SessionId): Result<Unit> = try {
         sessionDao.deleteSessionAndDecrementProjectTotals(
-            sessionId = sessionId,
+            sessionId = sessionId.value,
             updatedAt = timeProvider.currentTimeMillis()
         )
         Result.Success(Unit)
     } catch (e: CancellationException) {
         throw e
     } catch (e: NoSuchElementException) {
-        Timber.w(e, "deleteSessionAndDecrementProjectTotals id=%d not found", sessionId)
-        Result.Error(AppError.NotFoundError("Сессия id=$sessionId не найдена"))
+        Timber.w(e, "deleteSessionAndDecrementProjectTotals id=%d not found", sessionId.value)
+        Result.Error(AppError.NotFoundError("Сессия id=${sessionId.value} не найдена"))
     } catch (e: Exception) {
-        Timber.e(e, "deleteSessionAndDecrementProjectTotals id=%d failed", sessionId)
+        Timber.e(e, "deleteSessionAndDecrementProjectTotals id=%d failed", sessionId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -200,12 +202,12 @@ class SessionRepositoryImpl @Inject constructor(
      *
      * @return [Result.Success] со списком [DailyStat] или [Result.Error].
      */
-    override suspend fun getDailyStats(projectId: Long): Result<List<DailyStat>> = try {
-        Result.Success(sessionDao.getDailyStats(projectId))
+    override suspend fun getDailyStats(projectId: ProjectId): Result<List<DailyStat>> = try {
+        Result.Success(sessionDao.getDailyStats(projectId.value))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "getDailyStats projectId=%d failed", projectId)
+        Timber.e(e, "getDailyStats projectId=%d failed", projectId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 }

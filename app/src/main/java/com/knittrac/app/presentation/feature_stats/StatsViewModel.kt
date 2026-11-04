@@ -1,5 +1,7 @@
 package com.knittrac.app.presentation.feature_stats
 
+import com.knittrac.app.domain.entity.ProjectId
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -61,7 +63,7 @@ class StatsViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorRes = null) }
             
-            when (val result = sessionRepository.getDailyStats(id)) {
+            when (val result = sessionRepository.getDailyStats(ProjectId.create(id))) {
                 is Result.Success -> _state.update {
                     it.copy(dailyStats = result.data, isLoading = false)
                 }

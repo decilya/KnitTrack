@@ -1,5 +1,9 @@
 package com.knittrac.app.data.mapper
 
+import com.knittrac.app.domain.entity.ProjectId
+
+import com.knittrac.app.domain.entity.SessionId
+
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
@@ -69,12 +73,12 @@ fun ProjectDto.toDomain(): Project = Project(
  * Session → SessionDto. Duration и syncStatus разворачиваются в примитивы.
  */
 fun Session.toDto(): SessionDto = SessionDto(
-    id = id,
-    projectId = projectId,
+    id = id.value,
+    projectId = projectId.value,
     startTimestamp = startTimestamp,
     endTimestamp = endTimestamp,
     durationSeconds = durationSeconds.seconds,
-    rowCount = rowCount,
+    rowCount = rowCount.value,
     updatedAt = updatedAt,
     syncStatus = syncStatus.name
 )
@@ -83,12 +87,12 @@ fun Session.toDto(): SessionDto = SessionDto(
  * SessionDto → Session. Длительность и статус — через безопасный fallback.
  */
 fun SessionDto.toDomain(): Session = Session(
-    id = id,
-    projectId = projectId,
+    id = SessionId.createOrNull(id) ?: SessionId.ZERO,
+    projectId = ProjectId.createOrNull(projectId) ?: ProjectId.ZERO,
     startTimestamp = startTimestamp,
     endTimestamp = endTimestamp,
     durationSeconds = Duration.createOrNull(durationSeconds) ?: Duration.ZERO,
-    rowCount = rowCount,
+    rowCount = RowCount.createOrNull(rowCount) ?: RowCount.ZERO,
     updatedAt = updatedAt,
     syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )

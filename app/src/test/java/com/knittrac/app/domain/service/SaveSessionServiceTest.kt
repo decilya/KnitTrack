@@ -4,6 +4,9 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.domain.repository.SessionRepository
+import com.knittrac.app.domain.entity.SessionId
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -28,7 +31,7 @@ class SaveSessionServiceTest {
     @Test
     fun `invoke returns validation error when duration is zero`() = runTest {
         // Arrange
-        val params = SaveSessionParams(projectId = 1L, startTimestamp = 1_000L, endTimestamp = 1_000L, rowCount = 0)
+        val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 1_000L, rowCount = RowCount.ZERO)
         
         // Act
         val result = service(params)
@@ -45,15 +48,15 @@ class SaveSessionServiceTest {
     @Test
     fun `invoke delegates to atomic repository method on success`() = runTest {
         // Arrange
-        val params = SaveSessionParams(projectId = 1L, startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = 5)
-        coEvery { sessionRepository.addSessionAtomically(any()) } returns Result.Success(10L)
+        val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = RowCount.create(5))
+        coEvery { sessionRepository.addSessionAtomically(any()) } returns Result.Success(SessionId.create(10L))
         
         // Act
         val result = service(params)
         
         // Assert
         assertTrue(result is Result.Success)
-        assertEquals(10L, (result as Result.Success).data)
+        assertEquals(SessionId.create(10L), (result as Result.Success).data)
         coVerify { sessionRepository.addSessionAtomically(any()) }
     }
 
@@ -63,7 +66,7 @@ class SaveSessionServiceTest {
     @Test
     fun `invoke returns error when atomic repository method fails`() = runTest {
         // Arrange
-        val params = SaveSessionParams(projectId = 1L, startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = 5)
+        val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = RowCount.create(5))
         coEvery { sessionRepository.addSessionAtomically(any()) } returns 
             Result.Error(AppError.DatabaseError(Exception("DB constraint fail")))
         

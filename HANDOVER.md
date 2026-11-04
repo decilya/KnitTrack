@@ -1058,13 +1058,16 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P1-D:** `Session` VO — мигрировать (~1.5 ч).
 - **P1-E:** `Project.id: Long` → `ProjectId` (~1 ч).
+- **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?` (~30 мин).
+- **P2-4:** D-инвариант в Domain (~30 мин).
+- **P2-5:** `TEMP_ROW_NUMBER = 999999` → `Int.MAX_VALUE` (~10 мин).
 
 ### Закрыто в P1-долге
 - **P1-A (02.11.2026):** `PatternEditorUseCases` (10 полей, God Bag) → 4 группы + `PatternEditorPlatformDeps`. VM — 5 параметров, без `@Suppress`. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
 - **P1-B (02.11.2026):** `ProgressService` (9 методов, 2 ответственности) → `RowMarkService` + `NextRowService`. Композиция через inject, Domain не дублирует логику. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
 - **P1-C (02.11.2026):** `TimerViewModel` (5 deps) → `TimerSessionCoordinator` + `ProjectProgressCoordinator` + `savedStateHandle` = 3 deps (оркестратор). Коммит `refactor(presentation): decompose TimerViewModel into 2 coordinators (P1-C)`. Уточнение: `@Suppress` в файле отсутствовал (было 5 deps, не 6), но SRP-проблема (5 причин изменения) была реальной.
+- **P1-D (02.11.2026):** `Session` VO (`SessionId`, `ProjectId`, `RowCount`), `SaveSessionParams` — VO, `SessionRepository` на границе VO, `SessionRepositoryImpl` разворачивает `.value`, `DtoMappers` обновлён (`Owner-approved §1.1`). Коммит `refactor(domain): Session — VO migration (P1-D)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1223,3 +1226,64 @@ ViewModel с >4 зависимостями — кандидат на деком�
 5. Координатор имеет 2–3 deps. VM имеет 2–3 координатора + `savedStateHandle`.
 
 **Правило:** если ViewModel >4 deps — разбить на координаторы по причине изменения. VM остаётся оркестратором. State — в VM, координаторы — тонкие прокси.
+
+### Урок 34. VO на границе Repository: разворачивать в `.value` перед DAO
+
+Если Domain-сущность использует VO (например, `Session.id: SessionId`), а Room — примитивы (`SessionEntity.id: Long`), граница конвертации — **`RepositoryImpl`** (Data → DAO), не DAO и не Domain.
+
+**Правило:**
+1. `RepositoryImpl.method(...)` принимает/возвращает **VO** (симметрично Domain).
+2. Перед вызовом DAO — развернуть: `id.value`, `projectId.value`, `rowCount.value`.
+3. После получения Entity — обернуть: `SessionId.createOrNull(id) ?: SessionId.ZERO`.
+4. DAO и Entity — **только примитивы** (Room не умеет `@JvmInline value class` в `@Entity`/`@Query` без `@TypeConverter`).
+5. Мапперы (`EntityMappers`, `DtoMappers`) — тоже **на границе**, разворачивать/оборачивать.
+
+**Пример (P1-D, 02.11.2026):**
+- `SessionRepository.addSessionAtomically(session: Session): Result<SessionId>` — на границе Repository.
+- `SessionRepositoryImpl` — `session.toEntity()` (маппер разворачивает `id.value`, `projectId.value`, `rowCount.value`), затем `sessionDao.insertSessionAndIncrementProjectTotals(entity, ...)`, затем `SessionId.create(newRowId)`.
+- `SessionDao.insertSession(...): Long`, `SessionEntity.id: Long` — не тронуты (примитивы).
+
+**Почему не `@TypeConverter`:** конвертеры нужны для Room-типов, но VO в Domain и так `@JvmInline` (без boxing). Конвертер добавил бы сложность без пользы. Разворачивать явно в `RepositoryImpl` — читаемо и тестируемо.
+
+**Почему не в Domain:** Domain не знает про Room (Clean Arch), значит и про `.value` на границе DAO — тоже.
+
+
+### Урок 35. `add_import`: anchor должен включать `\n` в конце
+
+**Симптом:** KSP «Expecting a top level declaration» + «imports are only allowed in the beginning of file» на одной и той же строке (`import Ximport Y`).
+
+**Причина:** `add_import`-helper вставлял импорт по anchor без завершающего `\n`, склеивая строку с предыдущим импортом.
+
+**Пример (P1-D, 02.11.2026):** anchor = `"import com.knittrac.app.core.common.Result"` (без `\n`) → при вставке `SessionId` получилось `...Resultimport com.knittrac.app.domain.entity.SessionId`. Фикс: anchor = `"...Result\n"`, insert после него с `imp + "\n"`.
+
+**Правило:**
+- Anchor всегда с `\n` в конце: `"import X\n"`, не `"import X"`.
+- После вставки: `grep -c "import.*import " file.kt` = 0 (иначе FAIL).
+- Idempotency-marker: `if "import X\n" in text: SKIP`.
+
+### Урок 36. Line-based replacement: `.strip()` + сохранение indentation/trailing
+
+**Симптом:** `old`-блок не совпадает дважды подряд, `changed=0`, хотя визуально блок идентичен. `cat -A` показывает trailing space (`id = 1L, `).
+
+**Причина:** trailing spaces в исходнике не совпадают с `old`-строкой без trailing. Indentation внутри callback/lambda-вложенности глубже предполагаемого.
+
+**Пример (P1-D, 02.11.2026):** `DataExporterImplTest.kt` — `val session = Session(...)` имел trailing space в `id = 1L, ` / `projectId = 1L, ` / `rowCount = 10, `. Полные old-строки без trailing не совпали дважды (Script 4b + Script 4b-fix с угаданными отступами). Третий фикс — через `.strip()` + сохранение `leading`/`trailing` — сработал.
+
+**Правило:**
+- Сравнение по `line.strip()`, не по полной строке.
+- При записи: сохранять `leading` (indentation) и `trailing` (хвостовые пробелы) из оригинала.
+- `changed != N` → FAIL, вывести `repr()` всех target-строк для диагностики, **не портить файл**.
+- Pre-check: `sed -n 'A,Bp' file | cat -A` для trailing-символов.
+
+### Урок 37. Regex-replace assert'ов в shared test-файлах: фильтр по enclosing `fun`
+
+**Симптом:** build компилируется, но падают 2+ unrelated теста в **другом** domain-type после миграции одного типа (`Session.id: SessionId`, `Project.id: Long`).
+
+**Причина:** regex `assertEquals\((\d+)L, domain\.id\)` матчит и `Project.id` (`Long`), и `Session.id` (`SessionId`). `assertEquals(Object, Object)` компилируется, но runtime ловит несовпадение типов.
+
+**Пример (P1-D, 02.11.2026):** `fix_assertions` в Script 4b заменил `assertEquals(2L, domain.id)` → `assertEquals(SessionId.create(2L), domain.id)` в `fun projectDtoToDomain_mapsAllFields`. Build зелёный, но `DtoMappersTest.projectDtoToDomain_...` и `EntityMappersTest.projectEntityToDomain_...` падали. Fix: line-scan up до `fun `, `startswith("fun project")` → revert.
+
+**Правило:**
+- Line-scan вверх до ближайшего `fun `, определить enclosing test-функцию.
+- Regex-replace **только** для строк в `fun session*` (или `fun project*` — по scope миграции).
+- Проверка: `grep -n "SessionId.create(NL), domain.id"` → только в session-fun, не в project-fun.

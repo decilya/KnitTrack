@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.domain.entity.ProjectId
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
@@ -23,7 +25,7 @@ import javax.inject.Inject
 class GetProjectStatisticsService @Inject constructor(
     private val sessionRepository: SessionRepository,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
-) : BaseUseCase<Long, List<DailyStat>>(dispatcher) {
+) : BaseUseCase<ProjectId, List<DailyStat>>(dispatcher) {
 
     /**
      * Выполняет получение дневной статистики.
@@ -32,6 +34,6 @@ class GetProjectStatisticsService @Inject constructor(
      * @return [Result.Success] со списком [DailyStat] (отсортированных по дате)
      *         или [Result.Error] при ошибке.
      */
-    override suspend fun execute(params: Long): Result<List<DailyStat>> =
+    override suspend fun execute(params: ProjectId): Result<List<DailyStat>> =
         sessionRepository.getDailyStats(params)
 }

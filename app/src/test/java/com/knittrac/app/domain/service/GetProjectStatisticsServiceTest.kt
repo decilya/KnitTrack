@@ -1,4 +1,5 @@
 package com.knittrac.app.domain.service
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.DailyStat
@@ -16,10 +17,10 @@ class GetProjectStatisticsServiceTest : BaseTest() {
     @Test
     fun `execute returns daily stats on success`() = runTest {
         val stats = listOf(DailyStat(1000L, 3600L))
-        coEvery { sessionRepository.getDailyStats(1L) } returns Result.Success(stats)
-        val result = service(1L)
+        coEvery { sessionRepository.getDailyStats(ProjectId.create(1L)) } returns Result.Success(stats)
+        val result = service(ProjectId.create(1L))
         assertTrue(result is Result.Success)
         assertEquals(stats, (result as Result.Success).data)
-        coVerify { sessionRepository.getDailyStats(1L) }
+        coVerify { sessionRepository.getDailyStats(ProjectId.create(1L)) }
     }
 }

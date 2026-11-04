@@ -4,6 +4,9 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
+import com.knittrac.app.domain.entity.SessionId
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.service.TimerService
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,10 +30,10 @@ class TimerSessionCoordinatorTest {
     private val coordinator = TimerSessionCoordinator(timerService, saveSessionService)
 
     private fun params(): SaveSessionParams = SaveSessionParams(
-        projectId = 1L,
+        projectId = ProjectId.create(1L),
         startTimestamp = 0L,
         endTimestamp = 60_000L,
-        rowCount = 10
+        rowCount = RowCount.create(10)
     )
 
     @Test
@@ -56,12 +59,12 @@ class TimerSessionCoordinatorTest {
 
     @Test
     fun saveSession_success_delegatesToService() = runTest {
-        coEvery { saveSessionService(any()) } returns Result.Success(42L)
+        coEvery { saveSessionService(any()) } returns Result.Success(SessionId.create(42L))
 
         val result = coordinator.saveSession(params())
 
         assertTrue(result is Result.Success)
-        assertEquals(42L, (result as Result.Success).data)
+        assertEquals(SessionId.create(42L), (result as Result.Success).data)
         coVerify(exactly = 1) { saveSessionService(any()) }
     }
 

@@ -1,6 +1,8 @@
 package com.knittrac.app.presentation.feature_timer
 
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.SessionId
+
 import com.knittrac.app.domain.service.SaveSessionParams
 import com.knittrac.app.domain.service.SaveSessionService
 import com.knittrac.app.domain.service.TimerService
@@ -55,6 +57,6 @@ class TimerSessionCoordinator @Inject constructor(
      * @return [Result.Success] с ID сессии; [Result.Error] с ValidationError (пустая)
      *   или DatabaseError (сбой БД).
      */
-    suspend fun saveSession(params: SaveSessionParams): Result<Long> =
+    suspend fun saveSession(params: SaveSessionParams): Result<SessionId> =
         saveSessionService(params)
 }

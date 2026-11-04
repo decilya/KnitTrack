@@ -6,6 +6,7 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowCount
@@ -115,7 +116,7 @@ class TimerViewModelTest {
         // мгновенно, и второй вызов пройдёт guard.
         coEvery { sessionCoordinator.saveSession(any()) } coAnswers {
             delay(100)
-            Result.Success(1L)
+            Result.Success(SessionId.create(1L))
         }
 
         val viewModel = TimerViewModel(

@@ -7,6 +7,8 @@ import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
+
 import com.knittrac.app.domain.service.SaveSessionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
@@ -221,12 +223,13 @@ class TimerViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                val projectIdVo = ProjectId.createOrDefault(projectId)
                 val endTimestamp = currentState.startTimestamp + (currentState.elapsedTime * 1000L)
                 val params = SaveSessionParams(
-                    projectId = projectId,
+                    projectId = projectIdVo,
                     startTimestamp = currentState.startTimestamp,
                     endTimestamp = endTimestamp,
-                    rowCount = currentState.rowCount
+                    rowCount = RowCount.createOrDefault(currentState.rowCount)
                 )
 
                 val result = sessionCoordinator.saveSession(params)

@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.SessionId
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -163,12 +165,12 @@ class DataRoundTripTest {
     )
 
     private fun session() = Session(
-        id = 1L,
-        projectId = 1L,
+        id = SessionId.create(1L),
+        projectId = ProjectId.create(1L),
         startTimestamp = 100L,
         endTimestamp = 200L,
         durationSeconds = Duration.create(100L),
-        rowCount = 10,
+        rowCount = RowCount.create(10),
         updatedAt = 200L,
         syncStatus = SyncStatus.PENDING
     )

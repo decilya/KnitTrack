@@ -9,6 +9,9 @@ import com.knittrac.app.data.local.exceptions.ProjectNotFoundException
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
+import com.knittrac.app.domain.entity.SessionId
+import com.knittrac.app.domain.entity.ProjectId
+import com.knittrac.app.domain.entity.RowCount
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -45,14 +48,14 @@ class SessionRepositoryImplTest {
         } returns 100L
 
         val session = Session(
-            projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
-            durationSeconds = Duration.create(60L), rowCount = 5, updatedAt = 1_000L
+            projectId = ProjectId.create(10L), startTimestamp = 1_000L, endTimestamp = 61_000L,
+            durationSeconds = Duration.create(60L), rowCount = RowCount.create(5), updatedAt = 1_000L
         )
 
         val result = repository.addSessionAtomically(session)
 
         assertTrue(result is Result.Success)
-        assertEquals(100L, (result as Result.Success).data)
+        assertEquals(SessionId.create(100L), (result as Result.Success).data)
         coVerify {
             sessionDao.insertSessionAndIncrementProjectTotals(any(), 60L, any())
         }
@@ -66,12 +69,12 @@ class SessionRepositoryImplTest {
     fun updateSession_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
         coEvery { sessionDao.updateSession(any()) } returns 0
         val session = Session(
-            id = 99L,
-            projectId = 1L,
+            id = SessionId.create(99L),
+            projectId = ProjectId.create(1L),
             startTimestamp = 1_000L,
             endTimestamp = 61_000L,
             durationSeconds = Duration.create(60L),
-            rowCount = 5,
+            rowCount = RowCount.create(5),
             updatedAt = 1_000L
         )
 
@@ -88,12 +91,12 @@ class SessionRepositoryImplTest {
     fun updateSession_returnsSuccessWhenDaoReturnsOneRow() = runTest {
         coEvery { sessionDao.updateSession(any()) } returns 1
         val session = Session(
-            id = 1L,
-            projectId = 1L,
+            id = SessionId.create(1L),
+            projectId = ProjectId.create(1L),
             startTimestamp = 1_000L,
             endTimestamp = 61_000L,
             durationSeconds = Duration.create(60L),
-            rowCount = 5,
+            rowCount = RowCount.create(5),
             updatedAt = 1_000L
         )
 
@@ -114,7 +117,7 @@ class SessionRepositoryImplTest {
         coEvery { sessionDao.updateSyncStatus(any(), any()) } returns 0
 
         val result = repository.updateSyncStatus(
-            sessionId = 99L,
+            sessionId = SessionId.create(99L),
             status = SyncStatus.SYNCED
         )
 
@@ -130,7 +133,7 @@ class SessionRepositoryImplTest {
         coEvery { sessionDao.updateSyncStatus(any(), any()) } returns 1
 
         val result = repository.updateSyncStatus(
-            sessionId = 1L,
+            sessionId = SessionId.create(1L),
             status = SyncStatus.SYNCED
         )
 
@@ -147,7 +150,7 @@ class SessionRepositoryImplTest {
             sessionDao.deleteSessionAndDecrementProjectTotals(any(), any())
         } throws NoSuchElementException("Сессия id=999 не найдена")
 
-        val result = repository.deleteSessionAndDecrementProjectTotals(999L)
+        val result = repository.deleteSessionAndDecrementProjectTotals(SessionId.create(999L))
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)
@@ -164,8 +167,8 @@ class SessionRepositoryImplTest {
         } throws ProjectNotFoundException(10L)
 
         val session = Session(
-            projectId = 10L, startTimestamp = 1_000L, endTimestamp = 61_000L,
-            durationSeconds = Duration.create(60L), rowCount = 5, updatedAt = 1_000L
+            projectId = ProjectId.create(10L), startTimestamp = 1_000L, endTimestamp = 61_000L,
+            durationSeconds = Duration.create(60L), rowCount = RowCount.create(5), updatedAt = 1_000L
         )
 
         val result = repository.addSessionAtomically(session)

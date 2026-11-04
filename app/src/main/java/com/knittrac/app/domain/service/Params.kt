@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.domain.entity.RowCount
+
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.ProjectId
@@ -17,10 +19,10 @@ data class AddProjectParams(
  * Параметры для сохранения сессии вязания.
  */
 data class SaveSessionParams(
-    val projectId: Long,
+    val projectId: ProjectId,
     val startTimestamp: Long,
     val endTimestamp: Long,
-    val rowCount: Int
+    val rowCount: RowCount
 )
 
 /**
