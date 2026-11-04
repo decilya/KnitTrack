@@ -1093,6 +1093,11 @@ gradle/libs.versions.toml — НЕ существует.
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
 - **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
+- **P2-баг (05.11.2026):** Санитизация `repeatCode` при импорте бэкапа. 
+  Ранее битый бэкап падал с `SQLiteConstraintException` (DatabaseError). 
+  Теперь в `BackupRepositoryImpl.savePatternOperationsBatch` orphan-коды 
+  зануляются с логом `Timber.w` перед вставкой. Коммит `fix(data): sanitize orphan repeat_code on import`.
+
 - **P2 #19 (05.11.2026):** `repeat_code` defense-in-depth — 2 триггера (`trg_repeat_code_check_insert`/`_update`) в `MIGRATION_8_9` + `DATABASE_CALLBACK.onCreate`. FK невозможен (composite PK `pattern_repeats`). 3-way JOIN через `pattern_rows.pattern_id`. DELETE — вне scope (нет `deleteRepeat`). Коммит `feat(data): repeat_code defense-in-depth — MIGRATION_8_9 (P2 #19)`.
 - **Long-press** на ячейке Canvas → `EditOperationDialog` (смена символа, HEX-цвет, span override, удаление операции).
 - **Long-press** на `FilterChip` ряда → `RowEditorSheet` (перемещение через ввод номера, удаление с подтверждением).

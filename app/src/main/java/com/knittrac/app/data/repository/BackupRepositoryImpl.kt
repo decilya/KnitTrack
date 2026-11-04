@@ -14,6 +14,7 @@ import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.repository.BackupRepository
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,7 +54,23 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePatternOperationsBatch(operations: List<PatternOperation>) {
-        database.patternDao().insertOperations(operations.map { it.toEntity() })
+        val validRepeatPairs = database.patternRepeatDao().getAllRepeats()
+            .map { it.patternId to it.code }
+            .toSet()
+        val rowToPattern = database.patternDao().getAllRows()
+            .associate { it.id to it.patternId }
+
+        val sanitized = operations.map { op ->
+            val code = op.repeatCode
+            if (code != null) {
+                val patternId = rowToPattern[op.patternRowId.value]
+                if (patternId == null || (patternId to code) !in validRepeatPairs) {
+                    Timber.w("Orphan repeat_code '%s' for patternRowId=%d. Sanitizing to null.", code, op.patternRowId.value)
+                    op.copy(repeatCode = null)
+                } else op
+            } else op
+        }
+        database.patternDao().insertOperations(sanitized.map { it.toEntity() })
     }
 
     override suspend fun saveProjectsBatch(batch: List<Project>) {
