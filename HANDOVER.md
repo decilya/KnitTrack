@@ -1072,7 +1072,6 @@ gradle/libs.versions.toml — НЕ существует.
 
 ### Next
 - **P2-4:** D-инвариант в Domain (~30 мин).
-- **P2-5:** `TEMP_ROW_NUMBER = 999999` → `Int.MAX_VALUE` (~10 мин).
 
 ### Закрыто в P1-долге
 - **P1-A (02.11.2026):** `PatternEditorUseCases` (10 полей, God Bag) → 4 группы + `PatternEditorPlatformDeps`. VM — 5 параметров, без `@Suppress`. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
@@ -1083,6 +1082,8 @@ gradle/libs.versions.toml — НЕ существует.
 - **P1-E (02.11.2026):** `Project.id: ProjectId`, `ProjectRepository` (+ `addProject: Result<ProjectId>`, `updateTotalTime` удалён — 0 usages), `ProjectRepositoryImpl`, `Add/GetProjectById/DeleteProjectService` — VO, `EntityMappers`/`DtoMappers` (`Owner-approved §1.1`), `RowMarkService`/`MarkRowUseCase`/`MarkNextRowUseCase`, `ProjectsListViewModel.toUiModel` — `id.value` (UI-слой Long). Коммит `refactor(domain): Project — VO migration (P1-E)`.
 
 - **P2-1 (02.11.2026):** `Symbol.ownerPatternId: Long?` → `PatternId?`. `SymbolMappers`/`SymbolDtoMappers` — `.value` / `?.let { PatternId.createOrNull(it) }`. `AddSymbolService`/`DeleteSymbolService` — VO, без `.value`. Системные символы = `null`, кастомные = VO. Коммит `refactor(domain): Symbol.ownerPatternId — VO migration (P2-1)`.
+
+- **P2-5 (02.11.2026):** `PatternRepositoryImpl.TEMP_ROW_NUMBER = 999_999` → `Int.MAX_VALUE` + KDoc. Уточнение §24: файл `PatternRepositoryImpl.kt:398`, не `UpdatePatternRowNumberService`. Коммит `refactor(data): TEMP_ROW_NUMBER = Int.MAX_VALUE (P2-5)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1359,3 +1360,16 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - Grep после VO-миграции: `grep -rnE 'Timber\.e\(e, "[^"]*%d[^"]*", [a-z.]+'` по main — проверить каждый use-site.
 - То же для `String.format`, `printf`.
 - Аналогично `"...$x.id..."` в message: `ProjectId(value=1)` вместо `1`. Всегда `.value`.
+
+
+### Урок 42. Magic number → верхняя граница: проверить UNIQUE, CHECK, арифметику
+
+**Симптом:** замена `TEMP_ROW_NUMBER = 999_999` на `Int.MAX_VALUE` в сервисе переупорядочивания рядов.
+
+**Правило (4 проверки перед заменой):**
+1. **DB UNIQUE / CHECK** — если `UNIQUE(pattern_id, row_number)` есть, `Int.MAX_VALUE` может совпасть с существующим row. Grep `row_number` по `schemas/*.json` + миграции.
+2. **Промежуточное состояние** — shift-запросы (`shiftRowNumbersDown/Up`) должны **исключать** TEMP: условие `row_number <= :new` / `row_number < :old` — TEMP=`MAX` не попадает ни в один, если new/old < MAX.
+3. **Арифметика на `.value`** — overflow при `+1` если `Int.MAX_VALUE`. Grep `rowNumber.value [+*]` — но `[+\-*]` не работает в Python-regex (Unicode range). Использовать `[+*]` или `[+\-]` отдельно.
+4. **Где константа** — grep по обоим путям: `domain/service/` и `data/repository/` (HANDOVER §24 может указывать не на тот файл).
+
+**Пример (P2-5, 02.11.2026):** HANDOVER §24 указывал `UpdatePatternRowNumberService`, реально — `PatternRepositoryImpl.kt:398` (companion). UNIQUE/CHECK отсутствуют, арифметики нет, shift-запросы корректно исключают TEMP. Fix — 1 строка + KDoc.

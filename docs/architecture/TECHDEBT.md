@@ -344,7 +344,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [x] **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?` — **закрыт 02.11.2026**. **Факт:** `refactor(domain): Symbol.ownerPatternId — VO migration (P2-1)`.
 - **P2-4:** D-инвариант (`stitch > 0 → row IS NOT NULL`) — только в БД. Добавить в `ProgressService.updateProgress` / `Project.markRow` → `ValidationError`. ~30 мин.
-- **P2-5:** `TEMP_ROW_NUMBER = 999999` в `UpdatePatternRowNumberService` — заменить на `Int.MAX_VALUE`. ~10 мин.
+- [x] **P2-5:** `PatternRepositoryImpl.TEMP_ROW_NUMBER = 999_999` → `Int.MAX_VALUE` — **закрыт 02.11.2026**. Файл — `PatternRepositoryImpl.kt:398`, не `UpdatePatternRowNumberService` (неточность §24). **Факт:** `refactor(data): TEMP_ROW_NUMBER = Int.MAX_VALUE (P2-5)`.
 - **P2-7:** Большие коммиты (`84b3b65` 969 additions, `158add4` 672, `ab76eb6` 736) — нарушение атомарности. Правило: ≤300 строк. Процессный урок.
 
 **Итого P1-долг:** ~10 ч, 5-6 атомарных коммитов. **Не новая фича.**

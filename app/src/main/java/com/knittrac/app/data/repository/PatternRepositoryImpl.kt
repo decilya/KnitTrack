@@ -395,6 +395,15 @@ class PatternRepositoryImpl @Inject constructor(
          * Временный номер ряда, чтобы освободить старую позицию при перемещении.
          * Должен быть достаточно большим, чтобы не пересечься с реальными рядами.
          */
-        const val TEMP_ROW_NUMBER = 999_999
+        /**
+         * Временный row_number для двухшагового перемещения ряда.
+         *
+         * `Int.MAX_VALUE` гарантированно больше любого валидного
+         * row_number (1..rowCount) — shift-запросы `shiftRowNumbersDown/Up`
+         * с условием `row_number <= :new` / `row_number < :old` его
+         * не затрагивают, что исключает UNIQUE-конфликт в промежуточном
+         * состоянии (P2-5, 02.11.2026: заменён с magic `999_999`).
+         */
+        const val TEMP_ROW_NUMBER = Int.MAX_VALUE
     }
 }
