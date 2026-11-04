@@ -18,6 +18,18 @@
 - [ ] **P3 (LIN):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
 - [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
 
+## Ревью 05.11.2026 (Строгий код-ревью, все линзы)
+
+- [ ] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое (`BackupRepositoryImpl`). Нарушение Clean Arch: бизнес-логика в Repository. Нужно перенести в `DataImporterImpl` и возвращать `ValidationError` (чтобы не терять данные пользователя молча).
+- [ ] **P2 (LIN/KOT):** Оркестрация в `PatternEditorViewModel.retry()`. Вызов `patternUseCases.getAllPatternSummaries(Unit).first()` внутри VM нарушает SRP. Блокирующий `first()` может подвесить корутину. Вынести в UseCase / Coordinator.
+- [ ] **P2 (BIZ/UX):** Молчаливое удаление данных при импорте. Если бэкап содержит `repeatCode`, которого нет в схеме, код просто зануляется с логом `Timber.w` (пользователь не видит). Нужно возвращать ошибку или показывать диалог.
+- [ ] **P2 (AND/QA):** `PatternEditorViewModelTest` — LargeClass (338+ строк) и хрупкие тесты из-за `coEvery` в `setUpMocks`. Разбить на `PatternEditorViewModelTest` (базовые) + `PatternEditorViewModelEditingTest`.
+- [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
+- [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
+- [ ] **P3 (UX):** Логика показа туториала. Сейчас он показывается при первом входе в `PatternEditorScreen` без учета контекста (видел ли пользователь другие экраны).
+- [ ] **P3 (QA):** Отсутствие тестов на `Channel` события. Не проверено, что `Channel` не теряет события (снекбары/навигацию) при быстрых кликах.
+- [ ] **P3 (AND):** Защита от забытых миграций в `DatabaseModule`. Если кто-то добавит миграцию в `AppDatabase`, но забудет в `addMigrations`, тесты миграций могут не поймать это.
+
 ## Уроки 31.10.2026 (сессия 7c-2 + 7f-B)
 
 - **SQLite не поддерживает `INSERT OR UPDATE` в одном `CREATE TRIGGER`.** Нужны два триггера. Проверять grammar до написания миграции.
