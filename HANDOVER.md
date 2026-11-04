@@ -919,6 +919,19 @@ Feature flags, Security, Performance — после релиза.
 
 ---
 
+
+### Post-commit sanity: `git ls-tree -r HEAD -- <new_file>`
+
+Pre-commit (`gradlew test detekt`) валидирует **working tree**, не коммит. Если новый файл не добавлен в индекс (`git add -u` его пропускает, т.к. файл untracked), сборка пройдёт, коммит запушен, но в remote файла нет — build broken для всех, кто клонирует.
+
+**Правило (post-commit, обязательно для каждого нового файла):**
+1. До коммита: `git status --short` — проверить, что в `??` нет файлов, которые должны быть в коммите.
+2. `git add -u` **+ явный `git add <path>`** для каждого нового файла.
+3. `git ls-files --stage <new_file>` — файл в индексе.
+4. После push: `git ls-tree -r HEAD -- <new_file>` и `git ls-tree -r origin/main -- <new_file>` — оба **не пустые**.
+
+**Симптом нарушения:** pre-commit 3s (incremental, всё UP-TO-DATE), коммит запушен, `git ls-tree origin/main -- <new_file>` пуст. Пример: P1-D, `7e75b24` без `SessionId.kt` → `2d7b0fc` fix-forward.
+
 ## 21. ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ
 
 decilya — backend-разработчик (Symfony, Laravel), пишет Android впервые, думает как архитектор. Стремится к подобию Symfony/Laravel. Работает в WSL и PowerShell. Проект соло, цель — читаемость через год и защита от ИИ-дрейфа.
