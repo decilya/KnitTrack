@@ -59,7 +59,14 @@ object PatternEditorContract {
          * Читается из SettingsRepository.legendAddButtonVisibleFlow
          * (настройка в SettingsScreen). Default = true.
          */
-        val showLegendAddButton: Boolean = true
+        val showLegendAddButton: Boolean = true,
+
+        /**
+         * Показан ли одноразовый туториал Pattern Editor.
+         * Источник — SettingsRepository.editTutorialShownFlow (DataStore).
+         * Default true — показываем до чтения из DataStore.
+         */
+        val showEditTutorial: Boolean = true
     )
 
     /**
@@ -136,6 +143,9 @@ object PatternEditorContract {
          * Если символ используется в операциях (FK RESTRICT) → ValidationError от репозитория.
          */
         data class DeleteSymbol(val code: String) : Intent()
+
+        /** Закрыть туториал (persist в DataStore через SettingsRepository). */
+        object DismissEditTutorial : Intent()
 
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()

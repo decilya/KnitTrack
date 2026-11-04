@@ -41,4 +41,10 @@ interface SettingsRepository {
 
     /** Сохраняет флаг видимости кнопки «Добавить» в легенде. */
     suspend fun setLegendAddButtonVisible(enabled: Boolean): Result<Unit>
+
+    /** Реактивный поток: показан ли одноразовый туториал Pattern Editor (P2-баг). */
+    val editTutorialShownFlow: Flow<Boolean>
+
+    /** Сохраняет флаг «туториал показан». */
+    suspend fun setEditTutorialShown(shown: Boolean): Result<Unit>
 }

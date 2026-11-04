@@ -96,17 +96,16 @@ fun PatternEditorScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var pendingCell by remember { mutableStateOf<PendingCell?>(null) }
     val pattern = state.pattern
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = remember { context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE) }
-    var showTutorial by remember { mutableStateOf(!prefs.getBoolean("tutorial_shown", false)) }
 
-    if (showTutorial) {
+    // 05.11.2026: источник — SettingsRepository.editTutorialShownFlow (DataStore),
+    // не SharedPreferences (§25 Урок 27, §11.3).
+    if (state.showEditTutorial) {
         AlertDialog(
-            onDismissRequest = { showTutorial = false; prefs.edit().putBoolean("tutorial_shown", true).apply() },
+            onDismissRequest = { viewModel.onIntent(PatternEditorContract.Intent.DismissEditTutorial) },
             title = { Text(stringResource(R.string.pattern_editor_tutorial_title)) },
             text = { Text(stringResource(R.string.pattern_editor_tutorial_message)) },
             confirmButton = {
-                TextButton(onClick = { showTutorial = false; prefs.edit().putBoolean("tutorial_shown", true).apply() }) {
+                TextButton(onClick = { viewModel.onIntent(PatternEditorContract.Intent.DismissEditTutorial) }) {
                     Text(stringResource(R.string.pattern_editor_ok))
                 }
             }

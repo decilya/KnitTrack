@@ -40,6 +40,9 @@ class SettingsRepositoryImpl @Inject constructor(
     override val legendAddButtonVisibleFlow: Flow<Boolean> = dataStore.data
         .map { it[SettingsKeys.LEGEND_ADD_BUTTON_VISIBLE] ?: true }
 
+    override val editTutorialShownFlow: Flow<Boolean> = dataStore.data
+        .map { it[SettingsKeys.EDIT_TUTORIAL_SHOWN] ?: false }
+
     override suspend fun setThemeMode(mode: ThemeMode): Result<Unit> = try {
         dataStore.edit { it[SettingsKeys.THEME_MODE] = mode.name }
         Result.Success(Unit)
@@ -77,6 +80,19 @@ class SettingsRepositoryImpl @Inject constructor(
         Result.Error(AppError.IoError(e))
     } catch (e: Exception) {
         Timber.e(e, "setLegendAddButtonVisible(%b) unexpected error", enabled)
+        Result.Error(AppError.UnknownError(e))
+    }
+
+    override suspend fun setEditTutorialShown(shown: Boolean): Result<Unit> = try {
+        dataStore.edit { it[SettingsKeys.EDIT_TUTORIAL_SHOWN] = shown }
+        Result.Success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IOException) {
+        Timber.e(e, "setEditTutorialShown(%b) failed", shown)
+        Result.Error(AppError.IoError(e))
+    } catch (e: Exception) {
+        Timber.e(e, "setEditTutorialShown(%b) unexpected error", shown)
         Result.Error(AppError.UnknownError(e))
     }
 }

@@ -444,7 +444,7 @@ KnitCompanion использует **Edit Mode** (явный переключа�
 - **Color picker** для цвета операции — только HEX-поле. Color picker (M3 `Palette`) — P3.
 - **Drag-and-drop** для перемещения ряда — только ввод числа. Drag-and-drop — P3.
 - **Список всех операций** для accessibility — P3.
-- **Туториал** при первом открытии — реализуется в 7f-D-6, но без UI-теста (Compose-тесты в проекте не настроены, `createComposeRule` отсутствует — P3).
+- **Туториал** при первом открытии — реализован в 7f-D-6, перенесён на DataStore (05.11.2026, `SettingsKeys.EDIT_TUTORIAL_SHOWN`). UI-теста нет (`createComposeRule` в проекте отсутствует — P3).
 
 ## 12. Ссылки
 

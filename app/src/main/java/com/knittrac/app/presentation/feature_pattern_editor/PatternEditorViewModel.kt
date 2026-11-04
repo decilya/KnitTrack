@@ -113,6 +113,7 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.AddOperation -> addOperation(intent)
             is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
             is PatternEditorContract.Intent.UndoLastOperation -> undoLastOperation()
+            is PatternEditorContract.Intent.DismissEditTutorial -> dismissEditTutorial()
             is PatternEditorContract.Intent.Retry -> retry()
             is PatternEditorContract.Intent.OpenLegendEditor -> _state.update { it.copy(isLegendEditorOpen = true) }
             is PatternEditorContract.Intent.CloseLegendEditor -> _state.update { it.copy(isLegendEditorOpen = false) }
@@ -153,6 +154,11 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             platformDeps.settingsRepository.legendAddButtonVisibleFlow.collect { visible ->
                 _state.update { it.copy(showLegendAddButton = visible) }
+            }
+
+            // 05.11.2026: туториал перенесён с SharedPreferences на DataStore (P2-баг).
+            platformDeps.settingsRepository.editTutorialShownFlow.collect { shown ->
+                _state.update { it.copy(showEditTutorial = !shown) }
             }
         }
     }
@@ -553,5 +559,17 @@ class PatternEditorViewModel @Inject constructor(
         const val KEY_SELECTED_SYMBOL = "selectedSymbolCode"
         const val KEY_IS_STICKY_MODE = "isStickyMode"
         const val MAX_UNDO = 25
+    }
+
+    /**
+     * Закрывает туториал и сохраняет флаг в DataStore.
+     * Если сохранение упало — туториал всё равно скрыт в текущей сессии
+     * (UI не должен зависать), ошибка логируется в SettingsRepositoryImpl.
+     */
+    private fun dismissEditTutorial() {
+        _state.update { it.copy(showEditTutorial = false) }
+        viewModelScope.launch {
+            platformDeps.settingsRepository.setEditTutorialShown(true)
+        }
     }
 }

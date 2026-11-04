@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -88,9 +89,10 @@ class PatternEditorViewModelTest : BaseTest() {
         )
     }
 
-    private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()): PatternEditorViewModel {
+    private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle(), tutorialShown: Boolean = false): PatternEditorViewModel {
         stubSummaries()
         every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
+        every { settingsRepository.editTutorialShownFlow } returns kotlinx.coroutines.flow.flowOf(tutorialShown)
         return PatternEditorViewModel(
             patternUseCases = PatternEditorPatternUseCases(
                 getPatternById = getPatternByIdService,
@@ -544,5 +546,33 @@ class PatternEditorViewModelTest : BaseTest() {
         advanceUntilIdle()
 
         coVerify(exactly = 2) { getPatternByIdService(any()) }
+    }
+
+    /**
+     * P2-баг 05.11.2026: туториал перенесён с SharedPreferences на DataStore.
+     * DismissEditTutorial скрывает туториал и вызывает setEditTutorialShown(true).
+     */
+    @Test
+    fun dismissEditTutorial_hidesAndPersists() = runTest {
+        coEvery { settingsRepository.setEditTutorialShown(any()) } returns Result.Success(Unit)
+        val vm = loadedVm()
+        advanceUntilIdle()
+        assertTrue(vm.state.value.showEditTutorial)
+
+        vm.onIntent(PatternEditorContract.Intent.DismissEditTutorial)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.showEditTutorial)
+        coVerify(exactly = 1) { settingsRepository.setEditTutorialShown(true) }
+    }
+
+    /**
+     * При editTutorialShownFlow = true (уже показан) — state.showEditTutorial = false.
+     */
+    @Test
+    fun init_readsTutorialShownFromDataStore() = runTest {
+        val vm = createViewModel(tutorialShown = true)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showEditTutorial)
     }
 }

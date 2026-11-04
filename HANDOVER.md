@@ -1092,6 +1092,7 @@ gradle/libs.versions.toml — НЕ существует.
 
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
+- **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
 - **Long-press** на ячейке Canvas → `EditOperationDialog` (смена символа, HEX-цвет, span override, удаление операции).
 - **Long-press** на `FilterChip` ряда → `RowEditorSheet` (перемещение через ввод номера, удаление с подтверждением).
 - **Haptic feedback** (`HapticFeedbackType.LongPress`) при срабатывании long-press.
