@@ -1,6 +1,7 @@
 package com.knittrac.app.data.di
 
 import android.content.Context
+import androidx.room.Room
 import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.PatternDao
 import com.knittrac.app.data.local.PatternRepeatDao
@@ -21,7 +22,19 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getDatabase(context)
+        return Room.databaseBuilder(
+            context.applicationContext,
+            AppDatabase::class.java,
+            "knittrac_database"
+        )
+            .addMigrations(
+                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8
+            )
+            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .build()
     }
 
     @Provides

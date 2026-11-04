@@ -1,8 +1,6 @@
 package com.knittrac.app.data.local
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -49,9 +47,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun patternRepeatDao(): PatternRepeatDao
 
     companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
         /**
          * Миграция с версии 1 на версию 2.
          * Пустая — служит маркером первой миграции.
@@ -459,23 +454,5 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "knittrac_database"
-                )
-                    .addMigrations(
-                        MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
-                        MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
-                    )
-                    .addCallback(DATABASE_CALLBACK)
-                    .build()
-
-                INSTANCE = instance
-                instance
-            }
-        }
     }
 }
