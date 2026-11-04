@@ -23,7 +23,13 @@ class DeleteSymbolServiceTest {
      */
     @Test
     fun `delete custom symbol success`() = runTest {
-        val custom = Symbol("CUSTOM", PatternId.create(1L), "Мой", "X", SymbolCategory.CUSTOM)
+        val custom = Symbol(
+            code = "CUSTOM",
+            ownerPatternId = PatternId.create(1L),
+            displayName = "Мой",
+            textGlyph = "X",
+            category = SymbolCategory.CUSTOM
+        )
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(custom))
         coEvery { repo.deleteSymbol(any(), any()) } returns Result.Success(Unit)
 
@@ -37,7 +43,13 @@ class DeleteSymbolServiceTest {
      */
     @Test
     fun `delete system symbol returns ValidationError`() = runTest {
-        val system = Symbol("K", null, "Лицевая", "V", SymbolCategory.STANDARD)
+        val system = Symbol(
+            code = "K",
+            ownerPatternId = null,
+            displayName = "Лицевая",
+            textGlyph = "V",
+            category = SymbolCategory.STANDARD
+        )
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(system))
 
         val result = service.delete(DeleteSymbolParams(PatternId.create(1L), "K"))
@@ -52,7 +64,13 @@ class DeleteSymbolServiceTest {
      */
     @Test
     fun `delete symbol in use propagates ValidationError`() = runTest {
-        val custom = Symbol("CUSTOM", PatternId.create(1L), "Мой", "X", SymbolCategory.CUSTOM)
+        val custom = Symbol(
+            code = "CUSTOM",
+            ownerPatternId = PatternId.create(1L),
+            displayName = "Мой",
+            textGlyph = "X",
+            category = SymbolCategory.CUSTOM
+        )
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(custom))
         coEvery { repo.deleteSymbol(any(), any()) } returns Result.Error(AppError.ValidationError("используется"))
 

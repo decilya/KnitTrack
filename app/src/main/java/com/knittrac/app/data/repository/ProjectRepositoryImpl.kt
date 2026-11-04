@@ -74,7 +74,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "getProjectById id=%d failed", id)
+        Timber.e(e, "getProjectById id=%d failed", id.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -89,7 +89,14 @@ class ProjectRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        Result.Success(ProjectId.create(projectDao.insertProject(entity)))
+        val newId = projectDao.insertProject(entity)
+        if (newId <= 0L) {
+            Result.Error(AppError.DatabaseError(
+                IllegalStateException("insertProject вернул невалидный id=$newId")
+            ))
+        } else {
+            Result.Success(ProjectId.create(newId))
+        }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -114,14 +121,14 @@ class ProjectRepositoryImpl @Inject constructor(
         )
         val rows = projectDao.updateProject(entity)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${project.id} не найден"))
+            Result.Error(AppError.NotFoundError("Проект id=${project.id.value} не найден"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateProject id=%d failed", project.id)
+        Timber.e(e, "updateProject id=%d failed", project.id.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -148,7 +155,7 @@ class ProjectRepositoryImpl @Inject constructor(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "deleteProject id=%d failed", id)
+        Timber.e(e, "deleteProject id=%d failed", id.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -172,14 +179,14 @@ class ProjectRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis()
         )
         if (affected == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateProjectTotals projectId=%d sec=%d failed", projectId, duration.seconds)
+        Timber.e(e, "updateProjectTotals projectId=%d sec=%d failed", projectId.value, duration.seconds)
         Result.Error(AppError.DatabaseError(e))
     }
 
@@ -197,17 +204,27 @@ class ProjectRepositoryImpl @Inject constructor(
     ): Result<Unit> = try {
         val rows = projectDao.updateSyncStatus(projectId.value, status.name)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateSyncStatus projectId=%d failed", projectId)
+        Timber.e(e, "updateSyncStatus projectId=%d failed", projectId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 
+    /**
+     * Атомарно обновляет прогресс по схеме.
+     *
+     * @param projectId Идентификатор проекта.
+     * @param currentPatternRowId Текущий ряд схемы (null — нет прогресса).
+     * @param currentRowNumber Денормализованный номер ряда для UI badge.
+     * @param currentStitch Текущая петля (0 до per-stitch tracking, P3).
+     * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
+     *   если проекта нет, или [AppError.DatabaseError].
+     */
     override suspend fun updateProjectProgress(
         projectId: ProjectId,
         currentPatternRowId: PatternRowId?,
@@ -222,14 +239,14 @@ class ProjectRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis()
         )
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
+            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
         } else {
             Result.Success(Unit)
         }
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Timber.e(e, "updateProjectProgress projectId=%d failed", projectId)
+        Timber.e(e, "updateProjectProgress projectId=%d failed", projectId.value)
         Result.Error(AppError.DatabaseError(e))
     }
 }

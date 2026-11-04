@@ -31,7 +31,7 @@ class AddProjectService @Inject constructor(
      * Создаёт проект с валидным именем и PENDING-статусом синхронизации.
      *
      * @param params Параметры создания (сырое имя + категория).
-     * @return [Result.Success] с id нового проекта, [Result.Error]
+     * @return [Result.Success] с [ProjectId] нового проекта; [Result.Error]
      *   с [AppError.ValidationError] если имя невалидно,
      *   или [AppError.DatabaseError] при сбое записи.
      */

@@ -1346,3 +1346,16 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - Recon и patch — **сверка**: `grep -c` в recon == `len(targets)` в скрипте. Не равно — FAIL до запуска.
 - `fix_*`-helper принт `SKIP`/`FAIL`, никогда `return 0` без сигнала.
 - `add_import` fallback: перебрать список anchors (`Project`, `ProjectName`, `Result`, `repository.X`), не полагаться на один.
+
+
+### Урок 41. Timber `%d` + VO в `catch` — runtime crash, маскируется тестами
+
+**Симптом:** после VO-миграции (`X.id: Long → VO`) `Timber.e(e, "...%d...", x.id)` в `catch`-блоке. Тесты проходят (Timber мокнут/Robolectric), но в production `String.format("%d", ProjectId)` бросает `IllegalFormatConversionException` — **двойной сбой**: ошибка обработки ошибки. Detekt не видит, компилятор не видит.
+
+**Пример (P1-E follow-up, 02.11.2026):** `ProjectRepositoryImpl` — 6 мест: `getProjectById:77`, `updateProject:124`, `deleteProject:151`, `updateProjectTotals:182`, `updateSyncStatus:208`, `updateProjectProgress:232`. Все `%d` + `ProjectId` — фикс на `projectId.value`.
+
+**Правило:**
+- В `Timber.e/d/w(throwable, "message %d", x)` — `%d` требует `Number`. `value class` **не** `Number`. Всегда `.value`.
+- Grep после VO-миграции: `grep -rnE 'Timber\.e\(e, "[^"]*%d[^"]*", [a-z.]+'` по main — проверить каждый use-site.
+- То же для `String.format`, `printf`.
+- Аналогично `"...$x.id..."` в message: `ProjectId(value=1)` вместо `1`. Всегда `.value`.
