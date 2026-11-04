@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_add_project
 
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.service.AddProjectService
 import io.mockk.coEvery
@@ -39,7 +40,7 @@ class AddProjectViewModelTest : BaseTest() {
      */
     @Test
     fun saveProject_singleTap_callsService() = runTest {
-        coEvery { addProjectService(any()) } returns Result.Success(1L)
+        coEvery { addProjectService(any()) } returns Result.Success(ProjectId.create(1L))
         fillValidForm()
 
         viewModel.onIntent(AddProjectContract.Intent.SaveProject)
@@ -56,7 +57,7 @@ class AddProjectViewModelTest : BaseTest() {
     fun saveProject_doubleTap_secondIgnored() = runTest {
         coEvery { addProjectService(any()) } coAnswers {
             delay(100)
-            Result.Success(1L)
+            Result.Success(ProjectId.create(1L))
         }
         fillValidForm()
 

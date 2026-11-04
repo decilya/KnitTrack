@@ -7,6 +7,7 @@ import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.TimeProvider
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.repository.ProjectRepository
@@ -24,7 +25,7 @@ class AddProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val timeProvider: TimeProvider
-) : BaseUseCase<AddProjectParams, Long>(dispatcher) {
+) : BaseUseCase<AddProjectParams, ProjectId>(dispatcher) {
 
     /**
      * Создаёт проект с валидным именем и PENDING-статусом синхронизации.
@@ -34,7 +35,7 @@ class AddProjectService @Inject constructor(
      *   с [AppError.ValidationError] если имя невалидно,
      *   или [AppError.DatabaseError] при сбое записи.
      */
-    override suspend fun execute(params: AddProjectParams): Result<Long> {
+    override suspend fun execute(params: AddProjectParams): Result<ProjectId> {
         val name = ProjectName.createOrNull(params.name)
             ?: return Result.Error(
                 AppError.ValidationError(

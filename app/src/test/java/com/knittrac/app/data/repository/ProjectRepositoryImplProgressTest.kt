@@ -4,6 +4,7 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.data.local.ProjectDao
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
@@ -26,7 +27,7 @@ class ProjectRepositoryImplProgressTest {
         coEvery { projectDao.updateProjectProgress(any(), any(), any(), any(), any(), any()) } returns 1
 
         val result = repository.updateProjectProgress(
-            projectId = 1L,
+            projectId = ProjectId.create(1L),
             currentPatternRowId = PatternRowId.create(10L),
             currentRowNumber = RowCount.create(5),
             currentStitch = StitchCount.ZERO
@@ -41,7 +42,7 @@ class ProjectRepositoryImplProgressTest {
         coEvery { projectDao.updateProjectProgress(any(), any(), any(), any(), any(), any()) } returns 0
 
         val result = repository.updateProjectProgress(
-            projectId = 99L,
+            projectId = ProjectId.create(99L),
             currentPatternRowId = null,
             currentRowNumber = RowCount.ZERO,
             currentStitch = StitchCount.ZERO
@@ -56,7 +57,7 @@ class ProjectRepositoryImplProgressTest {
         coEvery { projectDao.updateProjectProgress(any(), any(), any(), any(), any(), any()) } throws SQLException("boom")
 
         val result = repository.updateProjectProgress(
-            projectId = 1L,
+            projectId = ProjectId.create(1L),
             currentPatternRowId = null,
             currentRowNumber = RowCount.ZERO,
             currentStitch = StitchCount.ZERO

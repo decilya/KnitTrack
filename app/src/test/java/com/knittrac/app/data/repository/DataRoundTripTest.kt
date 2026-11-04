@@ -153,7 +153,7 @@ class DataRoundTripTest {
     )
 
     private fun linkedProject() = Project(
-        id = 1L,
+        id = ProjectId.create(1L),
         name = ProjectName.create("Проект"),
         category = Category.KNITTING,
         createdAt = 100L,

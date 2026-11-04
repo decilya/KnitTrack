@@ -11,10 +11,8 @@ import androidx.annotation.Keep
  * не через create(0).
  *
  * Зачем VO, а не Long: типобезопасность (ProjectId != PatternId != PatternRowId
- * на уровне компилятора), инкапсуляция инварианта. Существующий
- * `Project.id: Long` и `ProjectRepository.getProjectById(id: Long)` — tech debt
- * (P2 в TECHDEBT); новый код (params, use cases) использует [ProjectId] с
- * конвертацией `.value` на границе репозитория.
+ * на уровне компилятора), инкапсуляция инварианта. На границе с Room/DTO
+ * разворачивается в примитив (`.value`) в RepositoryImpl и мапперах.
  *
  * @property value Числовое значение идентификатора.
  */

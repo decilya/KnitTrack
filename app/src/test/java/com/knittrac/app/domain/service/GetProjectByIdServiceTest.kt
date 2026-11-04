@@ -6,6 +6,7 @@ import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.repository.ProjectRepository
 import io.mockk.coEvery
@@ -34,7 +35,7 @@ class GetProjectByIdServiceTest : BaseTest() {
     fun `execute returns project when exists`() = runTest {
         val now = System.currentTimeMillis()
         val project = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("Тест"),
             category = Category.KNITTING,
             createdAt = now,
@@ -42,10 +43,10 @@ class GetProjectByIdServiceTest : BaseTest() {
             updatedAt = now,
             syncStatus = SyncStatus.SYNCED
         )
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project)
-        val result = service(1L)
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project)
+        val result = service(ProjectId.create(1L))
         assertTrue(result is Result.Success)
         assertEquals(project, (result as Result.Success).data)
-        coVerify { projectRepository.getProjectById(1L) }
+        coVerify { projectRepository.getProjectById(ProjectId.create(1L)) }
     }
 }

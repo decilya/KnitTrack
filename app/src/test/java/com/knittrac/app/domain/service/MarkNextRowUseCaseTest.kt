@@ -35,7 +35,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
     )
 
     private fun project(): Project = Project(
-        id = 1L,
+        id = ProjectId.create(1L),
         name = ProjectName.create("Тест"),
         category = Category.KNITTING,
         createdAt = 0L,
@@ -51,7 +51,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns RowNumber from NextRowService`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns Result.Success(RowNumber.create(5))
 
         val result = useCase(params())
@@ -66,7 +66,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns NotFoundError when project missing`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
         val result = useCase(params())
@@ -81,7 +81,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns ValidationError from NextRowService`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.ValidationError("нет схемы"))
 
@@ -96,7 +96,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns DatabaseError from NextRowService`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
 

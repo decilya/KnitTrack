@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.model.MarkResult
@@ -71,7 +72,7 @@ class RowMarkService @Inject constructor(
     private suspend fun validateMembership(
         pattern: Pattern,
         row: PatternRow,
-        projectId: Long
+        projectId: ProjectId
     ): Result<MarkResult> {
         return if (pattern.rows.none { it.id == row.id }) {
             Result.Error(AppError.ValidationError("Ряд не принадлежит схеме проекта"))
@@ -87,7 +88,7 @@ class RowMarkService @Inject constructor(
      * `currentStitch = 0` — потому что подсчёт петель per-stitch пока
      * не реализован (P3: per-stitch tracking в 7f-D+).
      */
-    private suspend fun updateProgress(projectId: Long, row: PatternRow): Result<MarkResult> {
+    private suspend fun updateProgress(projectId: ProjectId, row: PatternRow): Result<MarkResult> {
         return when (val updateResult = projectRepository.updateProjectProgress(
             projectId = projectId,
             currentPatternRowId = row.id,

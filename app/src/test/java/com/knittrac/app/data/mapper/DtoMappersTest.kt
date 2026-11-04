@@ -34,7 +34,7 @@ class DtoMappersTest {
     @Test
     fun projectToDto_mapsAllFieldsAndConvertsEnumToString() {
         val domain = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("Свитер"),
             category = Category.KNITTING,
             createdAt = 1000L,
@@ -69,7 +69,7 @@ class DtoMappersTest {
 
         val domain = dto.toDomain()
 
-        assertEquals(2L, domain.id)
+        assertEquals(ProjectId.create(2L), domain.id)
         assertEquals("Шарф", domain.name.value)
         assertEquals(Category.CROCHET, domain.category)
         assertEquals(3000L, domain.createdAt)
@@ -103,7 +103,7 @@ class DtoMappersTest {
     @Test
     fun projectRoundTrip_preservesAllFields() {
         val original = Project(
-            id = 42L,
+            id = ProjectId.create(42L),
             name = ProjectName.create("Макраме-панно"),
             category = Category.MACRAME,
             createdAt = 111L,
@@ -120,7 +120,7 @@ class DtoMappersTest {
     fun allCategoriesRoundTripThroughDto_arePreserved() {
         Category.entries.forEach { category ->
             val domain = Project(
-                id = 1L,
+                id = ProjectId.create(1L),
                 name = ProjectName.create("Тест"),
                 category = category,
                 createdAt = 1L,

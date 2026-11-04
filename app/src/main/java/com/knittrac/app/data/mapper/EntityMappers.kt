@@ -25,7 +25,7 @@ import com.knittrac.app.domain.entity.Session
  * отрицательное время → [Duration.ZERO], неизвестный syncStatus → [SyncStatus.PENDING].
  */
 fun ProjectEntity.toDomain(): Project = Project(
-    id = id,
+    id = ProjectId.createOrNull(id) ?: ProjectId.ZERO,
     name = ProjectName.createOrDefault(name),
     category = Category.fromNameOrDefault(category),
     createdAt = createdAt,
@@ -45,7 +45,7 @@ fun ProjectEntity.toDomain(): Project = Project(
  * Value Objects и enum разворачиваются в примитивы для SQLite.
  */
 fun Project.toEntity(): ProjectEntity = ProjectEntity(
-    id = id,
+    id = id.value,
     name = name.value,
     category = category.name,
     createdAt = createdAt,

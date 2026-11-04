@@ -42,7 +42,7 @@ class EntityMappersTest {
             syncStatus = "PENDING"
         )
         val domain = entity.toDomain()
-        assertEquals(1L, domain.id)
+        assertEquals(ProjectId.create(1L), domain.id)
         assertEquals("Свитер", domain.name.value)
         assertEquals(Category.KNITTING, domain.category)
         assertEquals(1000L, domain.createdAt)
@@ -58,7 +58,7 @@ class EntityMappersTest {
     @Test
     fun projectToEntity_mapsAllFieldsAndConvertsEnumToString() {
         val domain = Project(
-            id = 2L,
+            id = ProjectId.create(2L),
             name = ProjectName.create("Шарф"),
             category = Category.CROCHET,
             createdAt = 3000L,
@@ -101,7 +101,7 @@ class EntityMappersTest {
     fun allCategoryValues_roundTripCorrectly() {
         Category.values().forEach { category ->
             val entity = Project(
-                id = 1L,
+                id = ProjectId.create(1L),
                 name = ProjectName.create("Тест"),
                 category = category,
                 createdAt = 1L,

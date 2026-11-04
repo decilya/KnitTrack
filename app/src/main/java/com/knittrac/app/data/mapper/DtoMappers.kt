@@ -33,7 +33,7 @@ import com.knittrac.app.domain.entity.Session
  * чтобы JSON содержал стабильные имена enum.
  */
 fun Project.toDto(): ProjectDto = ProjectDto(
-    id = id,
+    id = id.value,
     name = name.value,
     category = category.name,
     createdAt = createdAt,
@@ -54,7 +54,7 @@ fun Project.toDto(): ProjectDto = ProjectDto(
  * отрицательное время → ZERO, неизвестный syncStatus → PENDING.
  */
 fun ProjectDto.toDomain(): Project = Project(
-    id = id,
+    id = ProjectId.createOrNull(id) ?: ProjectId.ZERO,
     name = ProjectName.createOrDefault(name),
     category = Category.fromNameOrDefault(category),
     createdAt = createdAt,

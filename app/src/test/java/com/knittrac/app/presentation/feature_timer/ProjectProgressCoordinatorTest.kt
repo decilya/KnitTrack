@@ -34,7 +34,7 @@ class ProjectProgressCoordinatorTest {
     private val coordinator = ProjectProgressCoordinator(getAllProjectsService, markNextRowUseCase)
 
     private fun project(id: Long = 1L): Project = Project(
-        id = id,
+        id = ProjectId.create(id),
         name = ProjectName.create("P$id"),
         category = Category.KNITTING,
         createdAt = 0L,

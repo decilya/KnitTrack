@@ -8,6 +8,7 @@ import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.service.GetAllProjectsService
@@ -68,7 +69,7 @@ class ProjectsListViewModelTest {
     fun init_loadsProjectsAndMapsToUiModels() = runTest {
         // Arrange: один доменный проект и его ожидаемое отображение в UI
         val mockProject = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("Тестовый проект"),
             category = Category.KNITTING,
             createdAt = 0L,
@@ -130,7 +131,7 @@ class ProjectsListViewModelTest {
 
         // Следующий вызов вернёт успех
         val mockProject = Project(
-            id = 2L,
+            id = ProjectId.create(2L),
             name = ProjectName.create("После retry"),
             category = Category.KNITTING,
             createdAt = 0L,
@@ -153,7 +154,7 @@ class ProjectsListViewModelTest {
     @Test
     fun init_mapsNullTargetRowCountForProjectsWithoutTarget() = runTest {
         val mockProject = Project(
-            id = 3L,
+            id = ProjectId.create(3L),
             name = ProjectName.create("Без цели"),
             category = Category.KNITTING,
             createdAt = 0L,
@@ -196,7 +197,7 @@ class ProjectsListViewModelTest {
     @Test
     fun init_mapsPatternIdAndCanOpenPatternEditor() = runTest {
         val mockProject = Project(
-            id = 4L,
+            id = ProjectId.create(4L),
             name = ProjectName.create("Со схемой"),
             category = Category.KNITTING,
             createdAt = 0L,

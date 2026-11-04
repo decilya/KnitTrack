@@ -3,6 +3,7 @@ package com.knittrac.app.domain.service
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.repository.ProjectRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
@@ -22,7 +23,7 @@ import javax.inject.Inject
 class DeleteProjectService @Inject constructor(
     private val projectRepository: ProjectRepository,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher
-) : BaseUseCase<Long, Unit>(dispatcher) {
+) : BaseUseCase<ProjectId, Unit>(dispatcher) {
 
     /**
      * Выполняет удаление проекта.
@@ -35,6 +36,6 @@ class DeleteProjectService @Inject constructor(
      * @param params Уникальный ID проекта для удаления.
      * @return [Result.Success] при успешном удалении или [Result.Error] при ошибке.
      */
-    override suspend fun execute(params: Long): Result<Unit> =
+    override suspend fun execute(params: ProjectId): Result<Unit> =
         projectRepository.deleteProject(params)
 }

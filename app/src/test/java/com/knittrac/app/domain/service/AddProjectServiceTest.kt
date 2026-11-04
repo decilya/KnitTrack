@@ -4,6 +4,7 @@ import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.repository.ProjectRepository
@@ -50,7 +51,7 @@ class AddProjectServiceTest {
             category = Category.KNITTING
         )
 
-        coEvery { projectRepository.addProject(any()) } returns Result.Success(1L)
+        coEvery { projectRepository.addProject(any()) } returns Result.Success(ProjectId.create(1L))
 
         val result = addProjectService(params)
 
@@ -66,7 +67,7 @@ class AddProjectServiceTest {
 
     @Test
     fun execute_withValidTargetRowCount_passesToProject() = runTest {
-        coEvery { projectRepository.addProject(any()) } returns Result.Success(1L)
+        coEvery { projectRepository.addProject(any()) } returns Result.Success(ProjectId.create(1L))
 
         val params = AddProjectParams(
             name = "Test",
@@ -98,7 +99,7 @@ class AddProjectServiceTest {
 
     @Test
     fun execute_withNullTargetRowCount_passesNullToProject() = runTest {
-        coEvery { projectRepository.addProject(any()) } returns Result.Success(1L)
+        coEvery { projectRepository.addProject(any()) } returns Result.Success(ProjectId.create(1L))
 
         val params = AddProjectParams(
             name = "Test",

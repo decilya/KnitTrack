@@ -9,6 +9,7 @@ import com.knittrac.app.data.local.entity.ProjectEntity
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.ProjectName
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -79,7 +80,7 @@ class ProjectRepositoryImplTest {
     fun addProject_mapsDomainToEntityAndReturnsId() = runTest {
         coEvery { projectDao.insertProject(any()) } returns 42L
         val project = Project(
-            id = 0L,
+            id = ProjectId.ZERO,
             name = ProjectName.create("Новый проект"),
             category = Category.CROCHET,
             createdAt = 1_000L,
@@ -91,7 +92,7 @@ class ProjectRepositoryImplTest {
         val result = repository.addProject(project)
 
         assertTrue(result is Result.Success)
-        assertEquals(42L, (result as Result.Success).data)
+        assertEquals(ProjectId.create(42L), (result as Result.Success).data)
         coVerify { projectDao.insertProject(any()) }
     }
 
@@ -102,7 +103,7 @@ class ProjectRepositoryImplTest {
     fun getProjectById_returnsNotFoundErrorWhenMissing() = runTest {
         coEvery { projectDao.getProjectById(99L) } returns null
 
-        val result = repository.getProjectById(99L)
+        val result = repository.getProjectById(ProjectId.create(99L))
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)
@@ -116,7 +117,7 @@ class ProjectRepositoryImplTest {
     fun updateProject_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
         coEvery { projectDao.updateProject(any()) } returns 0
         val project = Project(
-            id = 99L,
+            id = ProjectId.create(99L),
             name = ProjectName.create("Несуществующий"),
             category = Category.KNITTING,
             createdAt = 1_000L,
@@ -138,7 +139,7 @@ class ProjectRepositoryImplTest {
     fun updateProject_returnsSuccessWhenDaoReturnsOneRow() = runTest {
         coEvery { projectDao.updateProject(any()) } returns 1
         val project = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("Существующий"),
             category = Category.KNITTING,
             createdAt = 1_000L,
@@ -164,7 +165,7 @@ class ProjectRepositoryImplTest {
         coEvery { projectDao.incrementProjectTotals(any(), any(), any(), any()) } returns 0
 
         val result = repository.updateProjectTotals(
-            projectId = 99L,
+            projectId = ProjectId.create(99L),
             duration = Duration.create(60L),
             rows = 0
         )
@@ -181,7 +182,7 @@ class ProjectRepositoryImplTest {
         coEvery { projectDao.incrementProjectTotals(any(), any(), any(), any()) } returns 1
 
         val result = repository.updateProjectTotals(
-            projectId = 1L,
+            projectId = ProjectId.create(1L),
             duration = Duration.create(60L),
             rows = 0
         )
@@ -197,7 +198,7 @@ class ProjectRepositoryImplTest {
     fun updateSyncStatus_returnsSuccessWhenDaoReturnsOneRow() = runTest {
         coEvery { projectDao.updateSyncStatus(1L, SyncStatus.SYNCED.name) } returns 1
 
-        val result = repository.updateSyncStatus(1L, SyncStatus.SYNCED)
+        val result = repository.updateSyncStatus(ProjectId.create(1L), SyncStatus.SYNCED)
 
         assertTrue(result is Result.Success)
         coVerify { projectDao.updateSyncStatus(1L, SyncStatus.SYNCED.name) }
@@ -210,7 +211,7 @@ class ProjectRepositoryImplTest {
     fun updateSyncStatus_returnsNotFoundErrorWhenDaoReturnsZeroRows() = runTest {
         coEvery { projectDao.updateSyncStatus(99L, any()) } returns 0
 
-        val result = repository.updateSyncStatus(99L, SyncStatus.SYNCED)
+        val result = repository.updateSyncStatus(ProjectId.create(99L), SyncStatus.SYNCED)
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)
@@ -223,7 +224,7 @@ class ProjectRepositoryImplTest {
     fun deleteProject_callsDaoOnce() = runTest {
         coEvery { projectDao.deleteProjectById(1L) } returns 1
 
-        val result = repository.deleteProject(1L)
+        val result = repository.deleteProject(ProjectId.create(1L))
 
         assertTrue(result is Result.Success)
         coVerify(exactly = 1) { projectDao.deleteProjectById(1L) }
@@ -237,7 +238,7 @@ class ProjectRepositoryImplTest {
     fun deleteProject_rows0_returnsNotFoundError() = runTest {
         coEvery { projectDao.deleteProjectById(99L) } returns 0
 
-        val result = repository.deleteProject(99L)
+        val result = repository.deleteProject(ProjectId.create(99L))
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.NotFoundError)

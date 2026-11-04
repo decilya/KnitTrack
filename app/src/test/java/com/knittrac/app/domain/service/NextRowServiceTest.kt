@@ -10,6 +10,7 @@ import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternName
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowCount
@@ -42,7 +43,7 @@ class NextRowServiceTest {
         patternId: PatternId? = PatternId.create(1L),
         currentPatternRowId: PatternRowId? = PatternRowId.create(2L)
     ): Project = Project(
-        id = 1L,
+        id = ProjectId.create(1L),
         name = ProjectName.create("Тест"),
         category = Category.KNITTING,
         createdAt = 0L,

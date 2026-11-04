@@ -136,7 +136,7 @@ class ProjectsListViewModel @Inject constructor(
      */
     private fun com.knittrac.app.domain.entity.Project.toUiModel(): ProjectsContract.ProjectUiModel =
         ProjectsContract.ProjectUiModel(
-            id = id,
+            id = id.value,
             name = name.value,
             isUntitled = name == com.knittrac.app.domain.entity.ProjectName.DEFAULT,
             localizedCategoryName = categoryLocalizer.localize(category),

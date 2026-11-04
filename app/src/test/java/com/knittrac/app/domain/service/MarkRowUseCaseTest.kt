@@ -47,7 +47,7 @@ class MarkRowUseCaseTest : BaseTest() {
     )
 
     private fun project(patternId: PatternId? = PatternId.create(1L)): Project = Project(
-        id = 1L,
+        id = ProjectId.create(1L),
         name = ProjectName.create("Тест"),
         category = Category.KNITTING,
         createdAt = 0L,
@@ -78,7 +78,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns Added when all aggregates found`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
 
@@ -94,7 +94,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns AlreadyExists from ProgressService`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns
             Result.Success(MarkResult.AlreadyExists)
@@ -110,7 +110,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns NotFoundError when project missing`() = runTest {
-        coEvery { projectRepository.getProjectById(99L) } returns
+        coEvery { projectRepository.getProjectById(ProjectId.create(99L)) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
         val result = useCase(MarkRowParams(projectId = ProjectId.create(99L), rowId = PatternRowId.create(10L)))
@@ -124,7 +124,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns ValidationError when project has no pattern`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project(patternId = null))
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project(patternId = null))
 
         val result = useCase(params())
 
@@ -137,7 +137,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns pattern repository error`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
 
@@ -152,7 +152,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns ValidationError when row missing in pattern`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Success(pattern(rows = emptyList()))
 
@@ -167,7 +167,7 @@ class MarkRowUseCaseTest : BaseTest() {
      */
     @Test
     fun `execute returns ProgressService error`() = runTest {
-        coEvery { projectRepository.getProjectById(1L) } returns Result.Success(project())
+        coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns
             Result.Error(AppError.ValidationError("чужой ряд"))

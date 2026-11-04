@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.SessionId
@@ -182,7 +183,7 @@ class TimerViewModelTest {
     @Test
     fun selectProject_setsTargetRowCount() = runTest {
         val project = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("Test"),
             category = Category.KNITTING,
             createdAt = 0L,

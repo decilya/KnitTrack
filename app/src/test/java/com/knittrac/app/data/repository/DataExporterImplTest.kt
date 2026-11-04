@@ -35,7 +35,7 @@ class DataExporterImplTest {
     fun `exportTo writes JSON version 1_2 with projects sessions and pattern tables`() =
         runTest(UnconfinedTestDispatcher()) {
         val project = Project(
-            id = 1L, 
+            id = ProjectId.create(1L), 
             name = ProjectName.create("Project A"), 
             category = Category.KNITTING,
             createdAt = 100L, 

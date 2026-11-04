@@ -87,7 +87,7 @@ fun TimerScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (state.projects.isNotEmpty()) {
-            val selectedProject = state.projects.find { it.id == state.projectId }
+            val selectedProject = state.projects.find { it.id.value == state.projectId }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = selectedProject?.name?.value ?: stringResource(R.string.select_project),

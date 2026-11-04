@@ -10,6 +10,7 @@ import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.repository.ProjectRepository
@@ -66,10 +67,10 @@ class ProjectRepositoryImpl @Inject constructor(
      * @return [Result.Success] с проектом, [Result.Error] с
      *   [AppError.NotFoundError] если не найден, или [AppError.DatabaseError].
      */
-    override suspend fun getProjectById(id: Long): Result<Project> = try {
-        val entity = projectDao.getProjectById(id)
+    override suspend fun getProjectById(id: ProjectId): Result<Project> = try {
+        val entity = projectDao.getProjectById(id.value)
         if (entity != null) Result.Success(entity.toDomain())
-        else Result.Error(AppError.NotFoundError("Проект id=$id не найден"))
+        else Result.Error(AppError.NotFoundError("Проект id=${id.value} не найден"))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -83,12 +84,12 @@ class ProjectRepositoryImpl @Inject constructor(
      * @param project Domain-модель проекта.
      * @return [Result.Success] с id вставленной строки или [Result.Error].
      */
-    override suspend fun addProject(project: Project): Result<Long> = try {
+    override suspend fun addProject(project: Project): Result<ProjectId> = try {
         val entity = project.toEntity().copy(
             updatedAt = timeProvider.currentTimeMillis(),
             syncStatus = SyncStatus.PENDING.name
         )
-        Result.Success(projectDao.insertProject(entity))
+        Result.Success(ProjectId.create(projectDao.insertProject(entity)))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -137,10 +138,10 @@ class ProjectRepositoryImpl @Inject constructor(
      * @return [Result.Success] если удалена 1 строка, [Result.Error] с
      *   [AppError.NotFoundError] если строки не было, или [AppError.DatabaseError].
      */
-    override suspend fun deleteProject(id: Long): Result<Unit> = try {
-        val rows = projectDao.deleteProjectById(id)
+    override suspend fun deleteProject(id: ProjectId): Result<Unit> = try {
+        val rows = projectDao.deleteProjectById(id.value)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=$id не найден"))
+            Result.Error(AppError.NotFoundError("Проект id=${id.value} не найден"))
         } else {
             Result.Success(Unit)
         }
@@ -159,17 +160,13 @@ class ProjectRepositoryImpl @Inject constructor(
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
      *   если проекта нет, или [AppError.DatabaseError].
      */
-    @Deprecated("Используй updateProjectTotals(rows = 0)")
-    override suspend fun updateTotalTime(projectId: Long, duration: Duration): Result<Unit> =
-        updateProjectTotals(projectId, duration, 0)
-
     override suspend fun updateProjectTotals(
-        projectId: Long,
+        projectId: ProjectId,
         duration: Duration,
         rows: Int
     ): Result<Unit> = try {
         val affected = projectDao.incrementProjectTotals(
-            projectId = projectId,
+            projectId = projectId.value,
             durationSeconds = duration.seconds,
             rows = rows,
             updatedAt = timeProvider.currentTimeMillis()
@@ -195,10 +192,10 @@ class ProjectRepositoryImpl @Inject constructor(
      *   если проекта нет, или [AppError.DatabaseError].
      */
     override suspend fun updateSyncStatus(
-        projectId: Long,
+        projectId: ProjectId,
         status: SyncStatus
     ): Result<Unit> = try {
-        val rows = projectDao.updateSyncStatus(projectId, status.name)
+        val rows = projectDao.updateSyncStatus(projectId.value, status.name)
         if (rows == 0) {
             Result.Error(AppError.NotFoundError("Проект id=$projectId не найден"))
         } else {
@@ -212,13 +209,13 @@ class ProjectRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateProjectProgress(
-        projectId: Long,
+        projectId: ProjectId,
         currentPatternRowId: PatternRowId?,
         currentRowNumber: RowCount,
         currentStitch: StitchCount
     ): Result<Unit> = try {
         val rows = projectDao.updateProjectProgress(
-            projectId = projectId,
+            projectId = projectId.value,
             currentPatternRowId = currentPatternRowId?.value,
             currentRowNumber = currentRowNumber.value,
             currentStitch = currentStitch.value,

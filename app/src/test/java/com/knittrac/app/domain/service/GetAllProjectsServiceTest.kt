@@ -5,6 +5,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.repository.ProjectRepository
@@ -35,7 +36,7 @@ class GetAllProjectsServiceTest : BaseTest() {
     fun `execute returns flow of projects`() = runTest {
         val projects = listOf(
             Project(
-                id = 1L,
+                id = ProjectId.create(1L),
                 name = ProjectName.create("P1"),
                 category = Category.KNITTING,
                 createdAt = 0L,

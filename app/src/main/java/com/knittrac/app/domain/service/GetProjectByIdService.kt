@@ -4,6 +4,7 @@ import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.domain.entity.Project
+import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.repository.ProjectRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
@@ -22,7 +23,7 @@ import javax.inject.Inject
 class GetProjectByIdService @Inject constructor(
     private val projectRepository: ProjectRepository,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher
-) : BaseUseCase<Long, Project>(dispatcher) {
+) : BaseUseCase<ProjectId, Project>(dispatcher) {
 
     /**
      * Выполняет получение проекта по ID.
@@ -31,6 +32,6 @@ class GetProjectByIdService @Inject constructor(
      * @return [Result.Success] с проектом, если он найден,
      *         или [Result.Error] если проект не существует.
      */
-    override suspend fun execute(params: Long): Result<Project> =
+    override suspend fun execute(params: ProjectId): Result<Project> =
         projectRepository.getProjectById(params)
 }

@@ -27,7 +27,7 @@ import com.knittrac.app.domain.model.MarkResult
  */
 @Keep
 data class Project(
-    val id: Long = 0L,
+    val id: ProjectId = ProjectId.ZERO,
     val name: ProjectName,
     val category: Category,
     val createdAt: Long,

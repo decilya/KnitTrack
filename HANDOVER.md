@@ -1071,7 +1071,6 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P1-E:** `Project.id: Long` → `ProjectId` (~1 ч).
 - **P2-1:** `Symbol.ownerPatternId: Long?` → `PatternId?` (~30 мин).
 - **P2-4:** D-инвариант в Domain (~30 мин).
 - **P2-5:** `TEMP_ROW_NUMBER = 999999` → `Int.MAX_VALUE` (~10 мин).
@@ -1081,6 +1080,8 @@ gradle/libs.versions.toml — НЕ существует.
 - **P1-B (02.11.2026):** `ProgressService` (9 методов, 2 ответственности) → `RowMarkService` + `NextRowService`. Композиция через inject, Domain не дублирует логику. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
 - **P1-C (02.11.2026):** `TimerViewModel` (5 deps) → `TimerSessionCoordinator` + `ProjectProgressCoordinator` + `savedStateHandle` = 3 deps (оркестратор). Коммит `refactor(presentation): decompose TimerViewModel into 2 coordinators (P1-C)`. Уточнение: `@Suppress` в файле отсутствовал (было 5 deps, не 6), но SRP-проблема (5 причин изменения) была реальной.
 - **P1-D (02.11.2026):** `Session` VO (`SessionId`, `ProjectId`, `RowCount`), `SaveSessionParams` — VO, `SessionRepository` на границе VO, `SessionRepositoryImpl` разворачивает `.value`, `DtoMappers` обновлён (`Owner-approved §1.1`). Коммит `refactor(domain): Session — VO migration (P1-D)`.
+
+- **P1-E (02.11.2026):** `Project.id: ProjectId`, `ProjectRepository` (+ `addProject: Result<ProjectId>`, `updateTotalTime` удалён — 0 usages), `ProjectRepositoryImpl`, `Add/GetProjectById/DeleteProjectService` — VO, `EntityMappers`/`DtoMappers` (`Owner-approved §1.1`), `RowMarkService`/`MarkRowUseCase`/`MarkNextRowUseCase`, `ProjectsListViewModel.toUiModel` — `id.value` (UI-слой Long). Коммит `refactor(domain): Project — VO migration (P1-E)`.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1315,3 +1316,32 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - §7.1 п.1: `git add -u` **+ явный `git add <path>` для каждого нового файла**.
 - Pre-commit не гарантирует корректность коммита — он валидирует working tree.
 - Post-commit sanity: `git ls-tree -r HEAD -- <new_file_path>` не пустой (для каждого нового файла).
+
+
+### Урок 39. VO-миграция `X.id`: `grep` не только по сигнатурам, но и по use-sites
+
+**Симптом:** после `X.id: Long → VO` main-компиляция падает только на `.id == <primitive>` в Presentation (`it.id == state.projectId`), не на mapper/UseCase. Первые шаги — зелёные, Presentation — последний.
+
+**Причина:** `grep` перед патчем шёл по сигнатурам (`id: Long`, `projectId: Long`), но **не по use-sites сравнений**: `it.id == currentState.projectId`, `it.id != intent.projectId`, `rows.find { it.id == rowId }`, `when (x.id)`. Kotlin ловит `ProjectId == Long` на compile (не runtime), но только для затронутых файлов — если тесты/Presentation не покрыты в этой итерации, падает в самом конце.
+
+**Пример (P1-E, 02.11.2026):** P1-E-1 patch прошёл, `Project.id: ProjectId`, но compile fail: `TimerViewModel:89,140` и `TimerScreen:90` — `it.id == currentState.projectId` (`ProjectId == Long?`). Fix: `grep -rnE '\.id ==|\.id !='` **до** патча; после VO-миграции — `.id.value ==` на всех cross-boundary use-sites.
+
+**Правило:**
+- Перед VO-миграцией поля: `grep -rnE '\.id ==|\.id !=|\.id in |find \{ it\.id'` по main+test.
+- Классифицировать: cross-boundary (Domain Project.id vs UI state Long) → `.id.value`; внутри Domain (row.id == rowId) → обе стороны VO.
+- Если патч проходит compile — **прогнать полную сборку `test detekt`**, не только `compileDebugKotlin`: тесты используют `assertEquals(Object, Object)` и падают в runtime.
+- SKIP-marker — по точной строке, не по подстроке (см. Урок 29).
+
+
+### Урок 40. Recon → patch: сверять полный список файлов, не глазами
+
+**Симптом:** recon `grep -rnE 'Project\($'` даёт N файлов; patch покрывает M < N. Пропущенные файлы падают на compile, но не все — часть компилируется (если `id = NL` матчится только в `Project(...)` с другим контекстом).
+
+**Причина:** список `targets` в скрипте составлен вручную (по памяти/по инерции), а не через **сверку** с recon. Дополнительно: `fix_*`-helper молча `return 0`, не принтив `SKIP`/`FAIL` — «тихий пропуск».
+
+**Пример (P1-E, 02.11.2026):** recon показал 10 файлов с `Project(id = NL)`; patch P1-E-2 покрыл 4 → 6 остались: ProjectTest, GetAllProjectsServiceTest, NextRowServiceTest, RowMarkServiceTest, ProjectsListViewModelTest, TimerViewModelTest. Плюс DeleteProjectServiceTest — импорт `ProjectId` не добавлен (файл без `import ...entity.Project`, fallback не сработал).
+
+**Правило:**
+- Recon и patch — **сверка**: `grep -c` в recon == `len(targets)` в скрипте. Не равно — FAIL до запуска.
+- `fix_*`-helper принт `SKIP`/`FAIL`, никогда `return 0` без сигнала.
+- `add_import` fallback: перебрать список anchors (`Project`, `ProjectName`, `Result`, `repository.X`), не полагаться на один.

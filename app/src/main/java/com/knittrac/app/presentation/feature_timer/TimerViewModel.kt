@@ -86,7 +86,7 @@ class TimerViewModel @Inject constructor(
             progressCoordinator.projects().collect { result ->
                 when (result) {
                     is Result.Success -> _state.update { currentState ->
-                        val selected = result.data.find { it.id == currentState.projectId }
+                        val selected = result.data.find { it.id.value == currentState.projectId }
                         currentState.copy(
                             projects = result.data,
                             targetRowCount = selected?.targetRowCount?.value,
@@ -137,7 +137,7 @@ class TimerViewModel @Inject constructor(
      * Выбор проекта: State + savedStateHandle.
      */
     private fun handleSelectProject(intent: TimerContract.Intent.SelectProject) {
-        val selectedProject = _state.value.projects.find { it.id == intent.projectId }
+        val selectedProject = _state.value.projects.find { it.id.value == intent.projectId }
         _state.update {
             it.copy(
                 projectId = intent.projectId,

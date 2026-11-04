@@ -34,7 +34,7 @@ class MarkNextRowUseCase @Inject constructor(
      *   или [com.knittrac.app.core.common.AppError.NotFoundError] / DatabaseError.
      */
     override suspend fun execute(params: MarkNextRowParams): Result<RowNumber> {
-        return when (val projectResult = projectRepository.getProjectById(params.projectId.value)) {
+        return when (val projectResult = projectRepository.getProjectById(params.projectId)) {
             is Result.Error -> projectResult
             is Result.Success -> nextRowService.markNextRow(projectResult.data)
         }

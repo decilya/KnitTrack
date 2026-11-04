@@ -15,7 +15,7 @@ class ProjectTest {
         currentPatternRowId: PatternRowId? = null,
         currentRowNumber: RowCount = RowCount.ZERO
     ): Project = Project(
-        id = 1L,
+        id = ProjectId.create(1L),
         name = ProjectName.create("Тест"),
         category = Category.KNITTING,
         createdAt = 0L,
@@ -65,7 +65,7 @@ class ProjectTest {
             rowNumber = RowNumber.create(3)
         )
         val project = Project(
-            id = 1L,
+            id = ProjectId.create(1L),
             name = ProjectName.create("P"),
             category = Category.KNITTING,
             createdAt = 0L,

@@ -330,7 +330,9 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 **Решение (закрыто 02.11.2026):** `SessionId` VO создан. `Session.id: SessionId`, `projectId: ProjectId`, `rowCount: RowCount`. `SaveSessionParams` — VO. `SessionRepository` на границе VO, `SessionRepositoryImpl` разворачивает в примитивы (`.value`). `DtoMappers` обновлён (`Owner-approved §1.1`). Миграции не нужны.
 **Факт:** `refactor(domain): Session — VO migration (P1-D)`.
 
-### P1-E. `Project.id: Long` — не VO
+### P1-E. `Project.id: Long` — не VO — **закрыт 02.11.2026**
+
+**Факт:** `refactor(domain): Project — VO migration (P1-E)`.
 
 **Файл:** `domain/entity/Project.kt`
 **Факт:** `id: Long = 0L` при существующем `ProjectId` VO. `GetProjectByIdService` / `DeleteProjectService` принимают `Long`.
