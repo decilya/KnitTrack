@@ -35,7 +35,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
         PatternOperationEntity::class,
         PatternRepeatEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -343,6 +343,42 @@ abstract class AppDatabase : RoomDatabase() {
                 "END"
 
         /**
+         * Правило валидации repeat_code в pattern_operations (P2 #19, 05.11.2026).
+         *
+         * SQLite не может сделать FOREIGN KEY(repeat_code) -> pattern_repeats(code),
+         * потому что PK pattern_repeats — composite (pattern_id, code), а code
+         * глобально не уникален (два паттерна могут иметь повтор "A").
+         *
+         * Валидация через 3-way JOIN: pattern_operations.pattern_row_id ->
+         * pattern_rows.pattern_id -> pattern_repeats(pattern_id, code).
+         *
+         * DELETE из pattern_repeats не покрыт: путей удаления repeat в app нет
+         * (deleteRepeat отсутствует). При появлении DeleteRepeatService —
+         * добавить третий триггер BEFORE DELETE ON pattern_repeats.
+         */
+        private const val CREATE_TRIGGER_REPEAT_INSERT_V9 =
+            "CREATE TRIGGER trg_repeat_code_check_insert " +
+                "BEFORE INSERT ON pattern_operations BEGIN " +
+                "SELECT RAISE(ABORT, 'Раппорт не принадлежит схеме') " +
+                "WHERE NEW.repeat_code IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_repeats pr " +
+                "INNER JOIN pattern_rows r ON r.pattern_id = pr.pattern_id " +
+                "WHERE r.id = NEW.pattern_row_id " +
+                "AND pr.code = NEW.repeat_code); " +
+                "END"
+
+        private const val CREATE_TRIGGER_REPEAT_UPDATE_V9 =
+            "CREATE TRIGGER trg_repeat_code_check_update " +
+                "BEFORE UPDATE OF repeat_code ON pattern_operations BEGIN " +
+                "SELECT RAISE(ABORT, 'Раппорт не принадлежит схеме') " +
+                "WHERE NEW.repeat_code IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_repeats pr " +
+                "INNER JOIN pattern_rows r ON r.pattern_id = pr.pattern_id " +
+                "WHERE r.id = NEW.pattern_row_id " +
+                "AND pr.code = NEW.repeat_code); " +
+                "END"
+
+        /**
          * Fresh install: CHECK на projects/sessions и триггеры прогресса.
          *
          * Room `onCreate` создаёт таблицы без CHECK. Миграции 2→3 и 4→5
@@ -369,6 +405,8 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("PRAGMA foreign_keys = ON")
                 db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V8)
                 db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V8)
+                db.execSQL(CREATE_TRIGGER_REPEAT_INSERT_V9)
+                db.execSQL(CREATE_TRIGGER_REPEAT_UPDATE_V9)
                 db.execSQL(DEFAULT_SYMBOLS_INSERT)
             }
         }
@@ -451,6 +489,30 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(DEFAULT_SYMBOLS_INSERT)
+            }
+        }
+
+        /**
+         * Миграция 8→9 (P2 #19, 05.11.2026): defense-in-depth для repeat_code.
+         *
+         * 1. Санитизация: orphan repeat_code -> NULL (до CREATE триггеров,
+         *    иначе INSERT/UPDATE упадёт на ABORT при миграции).
+         * 2. CREATE 2 триггеров (INSERT + UPDATE OF repeat_code).
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "UPDATE pattern_operations SET repeat_code = NULL " +
+                    "WHERE repeat_code IS NOT NULL AND NOT EXISTS (" +
+                    "SELECT 1 FROM pattern_repeats pr " +
+                    "INNER JOIN pattern_rows r ON r.pattern_id = pr.pattern_id " +
+                    "WHERE r.id = pattern_operations.pattern_row_id " +
+                    "AND pr.code = pattern_operations.repeat_code)"
+                )
+                db.execSQL("DROP TRIGGER IF EXISTS trg_repeat_code_check_insert")
+                db.execSQL("DROP TRIGGER IF EXISTS trg_repeat_code_check_update")
+                db.execSQL(CREATE_TRIGGER_REPEAT_INSERT_V9)
+                db.execSQL(CREATE_TRIGGER_REPEAT_UPDATE_V9)
             }
         }
 

@@ -134,6 +134,8 @@ data class PatternRepeat(
 | A | `row IS NOT NULL → row принадлежит pattern` | `ProgressService.markRow` | `trg_progress_check` | — |
 | B | `row IS NOT NULL → currentRowNumber = row.rowNumber` | — (денорм.) | `trg_progress_check` | UI |
 | C | `row IS NULL → currentRowNumber = 0` | — | `trg_progress_check` | UI |
+| D | `currentStitch > 0 → currentPatternRowId != null` | `Project.markRow` (P2-4) | `trg_progress_check` (v8) | — |
+| E | `repeat_code ∈ pattern_repeats(pattern_id, code)` | `AddPatternOperationService.validateRepeat` | `trg_repeat_code_check` (v9) | — |
 
 D-инвариант (`stitch > 0 → row IS NOT NULL`) — **закрыт в 7f-D-5** (`MIGRATION_7_8`), включается вместе с
 per-stitch tracking (7f-B). В текущем коде `RowMarkService.updateProgress`
@@ -210,6 +212,48 @@ END;
   подзапрос даёт 0 строк (FK `pattern_rows.pattern_id` NOT NULL), триггер
   корректно отбивает.
 
+### 6.1.1. Триггеры `trg_repeat_code_check_*` (P2 #19, 05.11.2026)
+
+SQLite **не может** сделать `FOREIGN KEY(repeat_code) → pattern_repeats(code)`:
+PK `pattern_repeats` — composite `(pattern_id, code)`, а `code` глобально
+не уникален (два паттерна могут иметь "A"). Валидация — через 3-way JOIN:
+
+```sql
+CREATE TRIGGER trg_repeat_code_check_insert
+BEFORE INSERT ON pattern_operations
+BEGIN
+    SELECT RAISE(ABORT, 'Раппорт не принадлежит схеме')
+    WHERE NEW.repeat_code IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM pattern_repeats pr
+        INNER JOIN pattern_rows r ON r.pattern_id = pr.pattern_id
+        WHERE r.id = NEW.pattern_row_id
+          AND pr.code = NEW.repeat_code
+    );
+END;
+
+CREATE TRIGGER trg_repeat_code_check_update
+BEFORE UPDATE OF repeat_code ON pattern_operations
+BEGIN
+    SELECT RAISE(ABORT, 'Раппорт не принадлежит схеме')
+    WHERE NEW.repeat_code IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM pattern_repeats pr
+        INNER JOIN pattern_rows r ON r.pattern_id = pr.pattern_id
+        WHERE r.id = NEW.pattern_row_id
+          AND pr.code = NEW.repeat_code
+    );
+END;
+```
+
+**DELETE из `pattern_repeats` не покрыт:** в app нет `deleteRepeat`/`DeleteRepeatService`.
+При появлении — третий триггер `BEFORE DELETE ON pattern_repeats` с `RAISE(ABORT)`.
+Зафиксировано в TECHDEBT.
+
+**Gotchas:**
+- `WHERE NEW.repeat_code IS NOT NULL` — обязателен, иначе 3-way JOIN на каждом INSERT.
+- `UPDATE OF repeat_code` срабатывает на **любом** UPDATE, где колонка в SET.
+- Оба триггера создаются в `MIGRATION_8_9` **и** в `DATABASE_CALLBACK.onCreate`.
+  Миграция **идемпотентна**: `DROP TRIGGER IF EXISTS` перед CREATE.
+
 ### 6.2. Порядок `MIGRATION_5_6`
 
 1. Санитизация A+B: `UPDATE projects SET current_pattern_row_id = NULL,
@@ -233,6 +277,16 @@ END;
 `schemas/6.json` идентичен `5.json` — Room не экспортирует триггеры в schema
 JSON. Тест проверяет триггеры через `SELECT name FROM sqlite_master WHERE
 type='trigger' AND name LIKE 'trg_progress_check%'`, не через schema validation.
+
+### 6.2.1. Порядок `MIGRATION_8_9`
+
+1. **Санитизация:** `UPDATE pattern_operations SET repeat_code = NULL WHERE
+   repeat_code IS NOT NULL AND NOT EXISTS (3-way JOIN ...)` — orphan → NULL.
+2. `DROP TRIGGER IF EXISTS trg_repeat_code_check_insert` / `_update` — идемпотентность.
+3. `CREATE TRIGGER trg_repeat_code_check_insert` + `_update`.
+4. Room генерирует `schemas/9.json` (не экспортирует триггеры — как 6.json).
+
+**Порядок обязателен:** санитизация **до** CREATE триггеров.
 
 ### 6.3. INSERT-путь
 

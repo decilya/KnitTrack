@@ -75,7 +75,7 @@
 - [x] **P2 #26** — `SettingsViewModel`: guard `isExporting`/`isImporting` до `launch`, `try/finally`. Коммит `6643f09`.
 - [ ] **P2 #11** — `getDirectionForRow` `when` по enum. Сознательное решение ТЗ §4 (`rows-and-patterns.md §4`, TECHDEBT 7b): enum, не sealed — P3.
 - [x] **P2 #13** — уже валидируется: `ProjectName.createOrNull` + `RowCount.create` (throws → catch → ValidationError).
-- [ ] **P2 #19** — `repeat_code` без FK. Миграция 8→9, `Owner-approved: AppDatabase.kt`, отдельный заход.
+- [x] **P2 #19** — `repeat_code` без FK. **Закрыт 05.11.2026** через 2 триггера (`trg_repeat_code_check_insert`/`_update`) в `MIGRATION_8_9` + `DATABASE_CALLBACK.onCreate`. FK невозможен: PK `pattern_repeats` composite `(pattern_id, code)`, `code` глобально не уникален. 3-way JOIN через `pattern_rows.pattern_id`. **DELETE не покрыт** (`deleteRepeat` в app нет); при появлении — 3-й триггер `BEFORE DELETE ON pattern_repeats`. **Факт:** `feat(data): repeat_code defense-in-depth — MIGRATION_8_9 (P2 #19)`.
 - [x] **P2 #29** — не применимо: тика, перезаписывающего State, нет. Guard `isMarkingRow`/`isSaving` на месте (P1-C).
 - [ ] **P2 #31–#33** — backup edge cases. Детали в handover v5 §5 отсутствуют; `grep TODO/FIXME/HACK/XXX` по backup-файлам = 0. Переклассифицировать в P3.
 - [x] **P2 #35–#40** — косметика: `grep TODO/FIXME/HACK/XXX` по main = 0. Закрыто.
