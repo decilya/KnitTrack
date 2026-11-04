@@ -314,7 +314,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 **Решение (закрыто 02.11.2026):** `RowMarkService` (markRow + addRow + validateMembership + updateProgress) + `NextRowService` (markNextRow + selectNextRow + pickNextRow + pickFromNonEmpty + findAndAdvance + markSelectedRow). Композиция: `NextRowService` инжектит `RowMarkService` (DRY, markSelectedRow делегирует).
 **Факт:** `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
 
-### P1-C. `TimerViewModel` — 6 deps + `@Suppress`
+### P1-C. `TimerViewModel` — 6 deps + `@Suppress` — **закрыт 02.11.2026**
 
 **Файл:** `presentation/feature_timer/TimerViewModel.kt`
 **Факт:** `timerManager`, `saveSessionService`, `getAllProjectsService`, `markNextRowUseCase`, `permissionChecker`, `savedStateHandle` — **6 параметров** (равенство threshold=6 → detekt валит без `@Suppress`).

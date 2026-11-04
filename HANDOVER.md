@@ -1058,13 +1058,13 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
 ### Next
-- **P1-C:** `TimerViewModel` — 6 deps + `@Suppress`. Декомпозиция (~2 ч).
 - **P1-D:** `Session` VO — мигрировать (~1.5 ч).
 - **P1-E:** `Project.id: Long` → `ProjectId` (~1 ч).
 
 ### Закрыто в P1-долге
 - **P1-A (02.11.2026):** `PatternEditorUseCases` (10 полей, God Bag) → 4 группы + `PatternEditorPlatformDeps`. VM — 5 параметров, без `@Suppress`. Коммит `refactor(presentation): split PatternEditorUseCases into 4 groups (P1-A)`.
 - **P1-B (02.11.2026):** `ProgressService` (9 методов, 2 ответственности) → `RowMarkService` + `NextRowService`. Композиция через inject, Domain не дублирует логику. Коммит `refactor(domain): split ProgressService into RowMarkService + NextRowService (P1-B)`.
+- **P1-C (02.11.2026):** `TimerViewModel` (5 deps) → `TimerSessionCoordinator` + `ProjectProgressCoordinator` + `savedStateHandle` = 3 deps (оркестратор). Коммит `refactor(presentation): decompose TimerViewModel into 2 coordinators (P1-C)`. Уточнение: `@Suppress` в файле отсутствовал (было 5 deps, не 6), но SRP-проблема (5 причин изменения) была реальной.
 
 ### UX-решение 7f-D-6 (утверждено 01.11.2026)
 
@@ -1200,3 +1200,26 @@ Domain Service должен иметь **один публичный метод*
 **Композиция вместо дублирования:** `NextRowService.markSelectedRow` делегирует в `RowMarkService.markRow` (DRY: addRow + validateMembership + updateProgress — уже там). Domain Service может инжектить другой Domain Service (DDD: композиция Domain Services — норма для сложных процессов).
 
 **Правило:** если в Domain Service >2 public метода — проверить, это 1 причина изменения или 2+? Если 2+ — разбить на 2 сервиса, композиция через inject.
+
+### Урок 33. Координатор vs God ViewModel: 2–3 deps на координатора
+
+ViewModel с >4 зависимостями — кандидат на декомпозицию через **Presentation Coordinators** (не путать с Domain Services, Урок 32).
+
+**Признак God ViewModel:**
+- 5+ причин изменения (таймер + сессия + проекты + прогресс + savedState).
+- combine + N обработчиков Intent'ов + state-update'ы в одном классе.
+- Каждый новый сценарий → +1 dep в конструкторе.
+
+**Решение (P1-C, 02.11.2026):** декомпозиция `TimerViewModel` (5 deps → 3):
+- `TimerSessionCoordinator` (2 deps: `TimerService`, `SaveSessionService`) — start/pause/reset/saveSession + elapsedTime/state/sessionStartTime.
+- `ProjectProgressCoordinator` (2 deps: `GetAllProjectsService`, `MarkNextRowUseCase`) — projects flow + markNext.
+- `TimerViewModel` (3 deps: 2 координатора + `savedStateHandle`) — оркестратор: combine, Intent dispatch, guards.
+
+**Правила:**
+1. Координатор — в `presentation/feature_X/`, не в `domain/`. Domain Services — отдельно.
+2. Координатор — **не** содержит State. Только Flows и Result'ы. State собирает VM (combine).
+3. VM — оркестратор: combine + Intent dispatch + guards (`isSaving`, `isMarkingRow`). Не содержит бизнес-логики.
+4. Тривиальные state-операции (`IncrementRow` → `rowCount + 1`) остаются в VM. Выделять координатор под «+1 к числу» — overengineering.
+5. Координатор имеет 2–3 deps. VM имеет 2–3 координатора + `savedStateHandle`.
+
+**Правило:** если ViewModel >4 deps — разбить на координаторы по причине изменения. VM остаётся оркестратором. State — в VM, координаторы — тонкие прокси.
