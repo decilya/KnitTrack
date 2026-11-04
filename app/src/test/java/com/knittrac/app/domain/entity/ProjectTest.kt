@@ -81,4 +81,54 @@ class ProjectTest {
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.ValidationError)
     }
+
+    /**
+     * D-инвариант: currentStitch > 0 при currentPatternRowId = null → ValidationError.
+     * Defense-in-depth к триггеру v8 (writer сейчас ZERO, D недостижим через app-код).
+     */
+    @Test
+    fun markRow_returnsValidationError_whenStitchPositiveWithoutRow() {
+        val project = Project(
+            id = ProjectId.create(1L),
+            name = ProjectName.create("Тест"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.PENDING,
+            patternId = PatternId.create(1L),
+            currentPatternRowId = null,
+            currentStitch = StitchCount.create(5)
+        )
+        val result = project.markRow(PatternRow(
+            id = PatternRowId.create(1L),
+            rowNumber = RowNumber.create(1)
+        ))
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * D-инвариант не срабатывает, когда ряд установлен: currentStitch > 0
+     * при currentPatternRowId != null — валидное состояние.
+     */
+    @Test
+    fun markRow_returnsAdded_whenStitchPositiveAndRowSet() {
+        val project = Project(
+            id = ProjectId.create(1L),
+            name = ProjectName.create("Тест"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.PENDING,
+            patternId = PatternId.create(1L),
+            currentPatternRowId = PatternRowId.create(1L),
+            currentStitch = StitchCount.create(5)
+        )
+        val result = project.markRow(PatternRow(
+            id = PatternRowId.create(2L),
+            rowNumber = RowNumber.create(2)
+        ))
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).data == MarkResult.Added)
+    }
 }

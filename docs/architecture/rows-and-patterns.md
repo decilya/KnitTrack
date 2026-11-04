@@ -136,7 +136,7 @@ data class PatternRepeat(
 | C | `row IS NULL → currentRowNumber = 0` | — | `trg_progress_check` | UI |
 
 D-инвариант (`stitch > 0 → row IS NOT NULL`) — **закрыт в 7f-D-5** (`MIGRATION_7_8`), включается вместе с
-per-stitch tracking (7f-B). В текущем коде `ProgressService.updateProgress`
+per-stitch tracking (7f-B). В текущем коде `RowMarkService.updateProgress`
 всегда пишет `currentStitch = StitchCount.ZERO`, `TimerViewModel` не пишет
 `current_stitch` в БД — триггер D был бы мёртвым кодом.
 
@@ -259,8 +259,9 @@ NEW.current_pattern_row_id != OLD.current_pattern_row_id` пропускает
 ## 7. Что не покрыто (YAGNI)
 
 - **D: `stitch > 0 → row IS NOT NULL`** — **закрыт в 7f-D-5** (`MIGRATION_7_8`).
-  Защищён триггером в БД (v8). Domain-проверка (`Project.markRow` / `ProgressService`) —
-  P2-техдолг (см. TECHDEBT): инвариант должен быть primary в Domain (DDD).
+  Защищён триггером в БД (v8) + Domain-проверкой в `Project.markRow` (P2-4, 04.11.2026).
+  Defense-in-depth: writer сейчас пишет `StitchCount.ZERO` (`RowMarkService.updateProgress`),
+  D недостижим через app-код; обе защиты включатся при per-stitch tracking (P3).
 - **«Длина ряда = current_stitch»** — дорогой JOIN `pattern_operations` +
   `symbols` на каждый UPDATE `projects`. Domain (`StitchCount` +
   `ProgressService`) ограничивает.

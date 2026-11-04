@@ -41,11 +41,27 @@ data class Project(
     val updatedAt: Long,
     val syncStatus: SyncStatus
 ) {
-    fun markRow(row: PatternRow): Result<MarkResult> {
-        if (patternId == null) {
-            return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
-        }
-        return validateDenormalization(row) ?: successMarkResult(row)
+    /**
+     * Отмечает [row] как текущий ряд проекта.
+     *
+     * Порядок проверок:
+     * 1. D-инвариант: currentStitch > 0 → currentPatternRowId != null
+     *    (defense-in-depth к триггеру v8; writer сейчас ZERO, D недостижим
+     *    через app-код — см. TECHDEBT P2-4).
+     * 2. У проекта привязана схема.
+     * 3. Денормализация currentRowNumber = row.rowNumber (B-инвариант).
+     *
+     * @param row Ряд схемы.
+     * @return [Result.Success] с [MarkResult] (Added / AlreadyExists);
+     *   [Result.Error] с [AppError.ValidationError] если нарушен D-инвариант,
+     *   у проекта нет схемы, или рассинхронизирован currentRowNumber.
+     */
+    fun markRow(row: PatternRow): Result<MarkResult> = when {
+        currentStitch.value > 0 && currentPatternRowId == null ->
+            Result.Error(AppError.ValidationError("Петли без ряда невозможны"))
+        patternId == null ->
+            Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+        else -> validateDenormalization(row) ?: successMarkResult(row)
     }
 
     /**
