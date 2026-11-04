@@ -37,8 +37,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -83,6 +85,20 @@ class PatternEditorViewModelTest : BaseTest() {
         rows = listOf(row())
     )
 
+    @Before
+    fun setUpMocks() {
+        stubSummaries()
+        coEvery { getPatternByIdService(any()) } returns Result.Success(
+            Pattern(
+                id = PatternId.create(1L),
+                name = PatternName.create("Схема"),
+                technique = Technique.KNITTING,
+                direction = PatternDirection.LTR,
+                isReversible = false
+            )
+        )
+    }
+
     private fun stubSummaries() {
         every { getAllPatternSummariesService(Unit) } returns flowOf(
             Result.Success(listOf(PatternSummary(PatternId.create(1L), PatternName.create("Схема"))))
@@ -90,7 +106,6 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle(), tutorialShown: Boolean = false): PatternEditorViewModel {
-        stubSummaries()
         every { settingsRepository.legendAddButtonVisibleFlow } returns kotlinx.coroutines.flow.flowOf(true)
         every { settingsRepository.editTutorialShownFlow } returns kotlinx.coroutines.flow.flowOf(tutorialShown)
         return PatternEditorViewModel(
@@ -574,5 +589,73 @@ class PatternEditorViewModelTest : BaseTest() {
         val vm = createViewModel(tutorialShown = true)
         advanceUntilIdle()
         assertFalse(vm.state.value.showEditTutorial)
+    }
+
+    /**
+     * Retry перезапускает подписку на summaries и сбрасывает errorRes.
+     */
+    @Test
+    fun retry_restartsSummariesAndClearsError() = runTest {
+        // 1. Имитируем ошибку в summarize
+        every { getAllPatternSummariesService(Unit) } returns flowOf(
+            Result.Error(AppError.DatabaseError(RuntimeException("test")))
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.errorRes)
+
+        // 2. Имитируем успех для повторного вызова
+        every { getAllPatternSummariesService(Unit) } returns flowOf(
+            Result.Success(listOf(PatternSummary(PatternId.create(1L), PatternName.create("P1"))))
+        )
+        coEvery { getPatternByIdService(PatternId.create(1L)) } returns Result.Success(
+            Pattern(
+                id = PatternId.create(1L),
+                name = PatternName.create("P1"),
+                technique = Technique.KNITTING,
+                direction = PatternDirection.LTR,
+                isReversible = false
+            )
+        )
+
+        vm.onIntent(PatternEditorContract.Intent.Retry)
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.errorRes)
+        assertEquals(1, vm.state.value.availablePatterns.size)
+        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
+    }
+
+    /**
+     * Retry загружает первую доступную схему, если currentPatternId == null.
+     */
+    @Test
+    fun retry_fallsBackToFirstAvailable_whenCurrentIsNull() = runTest {
+        // 1. Имитируем ошибку, чтобы currentPatternId остался null
+        every { getAllPatternSummariesService(Unit) } returns flowOf(
+            Result.Error(AppError.DatabaseError(RuntimeException("test")))
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertNull(vm.state.value.currentPatternId)
+
+        // 2. На retry возвращаем успех
+        every { getAllPatternSummariesService(Unit) } returns flowOf(
+            Result.Success(listOf(PatternSummary(PatternId.create(1L), PatternName.create("P1"))))
+        )
+        coEvery { getPatternByIdService(PatternId.create(1L)) } returns Result.Success(
+            Pattern(
+                id = PatternId.create(1L),
+                name = PatternName.create("P1"),
+                technique = Technique.KNITTING,
+                direction = PatternDirection.LTR,
+                isReversible = false
+            )
+        )
+
+        vm.onIntent(PatternEditorContract.Intent.Retry)
+        advanceUntilIdle()
+
+        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
     }
 }

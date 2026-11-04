@@ -26,7 +26,7 @@
 ### Открыто после code review 31.10.2026
 
 - [ ] **P1-5**: `TimerScreen` permission flow (`if (!permissionViewModel.isGranted()) launcher.launch(...)`) не покрыт тестом. Регресс невидим. Robolectric compose test (`createComposeRule`).
-- [ ] **P2-4**: `PatternEditorViewModel.retry()` перезагружает только `LoadPattern(currentPatternId)`. Ошибки от `observePatternSummaries` не обрабатываются.
+- [x] **P2-4**: `PatternEditorViewModel.retry()` — **закрыт 05.11.2026**. Добавлен `summariesJob`, `retry()` перезапускает подписку на summaries и сбрасывает `errorRes`. Fallback: savedStateHandle → firstAvailable.
 - [ ] **P2-5**: `Migration5To6Test` использует симуляцию v5 через `DROP TRIGGER + PRAGMA user_version=5`, не реальную v5. Заменить на raw SQL `CREATE TABLE` v5 (эталон `Migration4To5Test`).
 - [ ] **P2-1 (P3→P2)**: `getOperationsForRow` грузит legend на каждый вызов. На Canvas с N видимыми рядами — N загрузок. Batch-запрос.
 

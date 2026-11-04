@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -87,6 +88,7 @@ class PatternEditorViewModel @Inject constructor(
 
     /** Job активной загрузки — отменяется при повторном loadPattern. */
     private var loadJob: Job? = null
+    private var summariesJob: Job? = null
 
     init {
         observePatternSummaries()
@@ -130,7 +132,8 @@ class PatternEditorViewModel @Inject constructor(
     }
 
     private fun observePatternSummaries() {
-        viewModelScope.launch {
+        summariesJob?.cancel()
+        summariesJob = viewModelScope.launch {
             patternUseCases.getAllPatternSummaries(Unit).collect { result ->
                 when (result) {
                     is Result.Success -> _state.update { it.copy(availablePatterns = result.data) }
@@ -232,9 +235,42 @@ class PatternEditorViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Повторная попытка после ошибки.
+     *
+     * Перезапускает подписку на список схем (могла упасть), сбрасывает
+     * errorRes, и перезагружает текущую схему, если она выбрана. Если
+     * currentPatternId == null (первая загрузка упала), пытается загрузить
+     * схему из savedStateHandle или первую доступную.
+     */
     private fun retry() {
-        val current = _state.value.currentPatternId ?: return
-        loadPattern(current)
+        _state.update { it.copy(errorRes = null) }
+        observePatternSummaries()
+
+        val current = _state.value.currentPatternId
+        if (current != null) {
+            loadPattern(current)
+            return
+        }
+
+        val savedId = platformDeps.savedStateHandle.get<Long>(KEY_PATTERN_ID)
+            ?.let { PatternId.createOrNull(it) }
+        if (savedId != null) {
+            loadPattern(savedId)
+            return
+        }
+
+        // Если current == null, дожидаемся первой успешной загрузки списка схем
+        // и загружаем первую доступную схему.
+        viewModelScope.launch {
+            val result = patternUseCases.getAllPatternSummaries(Unit).first()
+            if (result is Result.Success && _state.value.currentPatternId == null) {
+                val firstAvailable = result.data.firstOrNull()?.id
+                if (firstAvailable != null) {
+                    loadPattern(firstAvailable)
+                }
+            }
+        }
     }
 
     private fun addOperation(intent: PatternEditorContract.Intent.AddOperation) {
