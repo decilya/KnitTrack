@@ -11,6 +11,13 @@
 | ProjectDto | Добавлены поля totalRows/targetRowCount | Обратная совместимость | Версионирование DTO при синхронизации с бэкендом |
 
 
+## Ревью 05.11.2026 (Архитектурный анализ)
+
+- [ ] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое (`BackupRepositoryImpl`). Нарушение Clean Arch: бизнес-логика в Repository. Нужно перенести в `DataImporterImpl` и возвращать `ValidationError` (чтобы не терять данные пользователя молча).
+- [ ] **P2 (LIN/BIZ):** Оркестрация в `PatternEditorViewModel.retry()`. Вызов `patternUseCases.getAllPatternSummaries(Unit).first()` внутри VM нарушает SRP. Плюс автозагрузка `firstAvailable` при Retry может сбить пользователя с толку. Вынести в UseCase / Coordinator.
+- [ ] **P3 (LIN):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
+- [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
+
 ## Уроки 31.10.2026 (сессия 7c-2 + 7f-B)
 
 - **SQLite не поддерживает `INSERT OR UPDATE` в одном `CREATE TRIGGER`.** Нужны два триггера. Проверять grammar до написания миграции.
