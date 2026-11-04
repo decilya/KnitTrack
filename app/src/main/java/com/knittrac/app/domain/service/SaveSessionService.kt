@@ -1,12 +1,15 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.TimeProvider
+import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.domain.repository.SessionRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
 
 /**
@@ -21,17 +24,20 @@ import javax.inject.Inject
  */
 class SaveSessionService @Inject constructor(
     private val sessionRepository: SessionRepository,
-    private val timeProvider: TimeProvider
-) {
+    private val timeProvider: TimeProvider,
+    @param:IoDispatcher private val dispatcher: CoroutineDispatcher
+) : BaseUseCase<SaveSessionParams, SessionId>(dispatcher) {
     /**
      * Сохраняет сессию и атомарно обновляет время проекта.
+     *
+     * Вызывается через [BaseUseCase.invoke]; выполняется на [dispatcher].
      *
      * @param params Параметры сессии для сохранения (включая временные метки
      *   и количество рядов).
      * @return [Result.Success] с ID новой сессии или [Result.Error] при сбое
      *   валидации или БД.
      */
-    suspend operator fun invoke(params: SaveSessionParams): Result<SessionId> {
+    override suspend fun execute(params: SaveSessionParams): Result<SessionId> {
         // 1. Валидация: длительность должна быть строго больше нуля секунд.
         val durationSeconds = (params.endTimestamp - params.startTimestamp) / 1000L
         if (durationSeconds <= 0L) {

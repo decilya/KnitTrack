@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.knittrac.app.R
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.DailyStat
-import com.knittrac.app.domain.repository.SessionRepository
+import com.knittrac.app.domain.service.GetProjectStatisticsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
 import kotlinx.coroutines.Job
@@ -35,7 +35,7 @@ object StatsContract {
 
 @HiltViewModel
 class StatsViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository,
+    private val getProjectStatisticsService: GetProjectStatisticsService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,7 +63,7 @@ class StatsViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorRes = null) }
             
-            when (val result = sessionRepository.getDailyStats(ProjectId.create(id))) {
+            when (val result = getProjectStatisticsService(ProjectId.create(id))) {
                 is Result.Success -> _state.update {
                     it.copy(dailyStats = result.data, isLoading = false)
                 }

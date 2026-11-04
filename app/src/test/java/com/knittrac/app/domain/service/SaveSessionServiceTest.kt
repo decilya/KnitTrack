@@ -10,6 +10,8 @@ import com.knittrac.app.domain.entity.RowCount
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,11 +21,13 @@ import org.junit.Test
  * Юнит-тесты для [SaveSessionService].
  * Проверяют валидацию входных данных и корректное делегирование атомарного сохранения в репозиторий.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class SaveSessionServiceTest {
 
+    private val testDispatcher = UnconfinedTestDispatcher()
     private val sessionRepository: SessionRepository = mockk()
     private val timeProvider = FakeTimeProvider()
-    private val service = SaveSessionService(sessionRepository, timeProvider)
+    private val service = SaveSessionService(sessionRepository, timeProvider, testDispatcher)
 
     /**
      * Проверяет, что сессия с нулевой или отрицательной длительностью отвергается на этапе валидации.
