@@ -1287,3 +1287,18 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - Line-scan вверх до ближайшего `fun `, определить enclosing test-функцию.
 - Regex-replace **только** для строк в `fun session*` (или `fun project*` — по scope миграции).
 - Проверка: `grep -n "SessionId.create(NL), domain.id"` → только в session-fun, не в project-fun.
+
+
+### Урок 38. `git add -u` не добавляет новые файлы — pre-commit проверяет working tree, не коммит
+
+**Симптом:** коммит запушен, pre-commit BUILD SUCCESSFUL, но `git status --short` показывает новый файл в Untracked. Remote-коммит сломан (нет файла), локально всё работает.
+
+**Причина:** `git add -u` добавляет **только tracked**-файлы. Новые (созданные в этой сессии) — остаются untracked. Pre-commit хук (`gradlew test detekt`) работает с working tree, где файл есть, поэтому проходит зелёным. Коммит без файла → remote broken.
+
+**Пример (P1-D, 02.11.2026):** Script 1 создал `SessionId.kt`. `git add -u` не добавил его. Pre-commit 3s (incremental), коммит `7e75b24` запушен без SessionId.kt. `git ls-tree origin/main -- SessionId.kt` → пусто. Fix: отдельный commit `fix(domain): add missing SessionId.kt` с явным `git add <path>`.
+
+**Правило:**
+- Перед коммитом: `git status --short` — проверить, что в `??` (untracked) **нет** файлов, которые должны быть в коммите.
+- §7.1 п.1: `git add -u` **+ явный `git add <path>` для каждого нового файла**.
+- Pre-commit не гарантирует корректность коммита — он валидирует working tree.
+- Post-commit sanity: `git ls-tree -r HEAD -- <new_file_path>` не пустой (для каждого нового файла).
