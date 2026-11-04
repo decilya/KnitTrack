@@ -8,12 +8,10 @@ import com.knittrac.app.domain.repository.SettingsRepository
 import com.knittrac.app.domain.service.ExportDataService
 import com.knittrac.app.domain.service.ImportDataService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -40,12 +38,8 @@ class SettingsViewModel @Inject constructor(
     private val _state = MutableStateFlow(SettingsContract.State())
     val state: StateFlow<SettingsContract.State> = _state.asStateFlow()
 
-    private val _effect = MutableSharedFlow<SettingsContract.Effect>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    val effect: SharedFlow<SettingsContract.Effect> = _effect.asSharedFlow()
+    private val _effect = Channel<SettingsContract.Effect>(Channel.BUFFERED)
+    val effect = _effect.receiveAsFlow()
 
     init {
         _state.update { it.copy(supportedLanguages = localeService.supportedLanguages) }
@@ -86,7 +80,7 @@ class SettingsViewModel @Inject constructor(
                         is Result.Success -> Unit
                         is Result.Error -> {
                             Timber.e(r.error.cause, "Failed to set theme mode: %s", action.mode)
-                            _effect.emit(SettingsContract.Effect.ShowError)
+                            _effect.send(SettingsContract.Effect.ShowError)
                         }
                     }
                 }
@@ -97,7 +91,7 @@ class SettingsViewModel @Inject constructor(
                         is Result.Success -> Unit
                         is Result.Error -> {
                             Timber.e(r.error.cause, "Failed to toggle notifications: %b", action.enabled)
-                            _effect.emit(SettingsContract.Effect.ShowError)
+                            _effect.send(SettingsContract.Effect.ShowError)
                         }
                     }
                 }
@@ -108,7 +102,7 @@ class SettingsViewModel @Inject constructor(
                         is Result.Success -> Unit
                         is Result.Error -> {
                             Timber.e(r.error.cause, "Failed to toggle legend add button: %b", action.enabled)
-                            _effect.emit(SettingsContract.Effect.ShowError)
+                            _effect.send(SettingsContract.Effect.ShowError)
                         }
                     }
                 }
@@ -131,40 +125,48 @@ class SettingsViewModel @Inject constructor(
     private fun changeLanguage(code: String) {
         viewModelScope.launch {
             when (val r = localeService.setLanguage(code)) {
-                is Result.Success -> _effect.emit(SettingsContract.Effect.RecreateActivity)
+                is Result.Success -> _effect.send(SettingsContract.Effect.RecreateActivity)
                 is Result.Error -> {
                     Timber.e(r.error.cause, "Failed to change language to: %s", code)
-                    _effect.emit(SettingsContract.Effect.ShowError)
+                    _effect.send(SettingsContract.Effect.ShowError)
                 }
             }
         }
     }
 
     private fun exportData(outputStream: OutputStream) {
+        if (_state.value.isExporting) return
+        _state.update { it.copy(isExporting = true) }
         viewModelScope.launch {
-            _state.update { it.copy(isExporting = true) }
-            when (val result = exportDataService(outputStream)) {
-                is Result.Success -> _effect.emit(SettingsContract.Effect.ExportSuccess)
-                is Result.Error -> {
-                    Timber.e(result.error.cause, "Export failed")
-                    _effect.emit(SettingsContract.Effect.ExportError)
+            try {
+                when (val result = exportDataService(outputStream)) {
+                    is Result.Success -> _effect.send(SettingsContract.Effect.ExportSuccess)
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Export failed")
+                        _effect.send(SettingsContract.Effect.ExportError)
+                    }
                 }
+            } finally {
+                _state.update { it.copy(isExporting = false) }
             }
-            _state.update { it.copy(isExporting = false) }
         }
     }
 
     private fun importData(inputStream: InputStream) {
+        if (_state.value.isImporting) return
+        _state.update { it.copy(isImporting = true) }
         viewModelScope.launch {
-            _state.update { it.copy(isImporting = true) }
-            when (val result = importDataService(inputStream)) {
-                is Result.Success -> _effect.emit(SettingsContract.Effect.ImportSuccess)
-                is Result.Error -> {
-                    Timber.e(result.error.cause, "Import failed")
-                    _effect.emit(SettingsContract.Effect.ImportError)
+            try {
+                when (val result = importDataService(inputStream)) {
+                    is Result.Success -> _effect.send(SettingsContract.Effect.ImportSuccess)
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Import failed")
+                        _effect.send(SettingsContract.Effect.ImportError)
+                    }
                 }
+            } finally {
+                _state.update { it.copy(isImporting = false) }
             }
-            _state.update { it.copy(isImporting = false) }
         }
     }
 
