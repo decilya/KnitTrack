@@ -159,6 +159,7 @@ class PatternEditorViewModelTest : BaseTest() {
     fun `selectPattern reloads by new id`() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         val vm = createViewModel()
+        advanceUntilIdle() // Ждём, пока init (и автозагрузка) завершится
 
         vm.onIntent(PatternEditorContract.Intent.SelectPattern(PatternId.create(2L)))
         advanceUntilIdle()

@@ -136,7 +136,15 @@ class PatternEditorViewModel @Inject constructor(
         summariesJob = viewModelScope.launch {
             patternUseCases.getAllPatternSummaries(Unit).collect { result ->
                 when (result) {
-                    is Result.Success -> _state.update { it.copy(availablePatterns = result.data) }
+                    is Result.Success -> {
+                        _state.update { it.copy(availablePatterns = result.data) }
+                        if (_state.value.currentPatternId == null && result.data.isNotEmpty()) {
+                            val savedId = platformDeps.savedStateHandle.get<Long>(KEY_PATTERN_ID)
+                            if (savedId == null) {
+                                loadPattern(result.data.first().id)
+                            }
+                        }
+                    }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to load pattern summaries")
                         _state.update { it.copy(errorRes = R.string.pattern_editor_load_error) }
@@ -260,17 +268,6 @@ class PatternEditorViewModel @Inject constructor(
             return
         }
 
-        // Если current == null, дожидаемся первой успешной загрузки списка схем
-        // и загружаем первую доступную схему.
-        viewModelScope.launch {
-            val result = patternUseCases.getAllPatternSummaries(Unit).first()
-            if (result is Result.Success && _state.value.currentPatternId == null) {
-                val firstAvailable = result.data.firstOrNull()?.id
-                if (firstAvailable != null) {
-                    loadPattern(firstAvailable)
-                }
-            }
-        }
     }
 
     private fun addOperation(intent: PatternEditorContract.Intent.AddOperation) {

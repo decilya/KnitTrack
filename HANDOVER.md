@@ -1093,6 +1093,8 @@ gradle/libs.versions.toml — НЕ существует.
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
 - **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
+- **P2 (LIN/KOT) (05.11.2026):** `PatternEditorViewModel`. Убран блокирующий `first()` из `retry()`. Автозагрузка первой схемы перенесена в реактивный `observePatternSummaries` (VM не управляет потоками, SRP соблюден). Коммит `refactor(presentation): observePatternSummaries auto-loads first pattern, remove first() from retry()`.
+
 - **P2-баг (05.11.2026):** Архитектурный рефакторинг импорта бэкапа. 
   Убрана бизнес-логика (санитизация) из `BackupRepositoryImpl`. Теперь репозиторий просто пишет данные. 
   В `DataImporterImpl` добавлен маппинг `SQLiteConstraintException` (триггер БД) в `AppError.ValidationError` с понятным текстом. 
