@@ -51,7 +51,7 @@ class DurationTest {
      * fromMillis округляет вниз до целых секунд.
      */
     @Test
-    fun frommillisRoundsDownToWholeSeconds() {
+    fun fromMillisRoundsDownToWholeSeconds() {
         assertEquals(1L, Duration.fromMillis(1500L).seconds)
         assertEquals(0L, Duration.fromMillis(999L).seconds)
         assertEquals(2L, Duration.fromMillis(2999L).seconds)
@@ -61,7 +61,7 @@ class DurationTest {
      * fromMillis на отрицательном значении бросает IllegalArgumentException.
      */
     @Test
-    fun frommillisThrowsOnNegativeMillis() {
+    fun fromMillisThrowsOnNegativeMillis() {
         assertThrows(IllegalArgumentException::class.java) {
             Duration.fromMillis(-1L)
         }
@@ -71,7 +71,7 @@ class DurationTest {
      * createOrNull на отрицательном значении возвращает null без исключения.
      */
     @Test
-    fun createornullReturnsNullOnNegativeSeconds() {
+    fun createOrNullReturnsNullOnNegativeSeconds() {
         assertNull(Duration.createOrNull(-1L))
         assertNull(Duration.createOrNull(Long.MIN_VALUE))
     }
@@ -80,7 +80,7 @@ class DurationTest {
      * createOrNull на валидном значении возвращает Duration.
      */
     @Test
-    fun createornullReturnsDurationOnValidSeconds() {
+    fun createOrNullReturnsDurationOnValidSeconds() {
         val d = Duration.createOrNull(60L)
 
         assertEquals(60L, d?.seconds)
@@ -91,7 +91,7 @@ class DurationTest {
      * как fallback для невалидных данных.
      */
     @Test
-    fun zeroHasZeroSeconds() {
+    fun zEROHasZeroSeconds() {
         assertEquals(0L, Duration.ZERO.seconds)
     }
 

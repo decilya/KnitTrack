@@ -20,7 +20,7 @@ class ImportDataServiceTest {
     private val service = ImportDataService(dataImporter)
 
     @Test
-    fun invokeDelegatesToDataimporterAndReturnsSuccess() = runTest {
+    fun invokeDelegatesToDataImporterAndReturnsSuccess() = runTest {
         val stream = ByteArrayInputStream("{}".toByteArray())
         coEvery { dataImporter.importFrom(stream) } returns Result.Success(Unit)
 

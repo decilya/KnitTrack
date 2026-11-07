@@ -93,7 +93,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * RowMarkService вернул AlreadyExists — пробрасываем как Success.
      */
     @Test
-    fun executeReturnsAlreadyexistsFromProgressservice() = runTest {
+    fun executeReturnsAlreadyExistsFromProgressService() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns
@@ -109,7 +109,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * Проект не найден — NotFoundError без обращения к pattern/RowMarkService.
      */
     @Test
-    fun executeReturnsNotfounderrorWhenProjectMissing() = runTest {
+    fun executeReturnsNotFoundErrorWhenProjectMissing() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(99L)) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
@@ -123,7 +123,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * У проекта нет patternId — ValidationError.
      */
     @Test
-    fun executeReturnsValidationerrorWhenProjectHasNoPattern() = runTest {
+    fun executeReturnsValidationErrorWhenProjectHasNoPattern() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project(patternId = null))
 
         val result = useCase(params())
@@ -151,7 +151,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * Ряд не найден в pattern.rows — ValidationError.
      */
     @Test
-    fun executeReturnsValidationerrorWhenRowMissingInPattern() = runTest {
+    fun executeReturnsValidationErrorWhenRowMissingInPattern() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Success(pattern(rows = emptyList()))
@@ -166,7 +166,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * RowMarkService вернул ошибку — пробрасываем.
      */
     @Test
-    fun executeReturnsProgressserviceError() = runTest {
+    fun executeReturnsProgressServiceError() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns

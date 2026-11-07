@@ -22,7 +22,7 @@ class ProjectNameTest {
      * create с валидной строкой возвращает ProjectName с тем же значением.
      */
     @Test
-    fun createReturnsProjectnameWithSameValueForValidInput() {
+    fun createReturnsProjectNameWithSameValueForValidInput() {
         val name = ProjectName.create("Свитер")
 
         assertEquals("Свитер", name.value)
@@ -62,7 +62,7 @@ class ProjectNameTest {
      * create на строке ровно MAX_LENGTH символов работает.
      */
     @Test
-    fun createAcceptsStringOfExactlyMaxLengthCharacters() {
+    fun createAcceptsStringOfExactlyMAXLENGTHCharacters() {
         val input = "а".repeat(ProjectName.MAX_LENGTH)
 
         val name = ProjectName.create(input)
@@ -74,7 +74,7 @@ class ProjectNameTest {
      * create на строке длиннее MAX_LENGTH бросает IllegalArgumentException.
      */
     @Test
-    fun createThrowsOnStringLongerThanMaxLength() {
+    fun createThrowsOnStringLongerThanMAXLENGTH() {
         val input = "а".repeat(ProjectName.MAX_LENGTH + 1)
 
         assertThrows(IllegalArgumentException::class.java) {
@@ -86,7 +86,7 @@ class ProjectNameTest {
      * createOrNull на невалидной строке возвращает null без исключения.
      */
     @Test
-    fun createornullReturnsNullOnInvalidInput() {
+    fun createOrNullReturnsNullOnInvalidInput() {
         assertNull(ProjectName.createOrNull(""))
         assertNull(ProjectName.createOrNull("   "))
         assertNull(ProjectName.createOrNull("а".repeat(ProjectName.MAX_LENGTH + 1)))
@@ -96,7 +96,7 @@ class ProjectNameTest {
      * createOrNull на валидной строке возвращает ProjectName.
      */
     @Test
-    fun createornullReturnsProjectnameOnValidInput() {
+    fun createOrNullReturnsProjectNameOnValidInput() {
         val name = ProjectName.createOrNull("  Кофта  ")
 
         assertNotNull(name)
@@ -107,7 +107,7 @@ class ProjectNameTest {
      * createOrDefault на невалидной строке возвращает DEFAULT.
      */
     @Test
-    fun createordefaultReturnsDefaultOnInvalidInput() {
+    fun createOrDefaultReturnsDEFAULTOnInvalidInput() {
         assertEquals(ProjectName.DEFAULT, ProjectName.createOrDefault(""))
         assertEquals(ProjectName.DEFAULT, ProjectName.createOrDefault("   "))
     }
@@ -116,7 +116,7 @@ class ProjectNameTest {
      * createOrDefault на валидной строке возвращает ProjectName с этим значением.
      */
     @Test
-    fun createordefaultReturnsProjectnameOnValidInput() {
+    fun createOrDefaultReturnsProjectNameOnValidInput() {
         val name = ProjectName.createOrDefault("Плед")
 
         assertEquals("Плед", name.value)
@@ -127,7 +127,7 @@ class ProjectNameTest {
      * Это значение используется при миграции пустых имён.
      */
     @Test
-    fun defaultHasFallbackValueBezNazvaniya() {
+    fun dEFAULTHasFallbackValueBezNazvaniya() {
         assertEquals("Untitled", ProjectName.DEFAULT.value)
     }
 
@@ -136,7 +136,7 @@ class ProjectNameTest {
      * чтобы случайное изменение не сломало валидацию UI.
      */
     @Test
-    fun maxLengthIs100() {
+    fun mAXLENGTHIs100() {
         assertEquals(100, ProjectName.MAX_LENGTH)
     }
 
@@ -144,7 +144,7 @@ class ProjectNameTest {
      * value class с одинаковым value равны по структурному равенству.
      */
     @Test
-    fun projectnameWithSameValueIsEqual() {
+    fun projectNameWithSameValueIsEqual() {
         val a = ProjectName.create("Свитер")
         val b = ProjectName.create("Свитер")
 

@@ -42,7 +42,7 @@ class AddSymbolServiceTest {
      * возвращается ValidationError.
      */
     @Test
-    fun addDuplicateCodeReturnsValidationerror() = runTest {
+    fun addDuplicateCodeReturnsValidationError() = runTest {
         val existing = Symbol("NEW", null, "Существующий", "Y", SymbolCategory.STANDARD)
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(existing))
 
@@ -56,7 +56,7 @@ class AddSymbolServiceTest {
      * Проверяет, что ошибка БД при попытке сохранить символ пробрасывается наружу.
      */
     @Test
-    fun addDatabaseErrorOnAddsymbolPropagates() = runTest {
+    fun addDatabaseErrorOnAddSymbolPropagates() = runTest {
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(emptyList())
         coEvery { repo.addSymbol(any()) } returns Result.Error(AppError.DatabaseError(RuntimeException("db")))
 

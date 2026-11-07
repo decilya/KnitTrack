@@ -48,7 +48,7 @@ class GetPatternByIdServiceTest : BaseTest() {
      * Ошибка: сервис пробрасывает [Result.Error] из репозитория.
      */
     @Test
-    fun executePropagatesNotfounderror() = runTest {
+    fun executePropagatesNotFoundError() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Error(AppError.NotFoundError("нет"))
 

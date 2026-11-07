@@ -20,46 +20,46 @@ class ThemeModeTest {
     // ---------- Валидные значения ----------
 
     @Test
-    fun fromstringRestoresSystemFromCanonicalName() {
+    fun fromStringRestoresSYSTEMFromCanonicalName() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("SYSTEM"))
     }
 
     @Test
-    fun fromstringRestoresLightFromCanonicalName() {
+    fun fromStringRestoresLIGHTFromCanonicalName() {
         assertEquals(ThemeMode.LIGHT, ThemeMode.fromString("LIGHT"))
     }
 
     @Test
-    fun fromstringRestoresDarkFromCanonicalName() {
+    fun fromStringRestoresDARKFromCanonicalName() {
         assertEquals(ThemeMode.DARK, ThemeMode.fromString("DARK"))
     }
 
     // ---------- Fallback ----------
 
     @Test
-    fun fromstringFallsBackToSystemOnUnknownValue() {
+    fun fromStringFallsBackToSYSTEMOnUnknownValue() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("INVALID"))
     }
 
     @Test
-    fun fromstringFallsBackToSystemOnEmptyString() {
+    fun fromStringFallsBackToSYSTEMOnEmptyString() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString(""))
     }
 
     @Test
-    fun fromstringFallsBackToSystemOnWhitespace() {
+    fun fromStringFallsBackToSYSTEMOnWhitespace() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("   "))
     }
 
     @Test
-    fun fromstringIsCaseSensitiveLowercaseFallsBackToSystem() {
+    fun fromStringIsCaseSensitiveLowercaseFallsBackToSYSTEM() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("system"))
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("light"))
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("dark"))
     }
 
     @Test
-    fun fromstringDoesNotTrimTrailingSpaceFallsBackToSystem() {
+    fun fromStringDoesNotTrimTrailingSpaceFallsBackToSYSTEM() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString("SYSTEM "))
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromString(" SYSTEM"))
     }
@@ -75,14 +75,14 @@ class ThemeModeTest {
     }
 
     @Test
-    fun nameValuesMatchCanonicalStringsStoredInDatastore() {
+    fun nameValuesMatchCanonicalStringsStoredInDataStore() {
         assertEquals("SYSTEM", ThemeMode.SYSTEM.name)
         assertEquals("LIGHT", ThemeMode.LIGHT.name)
         assertEquals("DARK", ThemeMode.DARK.name)
     }
 
     @Test
-    fun fromstringIsInverseOfNameForAllEntries() {
+    fun fromStringIsInverseOfNameForAllEntries() {
         ThemeMode.entries.forEach { mode ->
             assertEquals(mode, ThemeMode.fromString(mode.name))
         }

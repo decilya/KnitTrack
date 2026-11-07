@@ -41,7 +41,7 @@ class DeletePatternRowServiceTest {
     }
 
     @Test
-    fun deleteRowNotInPatternReturnsNotfound() = runTest {
+    fun deleteRowNotInPatternReturnsNotFound() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
 
         val result = service.delete(DeletePatternRowParams(PatternId.create(1L), PatternRowId.create(99L)))

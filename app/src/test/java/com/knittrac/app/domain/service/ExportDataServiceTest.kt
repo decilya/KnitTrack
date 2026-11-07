@@ -20,7 +20,7 @@ class ExportDataServiceTest {
     private val service = ExportDataService(dataExporter)
 
     @Test
-    fun invokeDelegatesToDataexporterAndReturnsSuccess() = runTest {
+    fun invokeDelegatesToDataExporterAndReturnsSuccess() = runTest {
         val stream = ByteArrayOutputStream()
         coEvery { dataExporter.exportTo(stream) } returns Result.Success(Unit)
 

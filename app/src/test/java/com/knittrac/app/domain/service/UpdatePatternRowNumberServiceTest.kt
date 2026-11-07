@@ -42,7 +42,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun updateRowNotFoundReturnsNotfound() = runTest {
+    fun updateRowNotFoundReturnsNotFound() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(false)
 
         val result = service.update(params(rowId = 99L))
@@ -52,7 +52,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun updateOutOfBoundsReturnsValidationerror() = runTest {
+    fun updateOutOfBoundsReturnsValidationError() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns Result.Success(1)
         coEvery { patternRepository.getRowCount(any()) } returns Result.Success(2)
@@ -75,7 +75,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun updateDatabaseErrorOnGetrownumberPropagates() = runTest {
+    fun updateDatabaseErrorOnGetRowNumberPropagates() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))

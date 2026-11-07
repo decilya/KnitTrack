@@ -42,7 +42,7 @@ class DeleteSymbolServiceTest {
      * Проверяет, что системный символ (ownerPatternId = null) удалить нельзя.
      */
     @Test
-    fun deleteSystemSymbolReturnsValidationerror() = runTest {
+    fun deleteSystemSymbolReturnsValidationError() = runTest {
         val system = Symbol(
             code = "K",
             ownerPatternId = null,
@@ -63,7 +63,7 @@ class DeleteSymbolServiceTest {
      * возвращает ValidationError (от репозитория), а не падает с ошибкой БД.
      */
     @Test
-    fun deleteSymbolInUsePropagatesValidationerror() = runTest {
+    fun deleteSymbolInUsePropagatesValidationError() = runTest {
         val custom = Symbol(
             code = "CUSTOM",
             ownerPatternId = PatternId.create(1L),

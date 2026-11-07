@@ -75,7 +75,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun updateWithSymbolNotInLegendReturnsValidationerror() = runTest {
+    fun updateWithSymbolNotInLegendReturnsValidationError() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern(legend = emptySet()))
 
         val result = service.update(params())
@@ -85,7 +85,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun updateCreatingOverlapWithAnotherColumnReturnsValidationerror() = runTest {
+    fun updateCreatingOverlapWithAnotherColumnReturnsValidationError() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         // Существующая операция на колонке 1 (соседняя)
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns
@@ -113,7 +113,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun updatePropagatingNotfounderrorWhenOperationMissing() = runTest {
+    fun updatePropagatingNotFoundErrorWhenOperationMissing() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns Result.Success(emptyList())
         coEvery { patternRepository.updateOperation(any()) } returns Result.Error(AppError.NotFoundError("нет"))

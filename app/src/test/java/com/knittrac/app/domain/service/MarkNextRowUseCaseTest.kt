@@ -50,7 +50,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      * Успешный путь: проект найден → NextRowService вернул RowNumber.
      */
     @Test
-    fun executeReturnsRownumberFromNextrowservice() = runTest {
+    fun executeReturnsRowNumberFromNextRowService() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns Result.Success(RowNumber.create(5))
 
@@ -65,7 +65,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      * Проект не найден — NotFoundError без обращения к NextRowService.
      */
     @Test
-    fun executeReturnsNotfounderrorWhenProjectMissing() = runTest {
+    fun executeReturnsNotFoundErrorWhenProjectMissing() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
@@ -80,7 +80,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      * пустые rows) — пробрасываем.
      */
     @Test
-    fun executeReturnsValidationerrorFromNextrowservice() = runTest {
+    fun executeReturnsValidationErrorFromNextRowService() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.ValidationError("нет схемы"))
@@ -95,7 +95,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
      * NextRowService вернул DatabaseError — пробрасываем.
      */
     @Test
-    fun executeReturnsDatabaseerrorFromNextrowservice() = runTest {
+    fun executeReturnsDatabaseErrorFromNextRowService() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))

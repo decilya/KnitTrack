@@ -285,7 +285,7 @@ class PatternRepositoryImplTest {
     }
 
     @Test
-    fun getoperationsforrowReturnsOperationsWithResolvedSymbols() = runTest {
+    fun getOperationsForRowReturnsOperationsWithResolvedSymbols() = runTest {
         coEvery { symbolDao.getSymbolsForPattern(1L) } returns listOf(
             SymbolEntity(code = "K", displayName = "Лицевая", textGlyph = "V", category = "STANDARD")
         )
@@ -311,7 +311,7 @@ class PatternRepositoryImplTest {
     }
 
     @Test
-    fun getoperationsforrowReturnsDatabaseerrorWhenSymbolMissing() = runTest {
+    fun getOperationsForRowReturnsDatabaseErrorWhenSymbolMissing() = runTest {
         coEvery { symbolDao.getSymbolsForPattern(1L) } returns emptyList()
         coEvery { patternDao.getOperationsForRow(10L) } returns listOf(
             PatternOperationEntity(
@@ -333,7 +333,7 @@ class PatternRepositoryImplTest {
     }
 
     @Test
-    fun getallpatternsummariesMapsEntitiesToSummaries() = runTest {
+    fun getAllPatternSummariesMapsEntitiesToSummaries() = runTest {
         coEvery { patternDao.getAllPatternsFlow() } returns kotlinx.coroutines.flow.flowOf(listOf(entity))
 
         val summaries = repository.getAllPatternSummaries().first()

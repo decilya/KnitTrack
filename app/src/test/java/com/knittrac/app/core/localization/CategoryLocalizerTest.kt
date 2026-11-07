@@ -37,7 +37,7 @@ class CategoryLocalizerTest {
      * с правильным id — это защищает от случайной подмены ресурса в when.
      */
     @Test
-    fun localizeKnittingReturnsCategoryKnittingString() {
+    fun localizeKNITTINGReturnsCategoryKnittingString() {
         every { context.getString(R.string.category_knitting) } returns "Вязание спицами"
 
         val result = localizer.localize(Category.KNITTING)
@@ -50,7 +50,7 @@ class CategoryLocalizerTest {
      * CROCHET должен резолвиться в R.string.category_crochet.
      */
     @Test
-    fun localizeCrochetReturnsCategoryCrochetString() {
+    fun localizeCROCHETReturnsCategoryCrochetString() {
         every { context.getString(R.string.category_crochet) } returns "Вязание крючком"
 
         val result = localizer.localize(Category.CROCHET)
@@ -63,7 +63,7 @@ class CategoryLocalizerTest {
      * BEADING должен резолвиться в R.string.category_beading.
      */
     @Test
-    fun localizeBeadingReturnsCategoryBeadingString() {
+    fun localizeBEADINGReturnsCategoryBeadingString() {
         every { context.getString(R.string.category_beading) } returns "Бисероплетение"
 
         val result = localizer.localize(Category.BEADING)
@@ -76,7 +76,7 @@ class CategoryLocalizerTest {
      * MACRAME должен резолвиться в R.string.category_macrame.
      */
     @Test
-    fun localizeMacrameReturnsCategoryMacrameString() {
+    fun localizeMACRAMEReturnsCategoryMacrameString() {
         every { context.getString(R.string.category_macrame) } returns "Макраме"
 
         val result = localizer.localize(Category.MACRAME)
@@ -89,7 +89,7 @@ class CategoryLocalizerTest {
      * OTHER должен резолвиться в R.string.category_other.
      */
     @Test
-    fun localizeOtherReturnsCategoryOtherString() {
+    fun localizeOTHERReturnsCategoryOtherString() {
         every { context.getString(R.string.category_other) } returns "Другое"
 
         val result = localizer.localize(Category.OTHER)
