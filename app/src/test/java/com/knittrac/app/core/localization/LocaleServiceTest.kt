@@ -81,7 +81,7 @@ class LocaleServiceTest {
      * пока ensureLanguageInitialized не отработает.
      */
     @Test
-    fun `isInitialized starts as false`() {
+    fun isinitializedStartsAsFalse() {
         val manager = LocaleService(context, dataStore)
 
         assertFalse(manager.isInitialized.value)
@@ -92,7 +92,7 @@ class LocaleServiceTest {
      * чтобы случайное изменение не сломало fallback на английский.
      */
     @Test
-    fun `FALLBACK_LANGUAGE is en`() {
+    fun fallbackLanguageIsEn() {
         assertEquals("en", LocaleService.FALLBACK_LANGUAGE)
     }
 
@@ -102,7 +102,7 @@ class LocaleServiceTest {
      * а не упасть с IndexOutOfBounds.
      */
     @Test
-    fun `supportedLanguages returns emptyList when arrays mismatch`() {
+    fun supportedlanguagesReturnsEmptylistWhenArraysMismatch() {
         every { resources.getStringArray(R.array.supported_language_codes) } returns
             arrayOf("en")
         every { resources.getStringArray(R.array.supported_language_names) } returns
@@ -119,7 +119,7 @@ class LocaleServiceTest {
      * поэтому тест не сломается при добавлении нового языка в arrays.xml.
      */
     @Test
-    fun `supportedLanguages zips codes and names correctly`() {
+    fun supportedlanguagesZipsCodesAndNamesCorrectly() {
         val codes = arrayOf("en", "ru")
         val names = arrayOf("English", "Русский")
         every { resources.getStringArray(R.array.supported_language_codes) } returns codes
@@ -172,7 +172,7 @@ class LocaleServiceTest {
      * выставляет isInitialized = true через finally — splash скроется.
      */
     @Test
-    fun `ensureLanguageInitialized sets isInitialized to true on success`() = runTest {
+    fun ensurelanguageinitializedSetsIsinitializedToTrueOnSuccess() = runTest {
         val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } returns Unit
 
@@ -187,7 +187,7 @@ class LocaleServiceTest {
      * застрять на splash-экране навсегда.
      */
     @Test
-    fun `ensureLanguageInitialized sets isInitialized to true even on error`() = runTest {
+    fun ensurelanguageinitializedSetsIsinitializedToTrueEvenOnError() = runTest {
         val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } throws RuntimeException("test error")
 
@@ -206,7 +206,7 @@ class LocaleServiceTest {
      * Проверяем состояние DataStore после вызова.
      */
     @Test
-    fun `ensureLanguageInitialized saves default language when none stored`() = runTest {
+    fun ensurelanguageinitializedSavesDefaultLanguageWhenNoneStored() = runTest {
         val manager = spyk(LocaleService(context, dataStore))
         every { manager.updateLocale(any()) } returns Unit
 
@@ -222,7 +222,7 @@ class LocaleServiceTest {
      * Проверяем, что сохранённое значение не изменилось.
      */
     @Test
-    fun `ensureLanguageInitialized does not overwrite existing language`() = runTest {
+    fun ensurelanguageinitializedDoesNotOverwriteExistingLanguage() = runTest {
         // Предварительно сохраняем язык — имитация второго запуска.
         dataStore.edit { it[languageKey] = "en" }
 

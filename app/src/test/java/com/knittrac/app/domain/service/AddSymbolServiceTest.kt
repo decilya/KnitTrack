@@ -27,7 +27,7 @@ class AddSymbolServiceTest {
      * Проверяет успешное добавление нового кастомного символа.
      */
     @Test
-    fun `add success`() = runTest {
+    fun addSuccess() = runTest {
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(emptyList())
         coEvery { repo.addSymbol(any()) } returns Result.Success(Unit)
 
@@ -42,7 +42,7 @@ class AddSymbolServiceTest {
      * возвращается ValidationError.
      */
     @Test
-    fun `add duplicate code returns ValidationError`() = runTest {
+    fun addDuplicateCodeReturnsValidationerror() = runTest {
         val existing = Symbol("NEW", null, "Существующий", "Y", SymbolCategory.STANDARD)
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(existing))
 
@@ -56,7 +56,7 @@ class AddSymbolServiceTest {
      * Проверяет, что ошибка БД при попытке сохранить символ пробрасывается наружу.
      */
     @Test
-    fun `add database error on addSymbol propagates`() = runTest {
+    fun addDatabaseErrorOnAddsymbolPropagates() = runTest {
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(emptyList())
         coEvery { repo.addSymbol(any()) } returns Result.Error(AppError.DatabaseError(RuntimeException("db")))
 

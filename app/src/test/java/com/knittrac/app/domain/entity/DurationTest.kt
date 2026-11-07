@@ -21,7 +21,7 @@ class DurationTest {
      * create(0) возвращает Duration с нулём секунд.
      */
     @Test
-    fun `create accepts zero seconds`() {
+    fun createAcceptsZeroSeconds() {
         val d = Duration.create(0L)
 
         assertEquals(0L, d.seconds)
@@ -31,7 +31,7 @@ class DurationTest {
      * create с положительным значением сохраняет его без изменений.
      */
     @Test
-    fun `create preserves positive value`() {
+    fun createPreservesPositiveValue() {
         val d = Duration.create(3600L)
 
         assertEquals(3600L, d.seconds)
@@ -41,7 +41,7 @@ class DurationTest {
      * create на отрицательном значении бросает IllegalArgumentException.
      */
     @Test
-    fun `create throws on negative seconds`() {
+    fun createThrowsOnNegativeSeconds() {
         assertThrows(IllegalArgumentException::class.java) {
             Duration.create(-1L)
         }
@@ -51,7 +51,7 @@ class DurationTest {
      * fromMillis округляет вниз до целых секунд.
      */
     @Test
-    fun `fromMillis rounds down to whole seconds`() {
+    fun frommillisRoundsDownToWholeSeconds() {
         assertEquals(1L, Duration.fromMillis(1500L).seconds)
         assertEquals(0L, Duration.fromMillis(999L).seconds)
         assertEquals(2L, Duration.fromMillis(2999L).seconds)
@@ -61,7 +61,7 @@ class DurationTest {
      * fromMillis на отрицательном значении бросает IllegalArgumentException.
      */
     @Test
-    fun `fromMillis throws on negative millis`() {
+    fun frommillisThrowsOnNegativeMillis() {
         assertThrows(IllegalArgumentException::class.java) {
             Duration.fromMillis(-1L)
         }
@@ -71,7 +71,7 @@ class DurationTest {
      * createOrNull на отрицательном значении возвращает null без исключения.
      */
     @Test
-    fun `createOrNull returns null on negative seconds`() {
+    fun createornullReturnsNullOnNegativeSeconds() {
         assertNull(Duration.createOrNull(-1L))
         assertNull(Duration.createOrNull(Long.MIN_VALUE))
     }
@@ -80,7 +80,7 @@ class DurationTest {
      * createOrNull на валидном значении возвращает Duration.
      */
     @Test
-    fun `createOrNull returns Duration on valid seconds`() {
+    fun createornullReturnsDurationOnValidSeconds() {
         val d = Duration.createOrNull(60L)
 
         assertEquals(60L, d?.seconds)
@@ -91,7 +91,7 @@ class DurationTest {
      * как fallback для невалидных данных.
      */
     @Test
-    fun `ZERO has zero seconds`() {
+    fun zeroHasZeroSeconds() {
         assertEquals(0L, Duration.ZERO.seconds)
     }
 
@@ -99,7 +99,7 @@ class DurationTest {
      * value class с одинаковым value равны по структурному равенству.
      */
     @Test
-    fun `Duration with same value is equal`() {
+    fun durationWithSameValueIsEqual() {
         val a = Duration.create(100L)
         val b = Duration.create(100L)
 

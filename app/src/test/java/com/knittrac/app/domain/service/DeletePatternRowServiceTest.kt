@@ -31,7 +31,7 @@ class DeletePatternRowServiceTest {
     )
 
     @Test
-    fun `delete success returns Unit`() = runTest {
+    fun deleteSuccessReturnsUnit() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.deleteRow(any()) } returns Result.Success(Unit)
 
@@ -41,7 +41,7 @@ class DeletePatternRowServiceTest {
     }
 
     @Test
-    fun `delete row not in pattern returns NotFound`() = runTest {
+    fun deleteRowNotInPatternReturnsNotfound() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
 
         val result = service.delete(DeletePatternRowParams(PatternId.create(1L), PatternRowId.create(99L)))
@@ -51,7 +51,7 @@ class DeletePatternRowServiceTest {
     }
 
     @Test
-    fun `delete database error propagates`() = runTest {
+    fun deleteDatabaseErrorPropagates() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.deleteRow(any()) } returns Result.Error(AppError.DatabaseError(RuntimeException("db")))
 

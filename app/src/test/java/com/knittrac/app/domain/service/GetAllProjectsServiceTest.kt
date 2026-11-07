@@ -33,7 +33,7 @@ class GetAllProjectsServiceTest : BaseTest() {
      * полученных из репозитория.
      */
     @Test
-    fun `execute returns flow of projects`() = runTest {
+    fun executeReturnsFlowOfProjects() = runTest {
         val projects = listOf(
             Project(
                 id = ProjectId.create(1L),

@@ -15,7 +15,7 @@ class GetProjectStatisticsServiceTest : BaseTest() {
     private val sessionRepository: SessionRepository = mockk()
     private val service = GetProjectStatisticsService(sessionRepository, coroutineRule.testDispatcher)
     @Test
-    fun `execute returns daily stats on success`() = runTest {
+    fun executeReturnsDailyStatsOnSuccess() = runTest {
         val stats = listOf(DailyStat(1000L, 3600L))
         coEvery { sessionRepository.getDailyStats(ProjectId.create(1L)) } returns Result.Success(stats)
         val result = service(ProjectId.create(1L))

@@ -32,7 +32,7 @@ class DataExporterImplTest {
     private val exporter = DataExporterImpl(backupRepository, gson, timeProvider, UnconfinedTestDispatcher())
 
     @Test
-    fun `exportTo writes JSON version 1_2 with projects sessions and pattern tables`() =
+    fun exporttoWritesJsonVersion12WithProjectsSessionsAndPatternTables() =
         runTest(UnconfinedTestDispatcher()) {
         val project = Project(
             id = ProjectId.create(1L), 

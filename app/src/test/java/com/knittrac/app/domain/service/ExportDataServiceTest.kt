@@ -20,7 +20,7 @@ class ExportDataServiceTest {
     private val service = ExportDataService(dataExporter)
 
     @Test
-    fun `invoke delegates to DataExporter and returns success`() = runTest {
+    fun invokeDelegatesToDataexporterAndReturnsSuccess() = runTest {
         val stream = ByteArrayOutputStream()
         coEvery { dataExporter.exportTo(stream) } returns Result.Success(Unit)
 
@@ -31,7 +31,7 @@ class ExportDataServiceTest {
     }
 
     @Test
-    fun `invoke returns error on exporter failure`() = runTest {
+    fun invokeReturnsErrorOnExporterFailure() = runTest {
         val stream = ByteArrayOutputStream()
         coEvery { dataExporter.exportTo(stream) } returns Result.Error(mockk(relaxed = true))
 

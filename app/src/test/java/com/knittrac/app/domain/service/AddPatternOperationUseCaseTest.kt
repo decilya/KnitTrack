@@ -55,7 +55,7 @@ class AddPatternOperationUseCaseTest : BaseTest() {
      * Успешный путь: сервис вернул созданную операцию — пробрасываем как Success.
      */
     @Test
-    fun `execute delegates to service and returns operation`() = runTest {
+    fun executeDelegatesToServiceAndReturnsOperation() = runTest {
         val op = PatternOperation(
             patternRowId = PatternRowId.create(10L),
             columnStart = ColumnStart.create(0),
@@ -74,7 +74,7 @@ class AddPatternOperationUseCaseTest : BaseTest() {
      * Валидационная ошибка сервиса (символ не в легенде) — пробрасываем.
      */
     @Test
-    fun `execute returns validation error from service`() = runTest {
+    fun executeReturnsValidationErrorFromService() = runTest {
         coEvery { service.add(any()) } returns
             Result.Error(AppError.ValidationError("нет в легенде"))
 
@@ -88,7 +88,7 @@ class AddPatternOperationUseCaseTest : BaseTest() {
      * Ошибка БД сервиса — пробрасываем.
      */
     @Test
-    fun `execute returns database error from service`() = runTest {
+    fun executeReturnsDatabaseErrorFromService() = runTest {
         coEvery { service.add(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
 

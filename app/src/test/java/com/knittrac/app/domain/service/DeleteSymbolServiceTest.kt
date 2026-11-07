@@ -22,7 +22,7 @@ class DeleteSymbolServiceTest {
      * Проверяет успешное удаление кастомного символа, принадлежащего схеме.
      */
     @Test
-    fun `delete custom symbol success`() = runTest {
+    fun deleteCustomSymbolSuccess() = runTest {
         val custom = Symbol(
             code = "CUSTOM",
             ownerPatternId = PatternId.create(1L),
@@ -42,7 +42,7 @@ class DeleteSymbolServiceTest {
      * Проверяет, что системный символ (ownerPatternId = null) удалить нельзя.
      */
     @Test
-    fun `delete system symbol returns ValidationError`() = runTest {
+    fun deleteSystemSymbolReturnsValidationerror() = runTest {
         val system = Symbol(
             code = "K",
             ownerPatternId = null,
@@ -63,7 +63,7 @@ class DeleteSymbolServiceTest {
      * возвращает ValidationError (от репозитория), а не падает с ошибкой БД.
      */
     @Test
-    fun `delete symbol in use propagates ValidationError`() = runTest {
+    fun deleteSymbolInUsePropagatesValidationerror() = runTest {
         val custom = Symbol(
             code = "CUSTOM",
             ownerPatternId = PatternId.create(1L),

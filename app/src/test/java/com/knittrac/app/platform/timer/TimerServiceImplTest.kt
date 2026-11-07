@@ -78,7 +78,7 @@ class TimerServiceImplTest {
      * Это значение уйдёт в Session.startTimestamp при сохранении.
      */
     @Test
-    fun `start sets sessionStartTime from wall clock and switches state to RUNNING`() =
+    fun startSetsSessionstarttimeFromWallClockAndSwitchesStateToRunning() =
         runTimerTest {
             timerManager.start()
 
@@ -95,7 +95,7 @@ class TimerServiceImplTest {
      * чтобы статистика не сбивалась.
      */
     @Test
-    fun `resume after pause does not change sessionStartTime`() = runTimerTest {
+    fun resumeAfterPauseDoesNotChangeSessionstarttime() = runTimerTest {
         timerManager.start()
         val firstStartTime = timerManager.sessionStartTime
 
@@ -123,7 +123,7 @@ class TimerServiceImplTest {
      * виртуальное время.
      */
     @Test
-    fun `elapsedTime reflects monotonic time after tick`() = runTimerTest {
+    fun elapsedtimeReflectsMonotonicTimeAfterTick() = runTimerTest {
         timerManager.start()
 
         // Прокручиваем мок-часы на 5 секунд
@@ -143,7 +143,7 @@ class TimerServiceImplTest {
      * в таймере не используется — иначе тест упал бы.
      */
     @Test
-    fun `NTP shift backwards does not affect elapsedTime`() = runTimerTest {
+    fun ntpShiftBackwardsDoesNotAffectElapsedtime() = runTimerTest {
         timerManager.start()
 
         // 5 секунд monotonic — elapsedTime = 5
@@ -176,7 +176,7 @@ class TimerServiceImplTest {
      * и время продолжит накапливаться с того же места.
      */
     @Test
-    fun `pause preserves elapsedTime and switches state to PAUSED`() =
+    fun pausePreservesElapsedtimeAndSwitchesStateToPaused() =
         runTimerTest {
             timerManager.start()
 
@@ -195,7 +195,7 @@ class TimerServiceImplTest {
      * на elapsedTime: корутина отменена, тики не выполняются.
      */
     @Test
-    fun `elapsedTime does not grow during pause`() = runTimerTest {
+    fun elapsedtimeDoesNotGrowDuringPause() = runTimerTest {
         timerManager.start()
 
         fakeTime.elapsedMillis += 5_000L
@@ -222,7 +222,7 @@ class TimerServiceImplTest {
      * - итог: elapsedTime = 8, а не 38
      */
     @Test
-    fun `elapsedTime excludes paused duration on resume`() = runTimerTest {
+    fun elapsedtimeExcludesPausedDurationOnResume() = runTimerTest {
         timerManager.start()
         fakeTime.elapsedMillis += 5_000L
         advanceTimeBy(1000L)
@@ -250,7 +250,7 @@ class TimerServiceImplTest {
      * ни elapsedTime, ни накопленные паузы не сохраняются.
      */
     @Test
-    fun `reset clears all state`() = runTimerTest {
+    fun resetClearsAllState() = runTimerTest {
         timerManager.start()
         fakeTime.elapsedMillis += 10_000L
         advanceTimeBy(1000L)
@@ -272,7 +272,7 @@ class TimerServiceImplTest {
      * остановленного таймера — UI показывал бы «пауза» на пустой сессии.
      */
     @Test
-    fun `pause in IDLE does not change state`() = runTimerTest {
+    fun pauseInIdleDoesNotChangeState() = runTimerTest {
         assertEquals(TimerState.IDLE, timerManager.state.value)
 
         timerManager.pause()
@@ -298,7 +298,7 @@ class TimerServiceImplTest {
      *   elapsedTime = (15s + 3s - 5s) / 1000 = 13 — скачок вперёд.
      */
     @Test
-    fun `repeated pause does not reset lastPauseElapsed`() = runTimerTest {
+    fun repeatedPauseDoesNotResetLastpauseelapsed() = runTimerTest {
         timerManager.start()
         fakeTime.elapsedMillis += 5_000L
         advanceTimeBy(1000L)

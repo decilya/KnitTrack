@@ -77,7 +77,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * Успешный путь: project + pattern + row найдены → RowMarkService вернул Added.
      */
     @Test
-    fun `execute returns Added when all aggregates found`() = runTest {
+    fun executeReturnsAddedWhenAllAggregatesFound() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
@@ -93,7 +93,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * RowMarkService вернул AlreadyExists — пробрасываем как Success.
      */
     @Test
-    fun `execute returns AlreadyExists from ProgressService`() = runTest {
+    fun executeReturnsAlreadyexistsFromProgressservice() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns
@@ -109,7 +109,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * Проект не найден — NotFoundError без обращения к pattern/RowMarkService.
      */
     @Test
-    fun `execute returns NotFoundError when project missing`() = runTest {
+    fun executeReturnsNotfounderrorWhenProjectMissing() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(99L)) } returns
             Result.Error(AppError.NotFoundError("нет"))
 
@@ -123,7 +123,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * У проекта нет patternId — ValidationError.
      */
     @Test
-    fun `execute returns ValidationError when project has no pattern`() = runTest {
+    fun executeReturnsValidationerrorWhenProjectHasNoPattern() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project(patternId = null))
 
         val result = useCase(params())
@@ -136,7 +136,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * PatternRepository вернул ошибку — пробрасываем.
      */
     @Test
-    fun `execute returns pattern repository error`() = runTest {
+    fun executeReturnsPatternRepositoryError() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
@@ -151,7 +151,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * Ряд не найден в pattern.rows — ValidationError.
      */
     @Test
-    fun `execute returns ValidationError when row missing in pattern`() = runTest {
+    fun executeReturnsValidationerrorWhenRowMissingInPattern() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Success(pattern(rows = emptyList()))
@@ -166,7 +166,7 @@ class MarkRowUseCaseTest : BaseTest() {
      * RowMarkService вернул ошибку — пробрасываем.
      */
     @Test
-    fun `execute returns ProgressService error`() = runTest {
+    fun executeReturnsProgressserviceError() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns

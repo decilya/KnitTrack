@@ -32,7 +32,7 @@ class GetProjectByIdServiceTest : BaseTest() {
      * [Result.Success] с той же Domain-моделью.
      */
     @Test
-    fun `execute returns project when exists`() = runTest {
+    fun executeReturnsProjectWhenExists() = runTest {
         val now = System.currentTimeMillis()
         val project = Project(
             id = ProjectId.create(1L),

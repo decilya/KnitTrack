@@ -49,7 +49,7 @@ class DataImporterImplTest {
     """.trimIndent()
 
     @Test
-    fun `importFrom successfully parses JSON and inserts into DAOs`() = runTest(UnconfinedTestDispatcher()) {
+    fun importfromSuccessfullyParsesJsonAndInsertsIntoDaos() = runTest(UnconfinedTestDispatcher()) {
         coEvery { backupRepository.withTransaction<Unit>(any()) } coAnswers {
             val block = firstArg<suspend () -> Unit>()
             block()
@@ -74,7 +74,7 @@ class DataImporterImplTest {
     }
 
     @Test
-    fun `importFrom returns IoError on invalid JSON`() = runTest(UnconfinedTestDispatcher()) {
+    fun importfromReturnsIoerrorOnInvalidJson() = runTest(UnconfinedTestDispatcher()) {
         coEvery { backupRepository.withTransaction<Unit>(any()) } coAnswers {
             val block = firstArg<suspend () -> Unit>()
             block()

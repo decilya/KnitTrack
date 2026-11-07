@@ -13,7 +13,7 @@ class DeleteProjectServiceTest : BaseTest() {
     private val projectRepository: ProjectRepository = mockk()
     private val service = DeleteProjectService(projectRepository, coroutineRule.testDispatcher)
     @Test
-    fun `execute returns success on delete`() = runTest {
+    fun executeReturnsSuccessOnDelete() = runTest {
         coEvery { projectRepository.deleteProject(ProjectId.create(1L)) } returns Result.Success(Unit)
         val result = service(ProjectId.create(1L))
         assertTrue(result is Result.Success)

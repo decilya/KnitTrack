@@ -64,7 +64,7 @@ class UpdatePatternOperationServiceTest {
         )
 
     @Test
-    fun `update success returns updated operation`() = runTest {
+    fun updateSuccessReturnsUpdatedOperation() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns Result.Success(emptyList())
         coEvery { patternRepository.updateOperation(any()) } returns Result.Success(Unit)
@@ -75,7 +75,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun `update with symbol not in legend returns ValidationError`() = runTest {
+    fun updateWithSymbolNotInLegendReturnsValidationerror() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern(legend = emptySet()))
 
         val result = service.update(params())
@@ -85,7 +85,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun `update creating overlap with another column returns ValidationError`() = runTest {
+    fun updateCreatingOverlapWithAnotherColumnReturnsValidationerror() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         // Существующая операция на колонке 1 (соседняя)
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns
@@ -99,7 +99,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun `update overlap with self is ignored`() = runTest {
+    fun updateOverlapWithSelfIsIgnored() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         // Существующая операция на колонке 0 (это мы ее обновляем)
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns
@@ -113,7 +113,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun `update propagating NotFoundError when operation missing`() = runTest {
+    fun updatePropagatingNotfounderrorWhenOperationMissing() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns Result.Success(emptyList())
         coEvery { patternRepository.updateOperation(any()) } returns Result.Error(AppError.NotFoundError("нет"))
@@ -125,7 +125,7 @@ class UpdatePatternOperationServiceTest {
     }
 
     @Test
-    fun `update with larger span no overlap returns success`() = runTest {
+    fun updateWithLargerSpanNoOverlapReturnsSuccess() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         // Соседняя операция на колонке 5
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns

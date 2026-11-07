@@ -27,7 +27,7 @@ class GetAllPatternSummariesServiceTest : BaseTest() {
      * Успех: сервис эмитит [Result.Success] со списком [PatternSummary].
      */
     @Test
-    fun `execute returns flow of summaries`() = runTest {
+    fun executeReturnsFlowOfSummaries() = runTest {
         val summaries = listOf(
             PatternSummary(id = PatternId.create(1L), name = PatternName.create("A")),
             PatternSummary(id = PatternId.create(2L), name = PatternName.create("B"))

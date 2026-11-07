@@ -135,7 +135,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `init loads availablePatterns`() = runTest {
+    fun initLoadsAvailablepatterns() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
         assertEquals(1, vm.state.value.availablePatterns.size)
@@ -143,7 +143,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `loadPattern success sets pattern and currentPatternId`() = runTest {
+    fun loadpatternSuccessSetsPatternAndCurrentpatternid() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         val vm = createViewModel()
 
@@ -156,7 +156,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `selectPattern reloads by new id`() = runTest {
+    fun selectpatternReloadsByNewId() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         val vm = createViewModel()
         advanceUntilIdle() // Ждём, пока init (и автозагрузка) завершится
@@ -169,7 +169,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `toggleMode persists in SavedStateHandle`() = runTest {
+    fun togglemodePersistsInSavedstatehandle() = runTest {
         val savedState = SavedStateHandle()
         val vm = createViewModel(savedState)
         assertEquals(true, vm.state.value.isStickyMode)
@@ -181,7 +181,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addOperation success emits Effect and resets isSaving`() = runTest {
+    fun addoperationSuccessEmitsEffectAndResetsIssaving() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         coEvery { addPatternOperationUseCase(any()) } returns Result.Success(
             PatternOperation(
@@ -209,7 +209,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addOperation error emits ShowError`() = runTest {
+    fun addoperationErrorEmitsShowerror() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         coEvery { addPatternOperationUseCase(any()) } returns
             Result.Error(AppError.ValidationError("overlap"))
@@ -232,7 +232,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `restore from SavedStateHandle loads pattern on init`() = runTest {
+    fun restoreFromSavedstatehandleLoadsPatternOnInit() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         val savedState = SavedStateHandle(mapOf<String, Any>("patternId" to 1L))
 
@@ -246,7 +246,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `createPattern success loads created id`() = runTest {
+    fun createpatternSuccessLoadsCreatedId() = runTest {
         coEvery { createPatternUseCase(any()) } returns Result.Success(PatternId.create(3L))
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         val vm = createViewModel()
@@ -259,7 +259,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `createPattern error emits ShowError`() = runTest {
+    fun createpatternErrorEmitsShowerror() = runTest {
         coEvery { createPatternUseCase(any()) } returns Result.Error(AppError.ValidationError("x"))
         val vm = createViewModel()
         advanceUntilIdle()
@@ -297,7 +297,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addOperation success pushes to undo stack`() = runTest {
+    fun addoperationSuccessPushesToUndoStack() = runTest {
         coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
         val vm = loadedVm()
         advanceUntilIdle()
@@ -313,7 +313,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addOperation success stack caps at 25`() = runTest {
+    fun addoperationSuccessStackCapsAt25() = runTest {
         var column = 0
         coEvery { addPatternOperationUseCase(any()) } answers {
             Result.Success(operation(column++))
@@ -337,7 +337,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `undoLastOperation success pops and reloads`() = runTest {
+    fun undolastoperationSuccessPopsAndReloads() = runTest {
         coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
         coEvery { deleteOperationUseCase(any()) } returns Result.Success(Unit)
         val vm = loadedVm()
@@ -358,7 +358,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `undoLastOperation error emits ShowError and keeps stack`() = runTest {
+    fun undolastoperationErrorEmitsShowerrorAndKeepsStack() = runTest {
         coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
         coEvery { deleteOperationUseCase(any()) } returns
             Result.Error(AppError.NotFoundError("нет"))
@@ -386,7 +386,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `undoLastOperation empty stack does nothing`() = runTest {
+    fun undolastoperationEmptyStackDoesNothing() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
@@ -397,7 +397,7 @@ class PatternEditorViewModelTest : BaseTest() {
         assertTrue(vm.state.value.lastOperations.isEmpty())
     }
     @Test
-    fun `editOperation opens dialog`() = runTest {
+    fun editoperationOpensDialog() = runTest {
         val op = operation(0)
         val vm = loadedVm()
         advanceUntilIdle()
@@ -408,7 +408,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `dismissEditor clears editing state`() = runTest {
+    fun dismisseditorClearsEditingState() = runTest {
         val op = operation(0)
         val vm = loadedVm()
         advanceUntilIdle()
@@ -421,7 +421,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `updateOperation success reloads pattern`() = runTest {
+    fun updateoperationSuccessReloadsPattern() = runTest {
         coEvery { updatePatternOperationUseCase(any()) } returns
             Result.Success(operation(0))
         val vm = loadedVm()
@@ -441,7 +441,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `updateOperation error emits ShowError`() = runTest {
+    fun updateoperationErrorEmitsShowerror() = runTest {
         coEvery { updatePatternOperationUseCase(any()) } returns
             Result.Error(AppError.ValidationError("overlap"))
         val vm = loadedVm()
@@ -461,7 +461,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `deleteRow success reloads`() = runTest {
+    fun deleterowSuccessReloads() = runTest {
         coEvery { deletePatternRowUseCase(any()) } returns Result.Success(Unit)
         val vm = loadedVm()
         advanceUntilIdle()
@@ -473,7 +473,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `updateRowNumber success reloads`() = runTest {
+    fun updaterownumberSuccessReloads() = runTest {
         coEvery { updatePatternRowNumberUseCase(any()) } returns Result.Success(Unit)
         val vm = loadedVm()
         advanceUntilIdle()
@@ -488,7 +488,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `openLegendEditor sets flag`() = runTest {
+    fun openlegendeditorSetsFlag() = runTest {
         val vm = loadedVm()
         advanceUntilIdle()
 
@@ -498,7 +498,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `closeLegendEditor clears flag`() = runTest {
+    fun closelegendeditorClearsFlag() = runTest {
         val vm = loadedVm()
         advanceUntilIdle()
         vm.onIntent(PatternEditorContract.Intent.OpenLegendEditor)
@@ -509,7 +509,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addSymbol success reloads pattern`() = runTest {
+    fun addsymbolSuccessReloadsPattern() = runTest {
         coEvery { addSymbolUseCase(any()) } returns Result.Success(
             Symbol(
                 code = "NEW",
@@ -534,7 +534,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `addSymbol error emits ShowError`() = runTest {
+    fun addsymbolErrorEmitsShowerror() = runTest {
         coEvery { addSymbolUseCase(any()) } returns Result.Error(AppError.ValidationError("duplicate"))
         val vm = loadedVm()
         advanceUntilIdle()
@@ -553,7 +553,7 @@ class PatternEditorViewModelTest : BaseTest() {
     }
 
     @Test
-    fun `deleteSymbol success reloads pattern`() = runTest {
+    fun deletesymbolSuccessReloadsPattern() = runTest {
         coEvery { deleteSymbolUseCase(any()) } returns Result.Success(Unit)
         val vm = loadedVm()
         advanceUntilIdle()

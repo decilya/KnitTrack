@@ -28,7 +28,7 @@ class GetPatternByIdServiceTest : BaseTest() {
      * Успех: сервис возвращает [Result.Success] с полным [Pattern].
      */
     @Test
-    fun `execute returns pattern from repository`() = runTest {
+    fun executeReturnsPatternFromRepository() = runTest {
         val pattern = Pattern(
             id = PatternId.create(1L),
             name = PatternName.create("Схема"),
@@ -48,7 +48,7 @@ class GetPatternByIdServiceTest : BaseTest() {
      * Ошибка: сервис пробрасывает [Result.Error] из репозитория.
      */
     @Test
-    fun `execute propagates NotFoundError`() = runTest {
+    fun executePropagatesNotfounderror() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns
             Result.Error(AppError.NotFoundError("нет"))
 

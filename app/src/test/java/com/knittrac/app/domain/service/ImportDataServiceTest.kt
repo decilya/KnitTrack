@@ -20,7 +20,7 @@ class ImportDataServiceTest {
     private val service = ImportDataService(dataImporter)
 
     @Test
-    fun `invoke delegates to DataImporter and returns success`() = runTest {
+    fun invokeDelegatesToDataimporterAndReturnsSuccess() = runTest {
         val stream = ByteArrayInputStream("{}".toByteArray())
         coEvery { dataImporter.importFrom(stream) } returns Result.Success(Unit)
 
@@ -31,7 +31,7 @@ class ImportDataServiceTest {
     }
 
     @Test
-    fun `invoke returns error on importer failure`() = runTest {
+    fun invokeReturnsErrorOnImporterFailure() = runTest {
         val stream = ByteArrayInputStream("{}".toByteArray())
         coEvery { dataImporter.importFrom(stream) } returns Result.Error(mockk(relaxed = true))
 

@@ -22,7 +22,7 @@ class ProjectNameTest {
      * create с валидной строкой возвращает ProjectName с тем же значением.
      */
     @Test
-    fun `create returns ProjectName with same value for valid input`() {
+    fun createReturnsProjectnameWithSameValueForValidInput() {
         val name = ProjectName.create("Свитер")
 
         assertEquals("Свитер", name.value)
@@ -32,7 +32,7 @@ class ProjectNameTest {
      * create применяет trim: ведущие и замыкающие пробелы удаляются.
      */
     @Test
-    fun `create trims leading and trailing whitespace`() {
+    fun createTrimsLeadingAndTrailingWhitespace() {
         val name = ProjectName.create("   Шарф   ")
 
         assertEquals("Шарф", name.value)
@@ -42,7 +42,7 @@ class ProjectNameTest {
      * create на пустой строке бросает IllegalArgumentException.
      */
     @Test
-    fun `create throws on empty string`() {
+    fun createThrowsOnEmptyString() {
         assertThrows(IllegalArgumentException::class.java) {
             ProjectName.create("")
         }
@@ -52,7 +52,7 @@ class ProjectNameTest {
      * create на строке из одних пробелов бросает IllegalArgumentException.
      */
     @Test
-    fun `create throws on whitespace-only string`() {
+    fun createThrowsOnWhitespaceOnlyString() {
         assertThrows(IllegalArgumentException::class.java) {
             ProjectName.create("     ")
         }
@@ -62,7 +62,7 @@ class ProjectNameTest {
      * create на строке ровно MAX_LENGTH символов работает.
      */
     @Test
-    fun `create accepts string of exactly MAX_LENGTH characters`() {
+    fun createAcceptsStringOfExactlyMaxLengthCharacters() {
         val input = "а".repeat(ProjectName.MAX_LENGTH)
 
         val name = ProjectName.create(input)
@@ -74,7 +74,7 @@ class ProjectNameTest {
      * create на строке длиннее MAX_LENGTH бросает IllegalArgumentException.
      */
     @Test
-    fun `create throws on string longer than MAX_LENGTH`() {
+    fun createThrowsOnStringLongerThanMaxLength() {
         val input = "а".repeat(ProjectName.MAX_LENGTH + 1)
 
         assertThrows(IllegalArgumentException::class.java) {
@@ -86,7 +86,7 @@ class ProjectNameTest {
      * createOrNull на невалидной строке возвращает null без исключения.
      */
     @Test
-    fun `createOrNull returns null on invalid input`() {
+    fun createornullReturnsNullOnInvalidInput() {
         assertNull(ProjectName.createOrNull(""))
         assertNull(ProjectName.createOrNull("   "))
         assertNull(ProjectName.createOrNull("а".repeat(ProjectName.MAX_LENGTH + 1)))
@@ -96,7 +96,7 @@ class ProjectNameTest {
      * createOrNull на валидной строке возвращает ProjectName.
      */
     @Test
-    fun `createOrNull returns ProjectName on valid input`() {
+    fun createornullReturnsProjectnameOnValidInput() {
         val name = ProjectName.createOrNull("  Кофта  ")
 
         assertNotNull(name)
@@ -107,7 +107,7 @@ class ProjectNameTest {
      * createOrDefault на невалидной строке возвращает DEFAULT.
      */
     @Test
-    fun `createOrDefault returns DEFAULT on invalid input`() {
+    fun createordefaultReturnsDefaultOnInvalidInput() {
         assertEquals(ProjectName.DEFAULT, ProjectName.createOrDefault(""))
         assertEquals(ProjectName.DEFAULT, ProjectName.createOrDefault("   "))
     }
@@ -116,7 +116,7 @@ class ProjectNameTest {
      * createOrDefault на валидной строке возвращает ProjectName с этим значением.
      */
     @Test
-    fun `createOrDefault returns ProjectName on valid input`() {
+    fun createordefaultReturnsProjectnameOnValidInput() {
         val name = ProjectName.createOrDefault("Плед")
 
         assertEquals("Плед", name.value)
@@ -127,7 +127,7 @@ class ProjectNameTest {
      * Это значение используется при миграции пустых имён.
      */
     @Test
-    fun `DEFAULT has fallback value Bez nazvaniya`() {
+    fun defaultHasFallbackValueBezNazvaniya() {
         assertEquals("Untitled", ProjectName.DEFAULT.value)
     }
 
@@ -136,7 +136,7 @@ class ProjectNameTest {
      * чтобы случайное изменение не сломало валидацию UI.
      */
     @Test
-    fun `MAX_LENGTH is 100`() {
+    fun maxLengthIs100() {
         assertEquals(100, ProjectName.MAX_LENGTH)
     }
 
@@ -144,7 +144,7 @@ class ProjectNameTest {
      * value class с одинаковым value равны по структурному равенству.
      */
     @Test
-    fun `ProjectName with same value is equal`() {
+    fun projectnameWithSameValueIsEqual() {
         val a = ProjectName.create("Свитер")
         val b = ProjectName.create("Свитер")
 

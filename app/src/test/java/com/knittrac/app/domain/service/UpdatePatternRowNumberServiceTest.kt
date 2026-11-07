@@ -30,7 +30,7 @@ class UpdatePatternRowNumberServiceTest {
         )
 
     @Test
-    fun `update success`() = runTest {
+    fun updateSuccess() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns Result.Success(1)
         coEvery { patternRepository.getRowCount(any()) } returns Result.Success(5)
@@ -42,7 +42,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun `update row not found returns NotFound`() = runTest {
+    fun updateRowNotFoundReturnsNotfound() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(false)
 
         val result = service.update(params(rowId = 99L))
@@ -52,7 +52,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun `update out of bounds returns ValidationError`() = runTest {
+    fun updateOutOfBoundsReturnsValidationerror() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns Result.Success(1)
         coEvery { patternRepository.getRowCount(any()) } returns Result.Success(2)
@@ -64,7 +64,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun `update same number early-returns success`() = runTest {
+    fun updateSameNumberEarlyReturnsSuccess() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns Result.Success(2)
         coEvery { patternRepository.getRowCount(any()) } returns Result.Success(5)
@@ -75,7 +75,7 @@ class UpdatePatternRowNumberServiceTest {
     }
 
     @Test
-    fun `update database error on getRowNumber propagates`() = runTest {
+    fun updateDatabaseErrorOnGetrownumberPropagates() = runTest {
         coEvery { patternRepository.existsRow(any(), any()) } returns Result.Success(true)
         coEvery { patternRepository.getRowNumber(any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))

@@ -33,7 +33,7 @@ class SaveSessionServiceTest {
      * Проверяет, что сессия с нулевой или отрицательной длительностью отвергается на этапе валидации.
      */
     @Test
-    fun `invoke returns validation error when duration is zero`() = runTest {
+    fun invokeReturnsValidationErrorWhenDurationIsZero() = runTest {
         // Arrange
         val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 1_000L, rowCount = RowCount.ZERO)
         
@@ -50,7 +50,7 @@ class SaveSessionServiceTest {
      * Проверяет успешный сценарий: валидные параметры передаются в атомарный метод репозитория.
      */
     @Test
-    fun `invoke delegates to atomic repository method on success`() = runTest {
+    fun invokeDelegatesToAtomicRepositoryMethodOnSuccess() = runTest {
         // Arrange
         val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = RowCount.create(5))
         coEvery { sessionRepository.addSessionAtomically(any()) } returns Result.Success(SessionId.create(10L))
@@ -68,7 +68,7 @@ class SaveSessionServiceTest {
      * Проверяет, что ошибка репозитория корректно прокидывается наверх.
      */
     @Test
-    fun `invoke returns error when atomic repository method fails`() = runTest {
+    fun invokeReturnsErrorWhenAtomicRepositoryMethodFails() = runTest {
         // Arrange
         val params = SaveSessionParams(projectId = ProjectId.create(1L), startTimestamp = 1_000L, endTimestamp = 5_000L, rowCount = RowCount.create(5))
         coEvery { sessionRepository.addSessionAtomically(any()) } returns 

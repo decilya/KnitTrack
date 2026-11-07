@@ -284,7 +284,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `toggleLegendAddButton success`() = runTest {
+    fun togglelegendaddbuttonSuccess() = runTest {
         coEvery { settingsRepository.setLegendAddButtonVisible(any()) } returns Result.Success(Unit)
         val vm = SettingsViewModel(
             settingsRepository,

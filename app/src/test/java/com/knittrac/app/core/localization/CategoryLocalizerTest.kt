@@ -37,7 +37,7 @@ class CategoryLocalizerTest {
      * с правильным id — это защищает от случайной подмены ресурса в when.
      */
     @Test
-    fun `localize KNITTING returns category_knitting string`() {
+    fun localizeKnittingReturnsCategoryKnittingString() {
         every { context.getString(R.string.category_knitting) } returns "Вязание спицами"
 
         val result = localizer.localize(Category.KNITTING)
@@ -50,7 +50,7 @@ class CategoryLocalizerTest {
      * CROCHET должен резолвиться в R.string.category_crochet.
      */
     @Test
-    fun `localize CROCHET returns category_crochet string`() {
+    fun localizeCrochetReturnsCategoryCrochetString() {
         every { context.getString(R.string.category_crochet) } returns "Вязание крючком"
 
         val result = localizer.localize(Category.CROCHET)
@@ -63,7 +63,7 @@ class CategoryLocalizerTest {
      * BEADING должен резолвиться в R.string.category_beading.
      */
     @Test
-    fun `localize BEADING returns category_beading string`() {
+    fun localizeBeadingReturnsCategoryBeadingString() {
         every { context.getString(R.string.category_beading) } returns "Бисероплетение"
 
         val result = localizer.localize(Category.BEADING)
@@ -76,7 +76,7 @@ class CategoryLocalizerTest {
      * MACRAME должен резолвиться в R.string.category_macrame.
      */
     @Test
-    fun `localize MACRAME returns category_macrame string`() {
+    fun localizeMacrameReturnsCategoryMacrameString() {
         every { context.getString(R.string.category_macrame) } returns "Макраме"
 
         val result = localizer.localize(Category.MACRAME)
@@ -89,7 +89,7 @@ class CategoryLocalizerTest {
      * OTHER должен резолвиться в R.string.category_other.
      */
     @Test
-    fun `localize OTHER returns category_other string`() {
+    fun localizeOtherReturnsCategoryOtherString() {
         every { context.getString(R.string.category_other) } returns "Другое"
 
         val result = localizer.localize(Category.OTHER)
@@ -109,7 +109,7 @@ class CategoryLocalizerTest {
      * категорий.
      */
     @Test
-    fun `all categories return distinct strings`() {
+    fun allCategoriesReturnDistinctStrings() {
         every { context.getString(R.string.category_knitting) } returns "Вязание спицами"
         every { context.getString(R.string.category_crochet) } returns "Вязание крючком"
         every { context.getString(R.string.category_beading) } returns "Бисероплетение"
@@ -133,7 +133,7 @@ class CategoryLocalizerTest {
      * когда UI перерисовывается несколько раз при скролле списка.
      */
     @Test
-    fun `localize is stateless — repeated calls return same value`() {
+    fun localizeIsStatelessRepeatedCallsReturnSameValue() {
         every { context.getString(R.string.category_knitting) } returns "Вязание спицами"
 
         val first = localizer.localize(Category.KNITTING)

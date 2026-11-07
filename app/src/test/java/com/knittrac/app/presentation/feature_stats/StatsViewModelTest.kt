@@ -63,7 +63,7 @@ class StatsViewModelTest {
      * Assert:  проверяем все поля итогового State.
      */
     @Test
-    fun `loadStats should update state with daily stats on success`() = runTest {
+    fun loadstatsShouldUpdateStateWithDailyStatsOnSuccess() = runTest {
         // --- Arrange ---
         val mockStats = listOf(
             DailyStat(dayTimestamp = 1000L, totalSeconds = 3600L)
@@ -92,7 +92,7 @@ class StatsViewModelTest {
      * Assert:  проверяем errorRes и что список статистики пуст.
      */
     @Test
-    fun `loadStats sets errorRes when repository returns Error`() = runTest {
+    fun loadstatsSetsErrorresWhenRepositoryReturnsError() = runTest {
         // --- Arrange ---
         val cause = RuntimeException("test db error")
         coEvery { getProjectStatisticsService(ProjectId.create(1L)) } returns
@@ -115,7 +115,7 @@ class StatsViewModelTest {
      * статистики, которая вводила бы в заблуждение.
      */
     @Test
-    fun `missing projectId sets errorRes without repository call`() = runTest {
+    fun missingProjectidSetsErrorresWithoutRepositoryCall() = runTest {
         viewModel = StatsViewModel(getProjectStatisticsService, SavedStateHandle())
 
         val state = viewModel.state.value
