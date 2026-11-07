@@ -14,6 +14,11 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -298,5 +303,106 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { settingsRepository.setLegendAddButtonVisible(false) }
+    }
+
+    /**
+     * P3 (QA) guard: повторный [SettingsContract.Action.RequestExport], пока
+     * первый ещё не завершён (`isExporting == true`), НЕ запускает сервис
+     * второй раз. Guard синхронный до `launch`, поэтому `return` срабатывает
+     * сразу.
+     */
+    @Test
+    fun requestExport_whileExportingInProgress_doesNotStartSecondRun() = runTest(testDispatcher) {
+        val firstStream = mockk<OutputStream>(relaxed = true)
+        val secondStream = mockk<OutputStream>(relaxed = true)
+        val gate = CompletableDeferred<Unit>()
+
+        coEvery { exportDataService(firstStream) } coAnswers {
+            gate.await()
+            Result.Success(Unit)
+        }
+
+        val viewModel = createViewModel()
+
+        viewModel.onAction(SettingsContract.Action.RequestExport(firstStream))
+        assertTrue(viewModel.state.value.isExporting)
+
+        viewModel.onAction(SettingsContract.Action.RequestExport(secondStream))
+
+        coVerify(exactly = 1) { exportDataService(firstStream) }
+        coVerify(exactly = 0) { exportDataService(secondStream) }
+
+        val effectDeferred = async { viewModel.effect.first() }
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(SettingsContract.Effect.ExportSuccess, effectDeferred.await())
+        assertFalse(viewModel.state.value.isExporting)
+    }
+
+    /**
+     * P3 (QA) Channel: два последовательных `RequestExport` (первый завершился,
+     * `isExporting` сброшен) дают ДВА `ExportSuccess`. `Channel(BUFFERED)` не
+     * теряет повторный эмит, guard не мешает легитимной последовательности.
+     */
+    @Test
+    fun requestExport_twiceSequentially_bothEmitEffects() = runTest(testDispatcher) {
+        val firstStream = mockk<OutputStream>(relaxed = true)
+        val secondStream = mockk<OutputStream>(relaxed = true)
+        coEvery { exportDataService(firstStream) } returns Result.Success(Unit)
+        coEvery { exportDataService(secondStream) } returns Result.Success(Unit)
+
+        val viewModel = createViewModel()
+        val effects = async { viewModel.effect.take(2).toList() }
+
+        viewModel.onAction(SettingsContract.Action.RequestExport(firstStream))
+        advanceUntilIdle()
+        viewModel.onAction(SettingsContract.Action.RequestExport(secondStream))
+        advanceUntilIdle()
+
+        val received = effects.await()
+        assertEquals(2, received.size)
+        assertTrue(received.all { it == SettingsContract.Effect.ExportSuccess })
+        coVerify(exactly = 1) { exportDataService(firstStream) }
+        coVerify(exactly = 1) { exportDataService(secondStream) }
+    }
+
+    /**
+     * P3 (QA) Channel: `RequestExport` и `ImportData` идут параллельно,
+     * флаги `isExporting`/`isImporting` независимы, оба эффекта доходят.
+     */
+    @Test
+    fun exportAndImport_inParallel_bothEmitEffects() = runTest(testDispatcher) {
+        val exportStream = mockk<OutputStream>(relaxed = true)
+        val importStream = mockk<InputStream>(relaxed = true)
+        val exportGate = CompletableDeferred<Unit>()
+        val importGate = CompletableDeferred<Unit>()
+
+        coEvery { exportDataService(exportStream) } coAnswers {
+            exportGate.await()
+            Result.Success(Unit)
+        }
+        coEvery { importDataService(importStream) } coAnswers {
+            importGate.await()
+            Result.Success(Unit)
+        }
+
+        val viewModel = createViewModel()
+        val effects = async { viewModel.effect.take(2).toList() }
+
+        viewModel.onAction(SettingsContract.Action.RequestExport(exportStream))
+        viewModel.onAction(SettingsContract.Action.ImportData(importStream))
+
+        assertTrue(viewModel.state.value.isExporting)
+        assertTrue(viewModel.state.value.isImporting)
+
+        exportGate.complete(Unit)
+        importGate.complete(Unit)
+        advanceUntilIdle()
+
+        val received = effects.await()
+        assertEquals(2, received.size)
+        assertTrue(received.contains(SettingsContract.Effect.ExportSuccess))
+        assertTrue(received.contains(SettingsContract.Effect.ImportSuccess))
     }
 }
