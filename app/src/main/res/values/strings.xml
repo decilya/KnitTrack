@@ -103,6 +103,8 @@
     <string name="pattern_editor_edit_operation_symbol">Symbol</string>
     <string name="pattern_editor_edit_operation_span">Span override</string>
     <string name="pattern_editor_edit_operation_color">Color (HEX)</string>
+    <string name="pattern_editor_edit_operation_color_hex">HEX-код (например, #FF0000)</string>
+    <string name="pattern_editor_edit_operation_color_invalid">Формат: #RRGGBB</string>
     <string name="pattern_editor_edit_operation_delete">Delete</string>
     <string name="pattern_editor_edit_operation_delete_confirm">Delete operation?</string>
     <string name="pattern_editor_row_editor_title">Edit row</string>

@@ -1093,6 +1093,8 @@ gradle/libs.versions.toml — НЕ существует.
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
 - **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
+- **P3 UX (05.11.2026):** Color Picker для операций. В `EditOperationDialog` добавлена сетка 12 предустановленных цветов (`PRESET_COLORS`) + HEX-поле с валидацией через `Regex("^#[0-9A-Fa-f]{6}$")`. Кнопка OK неактивна при невалидном HEX. Коммит `feat(presentation): Color Picker for EditOperationDialog`.
+
 - **P2 (LIN/KOT) (05.11.2026):** `PatternEditorViewModel`. Убран блокирующий `first()` из `retry()`. Автозагрузка первой схемы перенесена в реактивный `observePatternSummaries` (VM не управляет потоками, SRP соблюден). Коммит `refactor(presentation): observePatternSummaries auto-loads first pattern, remove first() from retry()`.
 
 - **P2-баг (05.11.2026):** Архитектурный рефакторинг импорта бэкапа. 
