@@ -1070,6 +1070,8 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-6:** `EditOperationDialog` + `RowEditorSheet` + Long-press на ячейке (операция) и на чипе ряда (ряд) + Haptic + туториал (первый запуск). `PatternEditorCallbacks` + `PendingCell` DTO. `PatternEditorUseCases` → 8 полей.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
+- **Post-snapshot (07.11.2026):** P3 защита от забытых миграций. Тест `DatabaseModuleMigrationsTest` — интеграционный: `seedPreviousVersion()` создаёт БД, `PRAGMA user_version = CURRENT-1`, `DatabaseModule.provideAppDatabase(context)` триггерит `onUpgrade`, `assertEquals(CURRENT, version)`. Ловит пропуск `MIGRATION_N_N+1` в `addMigrations`. `CURRENT_DB_VERSION` hardcoded (reflection на `@Database.version` недоступен — `CLASS` retention). Закрыт P3 (AND). Коммит `test(data): DatabaseModuleMigrationsTest — защита от забытых миграций`.
+
 - **Post-snapshot (07.11.2026):** P3 WHEN-оптимизация UPDATE-триггера (`CREATE_TRIGGER_REPEAT_UPDATE_V9` → `WHEN OLD.repeat_code IS NOT NEW.repeat_code`). Тело пропускается при неизменном `repeat_code` (включая NULL→NULL). `IS NOT` вместо `!=` — NULL-safe. Тест `migrate8To9_updateTriggerHasWhenOptimization` (sqlite_master.sql). Закрыт P3 (LIN/DBA). Коммит `perf(data): WHEN-оптимизация UPDATE-триггера repeat_code`.
 
 - **Сессия 07.11.2026 (18 коммитов `d1f6865..2a2b2bb`):**

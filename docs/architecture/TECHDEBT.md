@@ -380,7 +380,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров `trg_repeat_code_check_*` в `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила — править оба места. См. `rows-and-patterns.md §6.1.1`.
 - [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
-- [ ] **P3 (AND):** Защита от забытых миграций в `DatabaseModule`. Если кто-то добавит миграцию в `AppDatabase`, но забудет в `addMigrations` — тесты могут не поймать. Тест через reflection: сравнить список `MIGRATION_*` в companion с `addMigrations`.
+- [x] **P3 (AND):** Защита от забытых миграций в `DatabaseModule` — **закрыт 07.11.2026**. Интеграционный тест `DatabaseModuleMigrationsTest.provideAppDatabaseMigratesFromPreviousVersion`: создаёт БД на `CURRENT-1`, открывает через production-путь `DatabaseModule.provideAppDatabase`, проверяет `version == CURRENT`. Reflection на `@Database.version` недоступен (аннотация `CLASS` retention), поэтому `CURRENT_DB_VERSION` hardcoded в тесте — при bump version обновлять константу.
 - [ ] **P3 (QA):** Отсутствие теста на `Channel` без потери событий. Не проверено, что `Channel(BUFFERED)` в `SettingsViewModel` не теряет эффекты (снекбары/навигацию) при быстрых кликах.
 - [ ] **P3 (UX):** Контекстная логика показа туториала. Сейчас `showEditTutorial` показывается при первом входе в `PatternEditorScreen` без учёта, видел ли пользователь другие экраны.
 - [ ] **P3 (UX):** Drag-and-drop для перемещения ряда (сейчас только ввод числа в `RowEditorSheet`).
