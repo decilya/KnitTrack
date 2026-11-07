@@ -376,6 +376,12 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 **Итого P1-долг:** ~10 ч, 5-6 атомарных коммитов. **Не новая фича.**
 
 
+## Архитектурные рекомендации (08.11.2026)
+
+- [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).
+- [ ] **P2 (Clean Arch):** `Result<T>` без комбинаторов (`map`, `fold`, `onError`). Приводит к дублированию `when (result) { is Success -> ... }`. Добавить комбинаторы и отрефакторить UseCase/ViewModel.
+- [ ] **P3 (QA):** Отсутствие инфраструктуры Compose-тестов (`createComposeRule`). UI-компоненты (ColorPicker, диалоги, Long-press) не покрыты тестами. Настроить `androidx.compose.ui:ui-test-junit4` + Robolectric.
+
 ## Открытые P3 после сессии 07.11.2026
 
 - [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров `trg_repeat_code_check_*` в `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила — править оба места. См. `rows-and-patterns.md §6.1.1`.
