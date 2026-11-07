@@ -376,6 +376,10 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 **Итого P1-долг:** ~10 ч, 5-6 атомарных коммитов. **Не новая фича.**
 
 
+## Per-stitch tracking (P3) — закрыт 08.11.2026
+
+- [x] **P3 (TD-PT-3, feature):** Глобальный счётчик петель на экране таймера. `UpdateStitchUseCase` (D-инвариант: `currentPatternRowId != null` → иначе `ValidationError`), `ProjectProgressCoordinator.updateStitch`, `TimerContract.currentStitch` + `IncrementStitch`/`DecrementStitch`, UI блок `+1/-1` в `TimerScreen` (только при `currentPatternRowId != null`). Запись через `ProjectRepository.updateProjectProgress(..., currentStitch)`. Триггер D (`stitch > 0 → row IS NOT NULL`) уже в v8. **Факт:** `feat(timer): global stitch counter (P3 per-stitch tracking)`.
+
 ## Архитектурные рекомендации (08.11.2026)
 
 - [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).
