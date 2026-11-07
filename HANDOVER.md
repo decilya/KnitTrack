@@ -1070,6 +1070,13 @@ gradle/libs.versions.toml — НЕ существует.
 - **7f-D-6:** `EditOperationDialog` + `RowEditorSheet` + Long-press на ячейке (операция) и на чипе ряда (ряд) + Haptic + туториал (первый запуск). `PatternEditorCallbacks` + `PendingCell` DTO. `PatternEditorUseCases` → 8 полей.
 - **7f-D-7:** `LegendEditorSheet` + IconButton `Palette` в `PatternEditorScreen` + настройка `showLegendAddButton` в SettingsScreen (DataStore). `LegendEditorCallbacks` DTO. `PatternEditorUseCases` → 10 полей. Fix TimerScreen strings (EN: RU → EN).
 
+- **Сессия 07.11.2026 (18 коммитов `d1f6865..2a2b2bb`):**
+  - **P2 закрыты (все из код-ревью):** #19 `repeat_code` defense-in-depth (`d0f1462` + `a6f70e1`), P2 LIN/BIZ санитизация в Data (`634f89e`), P2 BIZ/UX молчаливое удаление (`634f89e`), P2 LIN/KOT `first()` в retry (`4eabb49`), P2 AND/QA разбиение `PatternEditorViewModelTest` (`2a2b2bb`), P2-гигиена camelCase (141 тест, `6a84c33` + `b862dd4`).
+  - **P3 закрыты:** Color Picker сетка+HEX (`ddb80ec`), туториал на DataStore (`ce24455`).
+  - **Техдолг закрыт попутно:** P2-4 D-инвариант в `Project.markRow` (`e450832`), P2-5 `TEMP_ROW_NUMBER = Int.MAX_VALUE` (`d1f6865`), #16/#23/#26 Settings/UI (`6643f09`), #12/#14 Application (`bb963c1`), #17 AppDatabase без INSTANCE (`54fa33d`).
+  - **Финальное состояние:** 448 тестов, detekt 0, clean, origin синхрон.
+
+
 ### Next
 
 ### Закрыто в P1-долге
@@ -1412,3 +1419,25 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - Для unused-import: `text.count("import X\n")` или `line == "import X"`, не `"X." in text`.
 - Detekt `UnusedImports` — финальная проверка; но до неё — точечный grep по `^import`.
 - `KDoc`, `SQL`, `String.format` могут содержать паттерн, ломающий `in`-проверку.
+
+
+### Урок 44. `generateSequence<Throwable>` для цепочки `cause`
+
+**Симптом:** `val rootCause = generateSequence(e) { it.cause }.last()` не компилируется: `Type mismatch: inferred type is Throwable? but kotlin.Exception? was expected`.
+
+**Причина:** лямбда `{ it.cause }` возвращает `Throwable?`, а `e: Exception` даёт `T = Exception`. `Throwable?` не подтип `Exception?`.
+
+**Пример (07.11.2026):** `DataImporterImpl` при маппинге `SQLiteConstraintException` в `ValidationError`. Фикс — явный тип: `generateSequence<Throwable>(e) { it.cause }.last()`.
+
+**Правило:** при работе с `Throwable`-цепочкой — `generateSequence<Throwable>(...)`, не `generateSequence(...)`.
+
+
+### Урок 45. Тест на `SQLiteConstraintException` требует Robolectric
+
+**Симптом:** юнит-тест `DataImporterImplTest.importFromReturnsValidationErrorOnOrphanRepeatCode` падает на `AssertionError` (приходит `DatabaseError`, не `ValidationError`).
+
+**Причина:** `SQLiteConstraintException` — Android-класс. В обычном JUnit-тесте его конструктор `throw RuntimeException("Stub!")`. `try/catch` не ловит `SQLiteConstraintException`, код идёт в `catch (e: Exception)` → `DatabaseError`.
+
+**Пример (07.11.2026):** добавили `@RunWith(RobolectricTestRunner::class)` — зелёный.
+
+**Правило:** если тест создаёт исключение из `android.database.sqlite.*` или другого Android SDK-класса — `@RunWith(RobolectricTestRunner::class)`.

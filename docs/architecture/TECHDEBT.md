@@ -374,3 +374,16 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 - **P2-7:** Большие коммиты (`84b3b65` 969 additions, `158add4` 672, `ab76eb6` 736) — нарушение атомарности. Правило: ≤300 строк. Процессный урок.
 
 **Итого P1-долг:** ~10 ч, 5-6 атомарных коммитов. **Не новая фича.**
+
+
+## Открытые P3 после сессии 07.11.2026
+
+- [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров `trg_repeat_code_check_*` в `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила — править оба места. См. `rows-and-patterns.md §6.1.1`.
+- [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
+- [ ] **P3 (AND):** Защита от забытых миграций в `DatabaseModule`. Если кто-то добавит миграцию в `AppDatabase`, но забудет в `addMigrations` — тесты могут не поймать. Тест через reflection: сравнить список `MIGRATION_*` в companion с `addMigrations`.
+- [ ] **P3 (QA):** Отсутствие теста на `Channel` без потери событий. Не проверено, что `Channel(BUFFERED)` в `SettingsViewModel` не теряет эффекты (снекбары/навигацию) при быстрых кликах.
+- [ ] **P3 (UX):** Контекстная логика показа туториала. Сейчас `showEditTutorial` показывается при первом входе в `PatternEditorScreen` без учёта, видел ли пользователь другие экраны.
+- [ ] **P3 (UX):** Drag-and-drop для перемещения ряда (сейчас только ввод числа в `RowEditorSheet`).
+- [ ] **P3 (Accessibility):** Иконка `List` в `TopAppBar` `PatternEditorScreen` как альтернатива long-press (WCAG 2.1, 2.5.1 Pointer Gestures).
+- [ ] **P3 (Performance):** Lazy-load операций на Canvas. Сейчас `getPatternById` грузит все операции всех рядов.
+
