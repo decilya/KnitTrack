@@ -8,6 +8,7 @@ import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.StitchCount
 
 import com.knittrac.app.domain.service.SaveSessionParams
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,6 +77,7 @@ class TimerViewModel @Inject constructor(
                     projects = _state.value.projects,
                     isSaving = _state.value.isSaving,
                     currentPatternRowNumber = _state.value.currentPatternRowNumber,
+                    currentStitch = _state.value.currentStitch,
                     isMarkingRow = _state.value.isMarkingRow
                 )
             }.collect { _state.value = it }
@@ -119,6 +121,8 @@ class TimerViewModel @Inject constructor(
             is TimerContract.Intent.IncrementRow -> handleIncrementRow()
             is TimerContract.Intent.DecrementRow -> handleDecrementRow()
             is TimerContract.Intent.MarkNextPatternRow -> handleMarkNextPatternRow()
+            is TimerContract.Intent.IncrementStitch -> handleIncrementStitch()
+            is TimerContract.Intent.DecrementStitch -> handleDecrementStitch()
         }
     }
 
@@ -213,6 +217,30 @@ class TimerViewModel @Inject constructor(
      * Guard [TimerContract.State.isSaving] — синхронно до launch.
      * endTimestamp вычисляется из монотонного elapsedTime (устойчиво к NTP-сдвигу).
      */
+
+    private fun handleIncrementStitch() {
+        val projectId = _state.value.projectId ?: return
+        val current = _state.value.currentStitch
+        updateStitch(projectId, current + 1)
+    }
+
+    private fun handleDecrementStitch() {
+        val projectId = _state.value.projectId ?: return
+        val current = _state.value.currentStitch
+        if (current > 0) {
+            updateStitch(projectId, current - 1)
+        }
+    }
+
+    private fun updateStitch(projectIdValue: Long, newStitchValue: Int) {
+        val projectId = ProjectId.createOrDefault(projectIdValue)
+        viewModelScope.launch {
+            val result = progressCoordinator.updateStitch(projectId, StitchCount.createOrDefault(newStitchValue))
+            if (result is Result.Error) {
+                _effect.send(TimerContract.Effect.ShowError(R.string.error_save_stitch))
+            }
+        }
+    }
     private fun saveSession() {
         if (_state.value.isSaving) return
 

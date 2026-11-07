@@ -7,9 +7,11 @@ import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.ProjectName
 import com.knittrac.app.domain.entity.RowNumber
+import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.domain.service.GetAllProjectsService
 import com.knittrac.app.domain.service.MarkNextRowUseCase
+import com.knittrac.app.domain.service.UpdateStitchUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -31,7 +33,8 @@ class ProjectProgressCoordinatorTest {
 
     private val getAllProjectsService: GetAllProjectsService = mockk()
     private val markNextRowUseCase: MarkNextRowUseCase = mockk()
-    private val coordinator = ProjectProgressCoordinator(getAllProjectsService, markNextRowUseCase)
+    private val updateStitchUseCase: UpdateStitchUseCase = mockk()
+    private val coordinator = ProjectProgressCoordinator(getAllProjectsService, markNextRowUseCase, updateStitchUseCase)
 
     private fun project(id: Long = 1L): Project = Project(
         id = ProjectId.create(id),
@@ -73,5 +76,14 @@ class ProjectProgressCoordinatorTest {
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    @Test
+    fun updateStitch_delegatesToUseCase() = runTest {
+        coEvery { updateStitchUseCase(any()) } returns Result.Success(StitchCount.create(3))
+
+        coordinator.updateStitch(ProjectId.create(1L), StitchCount.create(3))
+
+        coVerify(exactly = 1) { updateStitchUseCase(any()) }
     }
 }

@@ -17,6 +17,7 @@ object TimerContract {
         val projectId: Long? = null,
         val startTimestamp: Long = 0L,
         val rowCount: Int = 0,
+    val currentStitch: Int = 0,
         val targetRowCount: Int? = null,
         val projects: List<Project> = emptyList(),
         /**
@@ -66,6 +67,8 @@ object TimerContract {
          * [com.knittrac.app.domain.service.MarkNextRowUseCase].
          */
         object MarkNextPatternRow : Intent()
+    object IncrementStitch : Intent()
+    object DecrementStitch : Intent()
     }
 
     sealed class Effect {

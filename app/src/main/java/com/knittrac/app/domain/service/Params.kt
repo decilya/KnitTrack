@@ -1,6 +1,7 @@
 package com.knittrac.app.domain.service
 
 import com.knittrac.app.domain.entity.RowCount
+import com.knittrac.app.domain.entity.StitchCount
 
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.PatternRowId
@@ -47,4 +48,12 @@ data class MarkRowParams(
  */
 data class MarkNextRowParams(
     val projectId: ProjectId
+)
+
+/**
+ * Параметры для обновления счетчика петель.
+ */
+data class UpdateStitchParams(
+    val projectId: ProjectId,
+    val newStitch: StitchCount
 )

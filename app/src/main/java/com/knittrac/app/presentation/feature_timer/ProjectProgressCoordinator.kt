@@ -5,6 +5,9 @@ import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.domain.service.GetAllProjectsService
+import com.knittrac.app.domain.service.UpdateStitchUseCase
+import com.knittrac.app.domain.service.UpdateStitchParams
+import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.service.MarkNextRowParams
 import com.knittrac.app.domain.service.MarkNextRowUseCase
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +31,8 @@ import javax.inject.Inject
  */
 class ProjectProgressCoordinator @Inject constructor(
     private val getAllProjectsService: GetAllProjectsService,
-    private val markNextRowUseCase: MarkNextRowUseCase
+    private val markNextRowUseCase: MarkNextRowUseCase,
+    private val updateStitchUseCase: UpdateStitchUseCase
 ) {
 
     /** Реактивный поток списка проектов с [Result] (Success / Error). */
@@ -43,4 +47,10 @@ class ProjectProgressCoordinator @Inject constructor(
      */
     suspend fun markNext(projectId: ProjectId): Result<RowNumber> =
         markNextRowUseCase(MarkNextRowParams(projectId = projectId))
+
+    /**
+     * Обновляет счетчик петель для текущего ряда.
+     */
+    suspend fun updateStitch(projectId: ProjectId, newStitch: StitchCount): Result<StitchCount> =
+        updateStitchUseCase(UpdateStitchParams(projectId, newStitch))
 }

@@ -130,4 +130,6 @@
     <string name="pattern_editor_delete_symbol_error">Failed to delete symbol</string>
     <string name="settings_pattern_editor">Pattern Editor</string>
     <string name="settings_legend_add_button">Always show Add button in legend</string>
+    <string name="error_save_stitch">Не удалось сохранить счетчик петель</string>
+    <string name="stitch_counter_label">Петли в ряду: %1$d</string>
 </resources>

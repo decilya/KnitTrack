@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.*
@@ -192,6 +193,41 @@ fun TimerScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+            }
+
+            // Счетчик петель (Per-stitch tracking)
+            if (state.currentPatternRowNumber != null) {
+                Text(
+                    text = stringResource(R.string.stitch_counter_label, state.currentStitch),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.onIntent(TimerContract.Intent.DecrementStitch)
+                        }
+                    ) {
+                        Icon(Icons.Default.Remove, contentDescription = "Убавить петлю")
+                    }
+                    Text(
+                        text = state.currentStitch.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.onIntent(TimerContract.Intent.IncrementStitch)
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Добавить петлю")
+                    }
+                }
             }
 
             val target = state.targetRowCount
