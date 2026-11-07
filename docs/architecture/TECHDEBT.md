@@ -17,7 +17,7 @@
 - [x] **P2 (LIN/BIZ):** Санитизация `repeatCode` в Data-слое. **Закрыт 05.11.2026**. `BackupRepositoryImpl` очищен от бизнес-логики, ошибка БД маппится в `ValidationError` в `DataImporterImpl`.
 - [x] **P2 (LIN/KOT):** Оркестрация в `PatternEditorViewModel.retry()` — **закрыт 05.11.2026**. Убран блокирующий `first()` из VM. Автозагрузка первой схемы перенесена в реактивный `observePatternSummaries`.
 - [x] **P2 (BIZ/UX):** Молчаливое удаление данных при импорте. **Закрыт 05.11.2026**. Теперь при orphan `repeatCode` импорт прерывается с `ValidationError` (данные не теряются молча).
-- [ ] **P2 (AND/QA):** `PatternEditorViewModelTest` — LargeClass (338+ строк) и хрупкие тесты из-за `coEvery` в `setUpMocks`. Разбить на `PatternEditorViewModelTest` (базовые) + `PatternEditorViewModelEditingTest`.
+- [x] **P2 (AND/QA):** `PatternEditorViewModelTest` — LargeClass — **закрыт 05.11.2026**. Разбит на `PatternEditorViewModelTestBase` (общие моки + хелперы) + `PatternEditorViewModelTest` (12 lifecycle-тестов) + `PatternEditorViewModelEditingTest` (17 editing-тестов). Все `@Test` получили KDoc. `@Suppress("LargeClass")` снят.
 - [ ] **P3 (LIN/DBA):** Дублирование SQL-триггеров (`trg_repeat_code_check_*`). Написаны в двух местах: `MIGRATION_8_9` и `DATABASE_CALLBACK.onCreate`. При изменении правила нужно править оба.
 - [ ] **P3 (LIN/DBA):** Оптимизация UPDATE-триггера. Добавить `WHEN OLD.repeat_code != NEW.repeat_code` в `trg_repeat_code_check_update`, чтобы не делать 3-way JOIN при каждом UPDATE операции (даже если цвет/символ не меняются).
 - [ ] **P3 (UX):** Логика показа туториала. Сейчас он показывается при первом входе в `PatternEditorScreen` без учета контекста (видел ли пользователь другие экраны).

@@ -1093,6 +1093,8 @@ gradle/libs.versions.toml — НЕ существует.
 После двух консилиумов (**Edit Mode** vs **Long-press**) и критического анализа принят **гибридный подход**:
 
 - **P2-баг (05.11.2026):** Pattern Editor туториал — `SharedPreferences` → DataStore (`SettingsKeys.EDIT_TUTORIAL_SHOWN`, `SettingsRepository.editTutorialShownFlow`/`setEditTutorialShown`, `State.showEditTutorial`, `Intent.DismissEditTutorial`, `dismissEditTutorial()`). Нарушение §11.3 / §25 Урок 27. Коммит `fix(presentation): Pattern Editor туториал на DataStore`.
+- **P2 (AND/QA) (05.11.2026):** `PatternEditorViewModelTest` разбит на 3 файла: `PatternEditorViewModelTestBase` (abstract, 12 моков + 6 хелперов), `PatternEditorViewModelTest` (12 lifecycle-тестов), `PatternEditorViewModelEditingTest` (17 тестов редактирования). Все `@Test` получили KDoc. `@Suppress("LargeClass")` снят. Коммит `refactor(test): split PatternEditorViewModelTest, add KDoc`.
+
 - **P2-гигиена (05.11.2026):** Массовое переименование тестов. Все 141 тест с бэктиками (пробелы, тире) переведены в camelCase согласно `STANDARDS.md §12.6.2 п.9` (без backtick-кириллицы). Затронуто 29 файлов. Коммит `refactor(test): rename all backticked tests to camelCase`.
 
 - **P3 UX (05.11.2026):** Color Picker для операций. В `EditOperationDialog` добавлена сетка 12 предустановленных цветов (`PRESET_COLORS`) + HEX-поле с валидацией через `Regex("^#[0-9A-Fa-f]{6}$")`. Кнопка OK неактивна при невалидном HEX. Коммит `feat(presentation): Color Picker for EditOperationDialog`.
