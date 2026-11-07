@@ -66,7 +66,15 @@ object PatternEditorContract {
          * Источник — SettingsRepository.editTutorialShownFlow (DataStore).
          * Default true — показываем до чтения из DataStore.
          */
-        val showEditTutorial: Boolean = true
+        val showEditTutorial: Boolean = true,
+
+        /**
+         * Открыт ли туториал вручную (иконка `?` в TopAppBar).
+         * Пока true — collect из editTutorialShownFlow НЕ сбрасывает
+         * showEditTutorial в false (иначе ручной показ затрётся следующим
+         * эмитом DataStore).
+         */
+        val tutorialManuallyRequested: Boolean = false
     )
 
     /**
@@ -143,6 +151,9 @@ object PatternEditorContract {
          * Если символ используется в операциях (FK RESTRICT) → ValidationError от репозитория.
          */
         data class DeleteSymbol(val code: String) : Intent()
+
+        /** Открыть туториал вручную (иконка `?` в TopAppBar). */
+        object ShowEditTutorial : Intent()
 
         /** Закрыть туториал (persist в DataStore через SettingsRepository). */
         object DismissEditTutorial : Intent()

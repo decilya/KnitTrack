@@ -242,4 +242,44 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
 
         assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
     }
+
+    /**
+     * Проверяет, что ShowEditTutorial открывает диалог вручную, даже если
+     * editTutorialShownFlow = true (пользователь уже видел туториал).
+     * tutorialManuallyRequested защищает от затирания следующим эмитом DataStore.
+     */
+    @Test
+    fun showEditTutorialManually_overridesStoredFlag() = runTest {
+        val vm = createViewModel(tutorialShown = true)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showEditTutorial)
+
+        vm.onIntent(PatternEditorContract.Intent.ShowEditTutorial)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.showEditTutorial)
+        assertTrue(vm.state.value.tutorialManuallyRequested)
+    }
+
+    /**
+     * Проверяет, что DismissEditTutorial после ручного показа сбрасывает
+     * tutorialManuallyRequested и сохраняет флаг в DataStore.
+     */
+    @Test
+    fun dismissEditTutorial_resetsManualFlag() = runTest {
+        coEvery { settingsRepository.setEditTutorialShown(any()) } returns Result.Success(Unit)
+        val vm = createViewModel(tutorialShown = true)
+        advanceUntilIdle()
+
+        vm.onIntent(PatternEditorContract.Intent.ShowEditTutorial)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.tutorialManuallyRequested)
+
+        vm.onIntent(PatternEditorContract.Intent.DismissEditTutorial)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.showEditTutorial)
+        assertFalse(vm.state.value.tutorialManuallyRequested)
+        coVerify(exactly = 1) { settingsRepository.setEditTutorialShown(true) }
+    }
 }

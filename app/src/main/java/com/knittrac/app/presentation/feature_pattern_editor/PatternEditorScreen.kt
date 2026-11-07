@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.AdsClick
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -147,6 +148,12 @@ fun PatternEditorScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.onIntent(Intent.ShowEditTutorial) }) {
+                        Icon(
+                            imageVector = Icons.Default.Help,
+                            contentDescription = stringResource(R.string.pattern_editor_tutorial_open)
+                        )
+                    }
                     IconButton(
                         onClick = { viewModel.onIntent(Intent.UndoLastOperation) },
                         enabled = state.lastOperations.isNotEmpty() && !state.isSaving

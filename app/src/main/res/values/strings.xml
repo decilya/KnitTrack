@@ -116,6 +116,7 @@
     <string name="pattern_editor_delete_error">Failed to delete</string>
     <string name="pattern_editor_tutorial_title">Quick tip</string>
     <string name="pattern_editor_tutorial_message">Long-press a cell to edit an operation, or a row chip to edit the row.</string>
+    <string name="pattern_editor_tutorial_open">Show tutorial</string>
     <string name="pattern_editor_legend_title">Legend</string>
     <string name="pattern_editor_legend_open">Open legend</string>
     <string name="pattern_editor_legend_add">Add symbol</string>

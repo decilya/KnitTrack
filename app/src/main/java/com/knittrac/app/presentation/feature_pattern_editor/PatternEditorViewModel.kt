@@ -104,10 +104,7 @@ class PatternEditorViewModel @Inject constructor(
     fun onIntent(intent: PatternEditorContract.Intent) {
         when (intent) {
             is PatternEditorContract.Intent.LoadPattern -> loadPattern(intent.patternId)
-            is PatternEditorContract.Intent.SelectPattern -> {
-                _state.update { it.copy(lastOperations = emptyList()) }
-                loadPattern(intent.patternId)
-            }
+            is PatternEditorContract.Intent.SelectPattern -> selectPattern(intent.patternId)
             is PatternEditorContract.Intent.SelectRow -> selectRow(intent.rowId)
             is PatternEditorContract.Intent.SelectColumn -> selectColumn(intent.columnStart)
             is PatternEditorContract.Intent.SelectSymbol -> selectSymbol(intent.symbolCode)
@@ -115,6 +112,7 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.AddOperation -> addOperation(intent)
             is PatternEditorContract.Intent.CreatePattern -> createPattern(intent.params)
             is PatternEditorContract.Intent.UndoLastOperation -> undoLastOperation()
+            is PatternEditorContract.Intent.ShowEditTutorial -> showEditTutorialManually()
             is PatternEditorContract.Intent.DismissEditTutorial -> dismissEditTutorial()
             is PatternEditorContract.Intent.Retry -> retry()
             is PatternEditorContract.Intent.OpenLegendEditor -> _state.update { it.copy(isLegendEditorOpen = true) }
@@ -169,9 +167,18 @@ class PatternEditorViewModel @Inject constructor(
 
             // 05.11.2026: туториал перенесён с SharedPreferences на DataStore (P2-баг).
             platformDeps.settingsRepository.editTutorialShownFlow.collect { shown ->
-                _state.update { it.copy(showEditTutorial = !shown) }
+                _state.update { it.copy(showEditTutorial = !shown || it.tutorialManuallyRequested) }
             }
         }
+    }
+
+    /**
+     * Смена активной схемы: сброс undo-стека и загрузка новой схемы.
+     * Вынесено из [onIntent] ради detekt LongMethod (30/30 = предел).
+     */
+    private fun selectPattern(patternId: PatternId) {
+        _state.update { it.copy(lastOperations = emptyList()) }
+        loadPattern(patternId)
     }
 
     private fun loadPattern(id: PatternId) {
@@ -599,8 +606,19 @@ class PatternEditorViewModel @Inject constructor(
      * Если сохранение упало — туториал всё равно скрыт в текущей сессии
      * (UI не должен зависать), ошибка логируется в SettingsRepositoryImpl.
      */
+    /**
+     * Открывает туториал вручную (иконка `?` в TopAppBar).
+     *
+     * Устанавливает tutorialManuallyRequested = true, чтобы collect из
+     * editTutorialShownFlow не закрыл диалог следующим эмитом (например,
+     * если в DataStore уже true от предыдущего закрытия).
+     */
+    private fun showEditTutorialManually() {
+        _state.update { it.copy(showEditTutorial = true, tutorialManuallyRequested = true) }
+    }
+
     private fun dismissEditTutorial() {
-        _state.update { it.copy(showEditTutorial = false) }
+        _state.update { it.copy(showEditTutorial = false, tutorialManuallyRequested = false) }
         viewModelScope.launch {
             platformDeps.settingsRepository.setEditTutorialShown(true)
         }
