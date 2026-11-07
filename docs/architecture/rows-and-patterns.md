@@ -250,7 +250,7 @@ END;
 
 **Gotchas:**
 - `WHERE NEW.repeat_code IS NOT NULL` — обязателен, иначе 3-way JOIN на каждом INSERT.
-- `UPDATE OF repeat_code` срабатывает на **любом** UPDATE, где колонка в SET.
+- `UPDATE OF repeat_code` срабатывает на **любом** UPDATE, где колонка в SET. **P3 (07.11.2026):** добавлен `WHEN OLD.repeat_code IS NOT NEW.repeat_code` — тело пропускается, если `repeat_code` не изменился (включая `NULL → NULL`). `IS NOT` (не `!=`) — NULL-safe.
 - Оба триггера создаются в `MIGRATION_8_9` **и** в `DATABASE_CALLBACK.onCreate`.
   Миграция **идемпотентна**: `DROP TRIGGER IF EXISTS` перед CREATE.
 

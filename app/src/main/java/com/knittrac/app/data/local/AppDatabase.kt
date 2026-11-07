@@ -367,9 +367,26 @@ abstract class AppDatabase : RoomDatabase() {
                 "AND pr.code = NEW.repeat_code); " +
                 "END"
 
+        /**
+         * P3 WHEN-оптимизация (07.11.2026): тело триггера пропускается,
+         * если NEW.repeat_code совпадает с OLD (включая NULL → NULL).
+         * `PatternDao.updateOperation` всегда пишет `repeat_code` в SET,
+         * поэтому без WHEN 3-way JOIN выполнялся бы при каждом UPDATE
+         * (смена цвета/символа без изменения repeat_code).
+         *
+         * `IS NOT` (не `!=`) — NULL-safe: `NULL IS NOT NULL` = false,
+         * `NULL IS NOT 'A'` = true. С `!=` WHEN дал бы NULL и тело
+         * выполнялось бы при NULL → NULL.
+         *
+         * Изменение касается fresh installs (onCreate) и новых v8→v9
+         * миграций. Уже-мигрированные v9 сохраняют старый триггер
+         * до v10 (P4, не актуально для pre-release).
+         */
         private const val CREATE_TRIGGER_REPEAT_UPDATE_V9 =
             "CREATE TRIGGER trg_repeat_code_check_update " +
-                "BEFORE UPDATE OF repeat_code ON pattern_operations BEGIN " +
+                "BEFORE UPDATE OF repeat_code ON pattern_operations " +
+                "WHEN OLD.repeat_code IS NOT NEW.repeat_code " +
+                "BEGIN " +
                 "SELECT RAISE(ABORT, 'Раппорт не принадлежит схеме') " +
                 "WHERE NEW.repeat_code IS NOT NULL AND NOT EXISTS (" +
                 "SELECT 1 FROM pattern_repeats pr " +

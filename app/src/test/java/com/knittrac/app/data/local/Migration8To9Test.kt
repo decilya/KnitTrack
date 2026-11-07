@@ -99,6 +99,32 @@ class Migration8To9Test {
     }
 
     /**
+     * P3 (07.11.2026): UPDATE-триггер содержит WHEN-оптимизацию —
+     * тело пропускается, если repeat_code не изменился (включая NULL → NULL).
+     * Проверяем через sqlite_master.sql, что WHEN присутствует в DDL.
+     */
+    @Test
+    fun migrate8To9_updateTriggerHasWhenOptimization() {
+        createV9AndClose()
+        val db = SQLiteDatabase.openDatabase(
+            context.getDatabasePath(dbName).absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READONLY
+        )
+        val sql = db.rawQuery(
+            "SELECT sql FROM sqlite_master WHERE type='trigger' " +
+                "AND name='trg_repeat_code_check_update'",
+            null
+        ).use {
+            it.moveToFirst()
+            it.getString(0)
+        }
+        assertTrue("Trigger DDL должен содержать WHEN-оптимизацию, а содержит: $sql",
+            sql.contains("WHEN OLD.repeat_code IS NOT NEW.repeat_code"))
+        db.close()
+    }
+
+    /**
      * Проверяет, что санитизация обнуляет orphan repeat_code.
      */
     @Test
