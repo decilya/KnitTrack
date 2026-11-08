@@ -380,6 +380,10 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [x] **P3 (TD-PT-3, feature):** Глобальный счётчик петель на экране таймера. `UpdateStitchUseCase` (D-инвариант: `currentPatternRowId != null` → иначе `ValidationError`), `ProjectProgressCoordinator.updateStitch`, `TimerContract.currentStitch` + `IncrementStitch`/`DecrementStitch`, UI блок `+1/-1` в `TimerScreen` (только при `currentPatternRowId != null`). Запись через `ProjectRepository.updateProjectProgress(..., currentStitch)`. Триггер D (`stitch > 0 → row IS NOT NULL`) уже в v8. **Факт:** `feat(timer): global stitch counter (P3 per-stitch tracking)`.
 
+## 3NF — отказ от денормализации currentRowNumber (P2) — закрыт 09.11.2026
+
+- [x] **P2 (DB/DDD, 3NF):** `projects.current_row_number` удалена (миграция v9→v10). Поле было транзитивной зависимостью: `currentRowNumber` derived от `current_pattern_row_id` через `pattern_rows.row_number`. §11.2 считал это «примером правильной денормализации» — ошибка (профилирования не было, единственный потребитель — badge). Теперь: `LEFT JOIN pattern_rows` в `ProjectDao.getAllProjectsFlow`/`getAllProjects`/`getProjectById`, маппер `ProjectWithCurrentRowNumber.toDomain`, `Project.currentRowNumber` остаётся в Domain как derived (UI не меняется). Триггеры B и C сняты (инвариант не существует физически), A и D сохранены. `onCreate` переведён на `CREATE_PROJECTS_V10`. Это открывает D&D-reorder: bulk-shift `pattern_rows.row_number` без второго writer-а на `projects`. Факт: `refactor(data): 3NF — drop current_row_number (P2)`.
+
 ## Архитектурные рекомендации (08.11.2026)
 
 - [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).

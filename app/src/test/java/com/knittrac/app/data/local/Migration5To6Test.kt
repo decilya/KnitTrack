@@ -48,22 +48,17 @@ class Migration5To6Test {
 
     /** Создаёт БД v6 через Room onCreate (все таблицы, триггер). Миграции 1→5
      *  не запускаются — только onCreate сгенерированного _Impl. */
-    private fun createV6AndClose() {
-        val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(
-                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9
-            )
-            .build()
-        room.openHelper.writableDatabase.close()
-        room.close()
+    private fun createV5AndClose() {
+        val dbFile = context.getDatabasePath(dbName)
+        dbFile.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        LegacySchemaHelper.createVersion(db, 5)
+        db.close()
     }
 
     /** Симулирует v5: drop trigger + seed + PRAGMA user_version = 5. */
     private fun seedV5(seed: (SQLiteDatabase) -> Unit) {
-        createV6AndClose()
+        createV5AndClose()
         val raw = SQLiteDatabase.openDatabase(
             context.getDatabasePath(dbName).absolutePath,
             null,
@@ -79,7 +74,7 @@ class Migration5To6Test {
     /** Открывает через Room с MIGRATION_5_6 — триггер создаётся, санитизация. */
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9)
+            .addMigrations(AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
             .build()
         room.openHelper.writableDatabase  // forces migration
         return room
@@ -121,8 +116,13 @@ class Migration5To6Test {
     }
 
     private fun readProjectProgress(room: AppDatabase, projectId: Long): Pair<Long?, Int> {
+        // v10 (3NF): current_row_number нет в projects. Derived через JOIN
+        // на pattern_rows.row_number. Семантика та же, что B-триггер в v6-v9.
         return room.openHelper.readableDatabase.query(
-            "SELECT current_pattern_row_id, current_row_number FROM projects WHERE id = $projectId"
+            "SELECT p.current_pattern_row_id, COALESCE(pr.row_number, 0) AS current_row_number " +
+                "FROM projects p " +
+                "LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id " +
+                "WHERE p.id = $projectId"
         ).use { c ->
             assertTrue("project $projectId not found", c.moveToFirst())
             val rowId: Long? = if (c.isNull(0)) null else c.getLong(0)
@@ -246,26 +246,10 @@ class Migration5To6Test {
     }
 
     /** B (runtime): UPDATE на number, не совпадающий с row_number → SQLiteConstraintException. */
-    @Test
-    fun trigger_rejectsNumberMismatch() {
-        seedV5 { db ->
-            seedPatternAndRow(db, patternId = 1, rowId = 10, rowNumber = 5)
-            seedProject(db, projectId = 1, patternId = 1, currentPatternRowId = 10, currentRowNumber = 5)
-        }
-        val room = runMigration()
-        try {
-            room.openHelper.writableDatabase.execSQL(
-                "UPDATE projects SET current_row_number = 99 WHERE id = 1"
-            )
-            throw AssertionError("Ожидалось SQLiteConstraintException от Trigger B")
-        } catch (expected: SQLiteConstraintException) {
-            // ok
-        }
-        room.close()
-    }
+    // trigger_rejectsNumberMismatch удалён в v10: B-инвариант
+    // (current_row_number = row_number) снят вместе с колонкой (3NF).
+    // Защита от рассинхронизации теперь на уровне derived-чтения через JOIN.
 
-    /** Fresh install: onCreate → DATABASE_CALLBACK создаёт оба триггера.
-     *  Регресс P0-1: без callback триггера бы не было (MIGRATION_5_6 не вызывается). */
     @Test
     fun freshInstall_createsTrigger() {
         context.deleteDatabase(dbName)

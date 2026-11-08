@@ -35,22 +35,16 @@ class Migration8To9Test {
         context.deleteDatabase(dbName)
     }
 
-    private fun createV9AndClose() {
-        val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(
-                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9
-            )
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
-            .build()
-        room.openHelper.writableDatabase.close()
-        room.close()
+    private fun createV8AndClose() {
+        val dbFile = context.getDatabasePath(dbName)
+        dbFile.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        LegacySchemaHelper.createVersion(db, 8)
+        db.close()
     }
 
     private fun seedV8(seed: (SQLiteDatabase) -> Unit) {
-        createV9AndClose()
+        createV8AndClose()
         val raw = SQLiteDatabase.openDatabase(
             context.getDatabasePath(dbName).absolutePath,
             null,
@@ -66,7 +60,7 @@ class Migration8To9Test {
 
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_8_9)
+            .addMigrations(AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
             .addCallback(AppDatabase.DATABASE_CALLBACK)
             .build()
         room.openHelper.writableDatabase // forces migration
@@ -85,17 +79,17 @@ class Migration8To9Test {
      */
     @Test
     fun migrate8To9_createsTriggers() {
-        createV9AndClose()
-        val db = SQLiteDatabase.openDatabase(
-            context.getDatabasePath(dbName).absolutePath,
-            null,
-            SQLiteDatabase.OPEN_READONLY
+        // v8 (историческая схема) НЕ содержит trg_repeat_code_check_* —
+        // они появляются только в MIGRATION_8_9. Проверяем это после runMigration.
+        seedV8 { }
+        val room = runMigration()
+        val cursor = room.openHelper.readableDatabase.query(
+            "SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'trg_repeat_code_check%'"
         )
-        val cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'trg_repeat_code_check%'", null)
         val count = cursor.count
         cursor.close()
+        room.close()
         assertEquals(2, count)
-        db.close()
     }
 
     /**
@@ -105,23 +99,19 @@ class Migration8To9Test {
      */
     @Test
     fun migrate8To9_updateTriggerHasWhenOptimization() {
-        createV9AndClose()
-        val db = SQLiteDatabase.openDatabase(
-            context.getDatabasePath(dbName).absolutePath,
-            null,
-            SQLiteDatabase.OPEN_READONLY
-        )
-        val sql = db.rawQuery(
+        // DDL триггера с WHEN-оптимизацией создаётся только в MIGRATION_8_9.
+        seedV8 { }
+        val room = runMigration()
+        val sql = room.openHelper.readableDatabase.query(
             "SELECT sql FROM sqlite_master WHERE type='trigger' " +
-                "AND name='trg_repeat_code_check_update'",
-            null
+                "AND name='trg_repeat_code_check_update'"
         ).use {
-            it.moveToFirst()
+            assertTrue("Триггер trg_repeat_code_check_update не найден после MIGRATION_8_9", it.moveToFirst())
             it.getString(0)
         }
         assertTrue("Trigger DDL должен содержать WHEN-оптимизацию, а содержит: $sql",
             sql.contains("WHEN OLD.repeat_code IS NOT NEW.repeat_code"))
-        db.close()
+        room.close()
     }
 
     /**

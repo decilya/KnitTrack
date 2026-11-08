@@ -6,7 +6,6 @@ import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
-import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import kotlinx.coroutines.flow.Flow
 
@@ -36,7 +35,6 @@ interface ProjectRepository {
     suspend fun updateProjectProgress(
         projectId: ProjectId,
         currentPatternRowId: PatternRowId?,
-        currentRowNumber: RowCount,
         currentStitch: StitchCount
     ): Result<Unit>
 }

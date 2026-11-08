@@ -38,21 +38,16 @@ class Migration7To8Test {
         context.deleteDatabase(dbName)
     }
 
-    private fun createV8AndClose() {
-        val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(
-                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9
-            )
-            .build()
-        room.openHelper.writableDatabase.close()
-        room.close()
+    private fun createV7AndClose() {
+        val dbFile = context.getDatabasePath(dbName)
+        dbFile.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        LegacySchemaHelper.createVersion(db, 7)
+        db.close()
     }
 
     private fun seedV7(seed: (SQLiteDatabase) -> Unit) {
-        createV8AndClose()
+        createV7AndClose()
         val raw = SQLiteDatabase.openDatabase(
             context.getDatabasePath(dbName).absolutePath,
             null,
@@ -68,7 +63,7 @@ class Migration7To8Test {
 
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9)
+            .addMigrations(AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
             .build()
         room.openHelper.writableDatabase
         return room
@@ -164,9 +159,9 @@ class Migration7To8Test {
         try {
             room.openHelper.writableDatabase.execSQL(
                 "INSERT INTO projects (id, name, category, created_at, updated_at, " +
-                    "total_time_seconds, sync_status, pattern_id, current_row_number, " +
+                    "total_time_seconds, sync_status, pattern_id, " +
                     "current_pattern_row_id, current_stitch) VALUES " +
-                    "(1, 'P', 'KNITTING', 0, 0, 0, 'PENDING', NULL, 0, NULL, 5)"
+                    "(1, 'P', 'KNITTING', 0, 0, 0, 'PENDING', NULL, NULL, 5)"
             )
             throw AssertionError("Ожидалось SQLiteConstraintException на INSERT от Trigger D")
         } catch (expected: SQLiteConstraintException) {

@@ -47,9 +47,6 @@ data class ProjectEntity(
     @ColumnInfo(name = "pattern_id")
     val patternId: Long? = null,
 
-    @ColumnInfo(name = "current_row_number", defaultValue = "0")
-    val currentRowNumber: Int = 0,
-
     @ColumnInfo(name = "current_pattern_row_id")
     val currentPatternRowId: Long? = null,
 

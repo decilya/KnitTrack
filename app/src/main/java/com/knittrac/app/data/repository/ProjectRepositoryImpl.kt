@@ -11,7 +11,6 @@ import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
-import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.repository.ProjectRepository
 import kotlinx.coroutines.CancellationException
@@ -228,13 +227,11 @@ class ProjectRepositoryImpl @Inject constructor(
     override suspend fun updateProjectProgress(
         projectId: ProjectId,
         currentPatternRowId: PatternRowId?,
-        currentRowNumber: RowCount,
         currentStitch: StitchCount
     ): Result<Unit> = try {
         val rows = projectDao.updateProjectProgress(
             projectId = projectId.value,
             currentPatternRowId = currentPatternRowId?.value,
-            currentRowNumber = currentRowNumber.value,
             currentStitch = currentStitch.value,
             updatedAt = timeProvider.currentTimeMillis()
         )

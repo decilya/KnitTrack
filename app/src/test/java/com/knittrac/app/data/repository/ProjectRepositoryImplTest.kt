@@ -6,6 +6,7 @@ import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.data.local.ProjectDao
 import com.knittrac.app.data.local.entity.ProjectEntity
+import com.knittrac.app.data.local.entity.ProjectWithCurrentRowNumber
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
 import com.knittrac.app.domain.entity.Project
@@ -48,7 +49,7 @@ class ProjectRepositoryImplTest {
      */
     @Test
     fun getAllProjectsFlow_mapsEntitiesToDomainModels() = runTest {
-        every { projectDao.getAllProjectsFlow() } returns flowOf(listOf(testEntity))
+        every { projectDao.getAllProjectsFlow() } returns flowOf(listOf(ProjectWithCurrentRowNumber(testEntity, null)))
 
         val result = repository.getAllProjectsFlow().first()
 
@@ -62,7 +63,7 @@ class ProjectRepositoryImplTest {
      */
     @Test
     fun getAllProjects_returnsSuccessWithMappedList() = runTest {
-        coEvery { projectDao.getAllProjects() } returns listOf(testEntity)
+        coEvery { projectDao.getAllProjects() } returns listOf(ProjectWithCurrentRowNumber(testEntity, null))
 
         val result = repository.getAllProjects()
 

@@ -35,7 +35,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
         PatternOperationEntity::class,
         PatternRepeatEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -194,6 +194,114 @@ abstract class AppDatabase : RoomDatabase() {
 
         private const val CREATE_INDEX_PROJECT_PROGRESS_ROW =
             "CREATE INDEX index_project_progress_pattern_row_id ON project_progress (pattern_row_id)"
+
+
+        /**
+         * CREATE TABLE projects_new для v10: без current_row_number (3NF).
+         *
+         * currentRowNumber — derived от current_pattern_row_id через
+         * LEFT JOIN pattern_rows.row_number. Дублирование в projects
+         * устранено (P2, 3NF).
+         */
+        private const val CREATE_PROJECTS_V10 =
+            "CREATE TABLE projects_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL CHECK(length(trim(name)) > 0 AND length(name) <= 100), category TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, total_time_seconds INTEGER NOT NULL CHECK(total_time_seconds >= 0), total_rows INTEGER NOT NULL DEFAULT 0 CHECK(total_rows >= 0), target_row_count INTEGER, pattern_id INTEGER, current_pattern_row_id INTEGER, current_stitch INTEGER NOT NULL DEFAULT 0, sync_status TEXT NOT NULL, FOREIGN KEY(pattern_id) REFERENCES patterns(id) ON DELETE SET NULL, FOREIGN KEY(current_pattern_row_id) REFERENCES pattern_rows(id) ON DELETE SET NULL)"
+
+        /**
+         * v10: A (row ∈ pattern) + D (stitch > 0 → row != null).
+         * B (current_row_number = row_number) и C (row IS NULL → number = 0)
+         * удалены — колонки current_row_number больше нет, инвариант derived.
+         */
+        private const val CREATE_TRIGGER_PROGRESS_INSERT_V10 =
+            "CREATE TRIGGER trg_progress_check_insert " +
+                "BEFORE INSERT ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Петли без ряда невозможны') " +
+                "WHERE NEW.current_stitch > 0 AND NEW.current_pattern_row_id IS NULL; " +
+                "END"
+
+        private const val CREATE_TRIGGER_PROGRESS_UPDATE_V10 =
+            "CREATE TRIGGER trg_progress_check_update " +
+                "BEFORE UPDATE OF current_pattern_row_id, current_stitch, pattern_id " +
+                "ON projects BEGIN " +
+                "SELECT RAISE(ABORT, 'Ряд не принадлежит схеме проекта') " +
+                "WHERE NEW.current_pattern_row_id IS NOT NULL AND NOT EXISTS (" +
+                "SELECT 1 FROM pattern_rows " +
+                "WHERE id = NEW.current_pattern_row_id " +
+                "AND pattern_id IS NEW.pattern_id); " +
+                "SELECT RAISE(ABORT, 'Петли без ряда невозможны') " +
+                "WHERE NEW.current_stitch > 0 AND NEW.current_pattern_row_id IS NULL; " +
+                "END"
+
+        /**
+         * MIGRATION_9_10 (P2, 3NF): удаление current_row_number.
+         *
+         * Порядок (FK children от projects — sessions, project_progress):
+         * 1. Бэкап children.
+         * 2. DROP children.
+         * 3. CREATE projects_new (без current_row_number) + индексы.
+         * 4. COPY из старой projects.
+         * 5. DROP old projects.
+         * 6. RENAME projects_new -> projects.
+         * 7. Recreate children + restore.
+         * 8. Триггеры A+D (B и C удалены — current_row_number нет).
+         *
+         * PRAGMA foreign_keys = OFF внутри migrate() — no-op (Room-транзакция).
+         * Безопасность обеспечивается порядком: children бэкапятся и удаляются
+         * ДО DROP parent, восстанавливаются ПОСЛЕ RENAME.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Бэкап children (sessions, project_progress)
+                db.execSQL("CREATE TABLE sessions_backup (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, project_id INTEGER NOT NULL, start_time INTEGER NOT NULL, end_time INTEGER NOT NULL, duration_seconds INTEGER NOT NULL, row_count INTEGER NOT NULL, updated_at INTEGER NOT NULL, sync_status TEXT NOT NULL)")
+                db.execSQL("INSERT INTO sessions_backup SELECT id, project_id, start_time, end_time, duration_seconds, row_count, updated_at, sync_status FROM sessions")
+
+                db.execSQL("CREATE TABLE project_progress_backup (project_id INTEGER NOT NULL, pattern_row_id INTEGER NOT NULL, PRIMARY KEY(project_id, pattern_row_id))")
+                db.execSQL("INSERT INTO project_progress_backup SELECT project_id, pattern_row_id FROM project_progress")
+
+                // 2. DROP children
+                db.execSQL("DROP TABLE sessions")
+                db.execSQL("DROP TABLE project_progress")
+
+                // 3. CREATE projects_new (без current_row_number).
+                // DROP INDEX обязателен: v5+ projects уже имеет
+                // index_projects_pattern_id / index_projects_current_pattern_row_id,
+                // а CREATE INDEX с тем же именем в SQLite — глобальный конфликт.
+                db.execSQL(CREATE_PROJECTS_V10)
+                db.execSQL("DROP INDEX IF EXISTS index_projects_pattern_id")
+                db.execSQL("DROP INDEX IF EXISTS index_projects_current_pattern_row_id")
+                db.execSQL(CREATE_INDEX_PROJECTS_PATTERN_ID)
+                db.execSQL(CREATE_INDEX_PROJECTS_CURRENT_ROW)
+
+                // 4. COPY из старой projects (до DROP)
+                db.execSQL("INSERT INTO projects_new (id, name, category, created_at, updated_at, total_time_seconds, total_rows, target_row_count, pattern_id, current_pattern_row_id, current_stitch, sync_status) SELECT id, name, category, created_at, updated_at, total_time_seconds, total_rows, target_row_count, pattern_id, current_pattern_row_id, current_stitch, sync_status FROM projects")
+
+                // 5. DROP old projects
+                db.execSQL("DROP TABLE projects")
+
+                // 6. RENAME
+                db.execSQL("ALTER TABLE projects_new RENAME TO projects")
+
+                // 7. Recreate children + restore
+                db.execSQL(CREATE_SESSIONS_WITH_CHECK)
+                db.execSQL(CREATE_INDEX_SESSIONS_PROJECT_ID)
+                db.execSQL(CREATE_INDEX_SESSIONS_START_TIME)
+                db.execSQL("INSERT INTO sessions SELECT id, project_id, start_time, end_time, duration_seconds, row_count, updated_at, sync_status FROM sessions_backup")
+                db.execSQL("DROP TABLE sessions_backup")
+
+                db.execSQL(CREATE_PROJECT_PROGRESS)
+                db.execSQL(CREATE_INDEX_PROJECT_PROGRESS_ROW)
+                db.execSQL("INSERT INTO project_progress SELECT project_id, pattern_row_id FROM project_progress_backup")
+                db.execSQL("DROP TABLE project_progress_backup")
+
+                // 8. Триггеры A+D (B и C удалены)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V10)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V10)
+            }
+        }
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -412,7 +520,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("PRAGMA foreign_keys = OFF")
                 db.execSQL("DROP TABLE sessions")
                 db.execSQL("DROP TABLE projects")
-                db.execSQL(CREATE_PROJECTS_WITH_CHECK)
+                db.execSQL(CREATE_PROJECTS_V10)
                 db.execSQL(CREATE_INDEX_PROJECTS_PATTERN_ID)
                 db.execSQL(CREATE_INDEX_PROJECTS_CURRENT_ROW)
                 db.execSQL("ALTER TABLE projects_new RENAME TO projects")
@@ -420,8 +528,8 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(CREATE_INDEX_SESSIONS_PROJECT_ID)
                 db.execSQL(CREATE_INDEX_SESSIONS_START_TIME)
                 db.execSQL("PRAGMA foreign_keys = ON")
-                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V8)
-                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V8)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_INSERT_V10)
+                db.execSQL(CREATE_TRIGGER_PROGRESS_UPDATE_V10)
                 db.execSQL(CREATE_TRIGGER_REPEAT_INSERT_V9)
                 db.execSQL(CREATE_TRIGGER_REPEAT_UPDATE_V9)
                 db.execSQL(DEFAULT_SYMBOLS_INSERT)

@@ -3,6 +3,7 @@ package com.knittrac.app.data.local
 import androidx.room.*
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.ProjectEntity
+import com.knittrac.app.data.local.entity.ProjectWithCurrentRowNumber
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,16 +16,31 @@ import kotlinx.coroutines.flow.Flow
 interface ProjectDao {
 
     /** Реактивный поток всех проектов, сначала новые. */
-    @Query("SELECT * FROM projects ORDER BY created_at DESC")
-    fun getAllProjectsFlow(): Flow<List<ProjectEntity>>
+    @Query("""
+        SELECT p.*, pr.row_number AS derived_current_row_number
+        FROM projects p
+        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
+        ORDER BY p.created_at DESC
+    """)
+    fun getAllProjectsFlow(): Flow<List<ProjectWithCurrentRowNumber>>
 
     /** Разовый запрос всех проектов, сначала новые. */
-    @Query("SELECT * FROM projects ORDER BY created_at DESC")
-    suspend fun getAllProjects(): List<ProjectEntity>
+    @Query("""
+        SELECT p.*, pr.row_number AS derived_current_row_number
+        FROM projects p
+        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
+        ORDER BY p.created_at DESC
+    """)
+    suspend fun getAllProjects(): List<ProjectWithCurrentRowNumber>
 
     /** Запрос проекта по id. null — если не найден. */
-    @Query("SELECT * FROM projects WHERE id = :projectId")
-    suspend fun getProjectById(projectId: Long): ProjectEntity?
+    @Query("""
+        SELECT p.*, pr.row_number AS derived_current_row_number
+        FROM projects p
+        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
+        WHERE p.id = :projectId
+    """)
+    suspend fun getProjectById(projectId: Long): ProjectWithCurrentRowNumber?
 
     /** Вставка проекта. REPLACE как upsert. @return id новой строки. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -50,7 +66,7 @@ interface ProjectDao {
      *   Репозиторий трактует 0 как NotFoundError. Идемпотентность —
      *   на уровне вызывающего кода.
      */
-    @Query("UPDATE projects SET current_pattern_row_id = NULL, current_row_number = 0, current_stitch = 0 WHERE current_pattern_row_id = :rowId")
+    @Query("UPDATE projects SET current_pattern_row_id = NULL, current_stitch = 0 WHERE current_pattern_row_id = :rowId")
     suspend fun clearProgressForRow(rowId: Long): Int
 
     @Query("DELETE FROM projects WHERE id = :id")
@@ -89,11 +105,9 @@ interface ProjectDao {
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int
 
-    @Suppress("LongParameterList") // Room @Query: flat-параметры, @Embedded не применим
     @Query("""
         UPDATE projects
         SET current_pattern_row_id = :currentPatternRowId,
-            current_row_number = :currentRowNumber,
             current_stitch = :currentStitch,
             updated_at = :updatedAt,
             sync_status = :pendingStatus
@@ -102,7 +116,6 @@ interface ProjectDao {
     suspend fun updateProjectProgress(
         projectId: Long,
         currentPatternRowId: Long?,
-        currentRowNumber: Int,
         currentStitch: Int,
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name

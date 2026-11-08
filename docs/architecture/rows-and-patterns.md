@@ -131,11 +131,18 @@ data class PatternRepeat(
 
 | # | Инвариант | Domain | Trigger | Presentation |
 |---|---|---|---|---|
-| A | `row IS NOT NULL → row принадлежит pattern` | `ProgressService.markRow` | `trg_progress_check` | — |
-| B | `row IS NOT NULL → currentRowNumber = row.rowNumber` | — (денорм.) | `trg_progress_check` | UI |
-| C | `row IS NULL → currentRowNumber = 0` | — | `trg_progress_check` | UI |
-| D | `currentStitch > 0 → currentPatternRowId != null` | `Project.markRow` (P2-4) | `trg_progress_check` (v8) | — |
+| A | `row IS NOT NULL → row принадлежит pattern` | `ProgressService.markRow` | `trg_progress_check` (v10) | — |
+| B | `row IS NOT NULL → currentRowNumber = row.rowNumber` — **снят в v10 (3NF)** | — (derived через JOIN) | — | UI (derived) |
+| C | `row IS NULL → currentRowNumber = 0` — **снят в v10 (3NF)** | — (derived через JOIN) | — | UI (derived) |
+| D | `currentStitch > 0 → currentPatternRowId != null` | `Project.markRow` (P2-4) | `trg_progress_check` (v10) | — |
 | E | `repeat_code ∈ pattern_repeats(pattern_id, code)` | `AddPatternOperationService.validateRepeat` | `trg_repeat_code_check` (v9) | — |
+
+**v10 (P2, 3NF):** `projects.current_row_number` удалена. `currentRowNumber` — derived
+через `LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id` (маппер в
+`EntityMappers.ProjectWithCurrentRowNumber.toDomain`). Инварианты B и C больше не
+существуют физически: денормализация, которую они защищали, устранена. Триггер
+`trg_progress_check` в v10 содержит только A и D. Это открывает путь к D&D-reorder
+рядов: bulk-shift `pattern_rows.row_number` не требует второго writer-а на `projects`.
 
 D-инвариант (`stitch > 0 → row IS NOT NULL`) — **закрыт в 7f-D-5** (`MIGRATION_7_8`), включается вместе с
 per-stitch tracking (7f-B). В текущем коде `RowMarkService.updateProgress`
@@ -254,7 +261,7 @@ END;
 - Оба триггера создаются в `MIGRATION_8_9` **и** в `DATABASE_CALLBACK.onCreate`.
   Миграция **идемпотентна**: `DROP TRIGGER IF EXISTS` перед CREATE.
 
-### 6.2. Порядок `MIGRATION_5_6`
+### 6.2. Порядок `MIGRATION_5_6` (историческое, v6)
 
 1. Санитизация A+B: `UPDATE projects SET current_pattern_row_id = NULL,
    current_row_number = 0 WHERE current_pattern_row_id IS NOT NULL AND

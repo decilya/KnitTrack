@@ -6,7 +6,6 @@ import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
-import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.StitchCount
 import com.knittrac.app.domain.model.MarkResult
 import com.knittrac.app.domain.repository.PatternRepository
@@ -92,7 +91,6 @@ class RowMarkService @Inject constructor(
         return when (val updateResult = projectRepository.updateProjectProgress(
             projectId = projectId,
             currentPatternRowId = row.id,
-            currentRowNumber = RowCount.createOrDefault(row.rowNumber.value),
             currentStitch = StitchCount.ZERO
         )) {
             is Result.Error -> updateResult

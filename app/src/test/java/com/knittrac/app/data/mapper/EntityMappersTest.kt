@@ -5,6 +5,7 @@ import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.SessionId
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.data.local.entity.ProjectEntity
+import com.knittrac.app.data.local.entity.ProjectWithCurrentRowNumber
 import com.knittrac.app.data.local.entity.SessionEntity
 import com.knittrac.app.domain.entity.Category
 import com.knittrac.app.domain.entity.Duration
@@ -41,7 +42,7 @@ class EntityMappersTest {
             totalTimeSeconds = 3600L,
             syncStatus = "PENDING"
         )
-        val domain = entity.toDomain()
+        val domain = ProjectWithCurrentRowNumber(entity, null).toDomain()
         assertEquals(ProjectId.create(1L), domain.id)
         assertEquals("Свитер", domain.name.value)
         assertEquals(Category.KNITTING, domain.category)
@@ -91,7 +92,7 @@ class EntityMappersTest {
             totalTimeSeconds = 333L,
             syncStatus = "PENDING"
         )
-        assertEquals(original, original.toDomain().toEntity())
+        assertEquals(original, ProjectWithCurrentRowNumber(original, null).toDomain().toEntity())
     }
 
     /**
@@ -112,7 +113,7 @@ class EntityMappersTest {
             assertEquals(
                 "Категория $category потерялась при round-trip",
                 category,
-                entity.toDomain().category
+                ProjectWithCurrentRowNumber(entity, null).toDomain().category
             )
         }
     }
@@ -132,7 +133,7 @@ class EntityMappersTest {
             totalTimeSeconds = 3600L,
             syncStatus = "PENDING"
         )
-        val domain = entity.toDomain()
+        val domain = ProjectWithCurrentRowNumber(entity, null).toDomain()
         assertEquals(Category.OTHER, domain.category)
     }
 

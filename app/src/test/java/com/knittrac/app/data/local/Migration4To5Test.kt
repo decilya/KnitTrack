@@ -64,7 +64,8 @@ class Migration4To5Test {
                 AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6,
                 AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9
+                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9,
+                AppDatabase.MIGRATION_9_10
             )
             .allowMainThreadQueries() // Разрешаем для теста
             .build()
@@ -77,7 +78,6 @@ class Migration4To5Test {
             assertEquals(100, cursor.getInt(cursor.getColumnIndexOrThrow("target_row_count")))
             
             // Новые поля
-            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("current_row_number")))
             assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("current_stitch")))
             assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("pattern_id")))
         }

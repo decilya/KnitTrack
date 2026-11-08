@@ -2,9 +2,9 @@ package com.knittrac.app.data.di
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.knittrac.app.data.local.AppDatabase
+import com.knittrac.app.data.local.LegacySchemaHelper
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -45,7 +45,7 @@ class DatabaseModuleMigrationsTest {
          * обновить константу — тест попробует миграцию от `N-1`, и если
          * её нет — упадёт. Это сигнал.
          */
-        private const val CURRENT_DB_VERSION = 9
+        private const val CURRENT_DB_VERSION = 10
         private const val PREVIOUS_DB_VERSION = CURRENT_DB_VERSION - 1
         private const val DB_NAME = "knittrac_database"
     }
@@ -69,19 +69,11 @@ class DatabaseModuleMigrationsTest {
      * «пользователь на предыдущей версии».
      */
     private fun seedPreviousVersion() {
-        val room = Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
-            .build()
-        room.openHelper.writableDatabase.close()
-        room.close()
-
-        val raw = SQLiteDatabase.openDatabase(
-            context.getDatabasePath(DB_NAME).absolutePath,
-            null,
-            SQLiteDatabase.OPEN_READWRITE
-        )
-        raw.execSQL("PRAGMA user_version = $PREVIOUS_DB_VERSION")
-        raw.close()
+        val dbFile = context.getDatabasePath(DB_NAME)
+        dbFile.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        LegacySchemaHelper.createVersion(db, PREVIOUS_DB_VERSION)
+        db.close()
     }
 
     /**

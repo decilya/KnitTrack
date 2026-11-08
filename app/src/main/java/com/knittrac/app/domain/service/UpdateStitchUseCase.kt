@@ -32,7 +32,6 @@ class UpdateStitchUseCase @Inject constructor(
                     val result = projectRepository.updateProjectProgress(
                         projectId = params.projectId,
                         currentPatternRowId = currentRowId,
-                        currentRowNumber = project.currentRowNumber,
                         currentStitch = params.newStitch
                     )
                     when (result) {

@@ -74,13 +74,13 @@ class RowMarkServiceTest {
         val p = project()
         val r = row(1L)
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern(listOf(r)))
-        coEvery { projectRepository.updateProjectProgress(any(), any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { projectRepository.updateProjectProgress(any(), any(), any()) } returns Result.Success(Unit)
 
         val result = service.markRow(p, r)
 
         assertTrue(result is Result.Success)
         assertEquals(MarkResult.Added, (result as Result.Success).data)
-        coVerify { projectRepository.updateProjectProgress(any(), any(), any(), any()) }
+        coVerify { projectRepository.updateProjectProgress(any(), any(), any()) }
     }
 
     @Test
@@ -92,7 +92,7 @@ class RowMarkServiceTest {
 
         assertTrue(result is Result.Success)
         assertEquals(MarkResult.AlreadyExists, (result as Result.Success).data)
-        coVerify(exactly = 0) { projectRepository.updateProjectProgress(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { projectRepository.updateProjectProgress(any(), any(), any()) }
     }
 
     @Test
@@ -135,7 +135,7 @@ class RowMarkServiceTest {
         val p = project()
         val r = row(1L)
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern(listOf(r)))
-        coEvery { projectRepository.updateProjectProgress(any(), any(), any(), any()) } returns
+        coEvery { projectRepository.updateProjectProgress(any(), any(), any()) } returns
             Result.Error(AppError.DatabaseError(RuntimeException("db")))
 
         val result = service.markRow(p, r)

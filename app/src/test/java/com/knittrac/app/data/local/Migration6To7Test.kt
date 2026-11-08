@@ -41,10 +41,7 @@ class Migration6To7Test {
 
     @Test
     fun migrate6To7_insertsDefaultSymbols() {
-        val created = openCurrent()
-        created.openHelper.writableDatabase.execSQL("DELETE FROM symbols")
-        created.close()
-        setUserVersion(6)
+        createLegacyV6()
         val room = openCurrent()
         assertEquals(codes, readSymbols(room).map { it.code }.toSet())
         room.close()
@@ -52,29 +49,27 @@ class Migration6To7Test {
 
     @Test
     fun migrate6To7_idempotent() {
-        openCurrent().close()
-        setUserVersion(6)
+        createLegacyV6()
         val room = openCurrent()
         assertEquals(6, readSymbols(room).size)
         room.close()
     }
 
+    /** Создаёт legacy БД v6 через [LegacySchemaHelper] (без Room onCreate). */
+    private fun createLegacyV6() {
+        val dbFile = context.getDatabasePath(dbName)
+        dbFile.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        LegacySchemaHelper.createVersion(db, 6)
+        db.close()
+    }
+
     private fun openCurrent(): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9)
+            .addMigrations(AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
             .addCallback(AppDatabase.DATABASE_CALLBACK)
             .build()
             .also { it.openHelper.writableDatabase }
-
-    private fun setUserVersion(version: Int) {
-        val raw = SQLiteDatabase.openDatabase(
-            context.getDatabasePath(dbName).absolutePath,
-            null,
-            SQLiteDatabase.OPEN_READWRITE
-        )
-        raw.execSQL("PRAGMA user_version = $version")
-        raw.close()
-    }
 
     private fun readSymbols(room: AppDatabase): List<SeedSymbol> {
         val out = mutableListOf<SeedSymbol>()

@@ -61,26 +61,7 @@ data class Project(
             Result.Error(AppError.ValidationError("Петли без ряда невозможны"))
         patternId == null ->
             Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
-        else -> validateDenormalization(row) ?: successMarkResult(row)
-    }
-
-    /**
-     * Валидирует согласованность денормализации: если `currentPatternRowId`
-     * указывает на `row`, то `currentRowNumber` должен соответствовать
-     * `row.rowNumber`. null — валидно, не null — [Result.Error].
-     */
-    private fun validateDenormalization(row: PatternRow): Result.Error? = when {
-        currentPatternRowId != row.id -> null
-        currentRowNumber == RowCount.createOrDefault(row.rowNumber.value) -> null
-        else -> {
-            val expected = RowCount.createOrDefault(row.rowNumber.value)
-            Result.Error(
-                AppError.ValidationError(
-                    "Рассинхронизация прогресса: currentRowNumber=${currentRowNumber.value}, " +
-                        "rowNumber=${expected.value} для ряда id=${row.id.value}"
-                )
-            )
-        }
+        else -> successMarkResult(row)
     }
 
     private fun successMarkResult(row: PatternRow): Result.Success<MarkResult> =
