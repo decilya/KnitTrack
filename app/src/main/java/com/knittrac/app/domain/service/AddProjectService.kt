@@ -44,9 +44,8 @@ class AddProjectService @Inject constructor(
                 )
             )
 
-        return when (val projectResult = buildProject(name, params)) {
-            is Result.Success -> projectRepository.addProject(projectResult.data)
-            is Result.Error -> projectResult
+        return buildProject(name, params).flatMap { project ->
+            projectRepository.addProject(project)
         }
     }
 
