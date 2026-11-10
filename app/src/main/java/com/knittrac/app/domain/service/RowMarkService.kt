@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
@@ -57,7 +59,7 @@ class RowMarkService @Inject constructor(
      */
     private suspend fun addRow(project: Project, row: PatternRow): Result<MarkResult> {
         val patternId = project.patternId
-            ?: return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+            ?: return Result.Error(AppError.ValidationError(ErrorCode.PATTERN_NOT_ATTACHED))
 
         return when (val patternResult = patternRepository.getPatternById(patternId)) {
             is Result.Error -> patternResult
@@ -74,7 +76,7 @@ class RowMarkService @Inject constructor(
         projectId: ProjectId
     ): Result<MarkResult> {
         return if (pattern.rows.none { it.id == row.id }) {
-            Result.Error(AppError.ValidationError("Ряд не принадлежит схеме проекта"))
+            Result.Error(AppError.ValidationError(ErrorCode.ROW_NOT_IN_SCHEMA))
         } else {
             updateProgress(projectId, row)
         }

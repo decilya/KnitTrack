@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
@@ -116,7 +117,7 @@ class UpdatePatternOperationServiceTest {
     fun updatePropagatingNotFoundErrorWhenOperationMissing() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { patternRepository.getOperationSpansForRow(any()) } returns Result.Success(emptyList())
-        coEvery { patternRepository.updateOperation(any()) } returns Result.Error(AppError.NotFoundError("нет"))
+        coEvery { patternRepository.updateOperation(any()) } returns Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = service.update(params())
 

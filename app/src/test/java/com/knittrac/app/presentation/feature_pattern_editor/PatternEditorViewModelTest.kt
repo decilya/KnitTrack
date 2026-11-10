@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
+import com.knittrac.app.core.common.ErrorCode
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
@@ -132,7 +133,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
      */
     @Test
     fun createPatternErrorEmitsShowError() = runTest {
-        coEvery { createPatternUseCase(any()) } returns Result.Error(AppError.ValidationError("x"))
+        coEvery { createPatternUseCase(any()) } returns Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "x"))
         val vm = createViewModel()
         advanceUntilIdle()
         val effectDeferred = async { vm.effect.first() }

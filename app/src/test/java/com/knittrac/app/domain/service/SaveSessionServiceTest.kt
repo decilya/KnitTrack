@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.FakeTimeProvider
@@ -42,7 +43,7 @@ class SaveSessionServiceTest {
         
         // Assert
         assertTrue(result is Result.Error)
-        assertEquals("Пустая сессия", (result as Result.Error).error.message)
+        assertEquals(ErrorCode.EMPTY_SESSION, (result as Result.Error).error.code)
         coVerify(exactly = 0) { sessionRepository.addSessionAtomically(any()) }
     }
 

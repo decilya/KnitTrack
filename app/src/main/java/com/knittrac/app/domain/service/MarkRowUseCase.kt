@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -58,7 +60,7 @@ class MarkRowUseCase @Inject constructor(
         params: MarkRowParams
     ): Result<MarkResult> {
         val patternId: PatternId = project.patternId
-            ?: return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+            ?: return Result.Error(AppError.ValidationError(ErrorCode.PATTERN_NOT_ATTACHED))
 
         return when (val patternResult = patternRepository.getPatternById(patternId)) {
             is Result.Error -> patternResult
@@ -76,7 +78,7 @@ class MarkRowUseCase @Inject constructor(
     ): Result<MarkResult> {
         val row = pattern.rows.firstOrNull { it.id == params.rowId }
             ?: return Result.Error(
-                AppError.ValidationError("Ряд id=${params.rowId.value} не найден в схеме")
+                AppError.ValidationError(ErrorCode.PATTERN_ROW_NOT_FOUND_IN_SCHEMA, "id=${params.rowId.value}")
             )
         return rowMarkService.markRow(project, row)
     }

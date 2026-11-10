@@ -36,7 +36,7 @@ abstract class BaseFlowUseCase<in Params, out T>(
         .map<T, Result<T>> { data -> Result.Success(data) }
         .catch { e ->
             if (e is CancellationException) throw e
-            emit(Result.Error(AppErrorMapper.map(e)))
+            emit(Result.Error(AppErrorMapper.map(e as? Exception ?: Exception(e))))
         }
         .flowOn(dispatcher)
 }

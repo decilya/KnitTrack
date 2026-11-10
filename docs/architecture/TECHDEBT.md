@@ -391,7 +391,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 ## Аудит архитектуры (10.11.2026)
 
 - [x] **P1 (Clean Arch):** Парсинг текста исключения в `DataImporterImpl`. **Закрыто 10.11.2026.** Заменено на типизированное `InvalidBackupOperationsException` в Data-слое (`BackupRepositoryImpl`). `DataImporterImpl` ловит его без парсинга строк.
-- [ ] **P1 (i18n):** Хардкод русского текста в `AppError` и `IllegalStateException` в Data/Domain. Сообщения об ошибках захардкожены (например, `AppError.ValidationError("В бэкапе...")`). UI не может их локализовать. Внедрить `ErrorCode` (enum) в `AppError` и маппинг в `@StringRes` на уровне Presentation.
+- [x] **P1 (i18n):** Хардкод русского текста в `AppError` — **закрыт 11.11.2026**. Введён `ErrorCode` (enum) в `AppError`. Domain/Data возвращают только код, технические детали — в `details`. В Presentation добавлен `ErrorMapper` (`ErrorCode` → `@StringRes`). Русские тексты удалены из Domain/Data, все строки для UI — в `strings.xml`. Тесты обновлены на проверку `error.code`.
 - [ ] **P1 (SRP):** `AppDatabase` — God Class (644 строки). Содержит `@Database`, все 10 миграций, `DATABASE_CALLBACK`, DDL-триггеры и сидеры. Вынести миграции в `AppDatabaseMigrations`, callback в `DatabaseCallback`, триггеры в `DatabaseTriggers` (закрывается в P1-7).
 - [ ] **P2 (DDD/VO):** `BackupRepository` использует `Pair<Long, T>`. Примитив `Long` вместо `PatternId` VO, `Pair` скрывает семантику. Заменить на явные data class (`PatternRowWithId`, `PatternRepeatWithId`).
 - [ ] **P2 (DIP):** Gson внутри `DataImporterImpl`/`DataExporterImpl`. Application-слой знает про инфраструктуру парсинга JSON. Вынести в интерфейс `BackupParser` (Data), чтобы можно было заменить Gson на `kotlinx.serialization` без правок Application.

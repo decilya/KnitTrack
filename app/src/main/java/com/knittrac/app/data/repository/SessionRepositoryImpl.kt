@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
@@ -115,7 +117,7 @@ class SessionRepositoryImpl @Inject constructor(
         throw e
     } catch (e: ProjectNotFoundException) {
         Timber.e(e, "addSessionAtomically projectId=%d not found", session.projectId.value)
-        Result.Error(AppError.NotFoundError(e.message ?: "Проект не найден"))
+        Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, e.message))
     } catch (e: Exception) {
         Timber.e(e, "addSessionAtomically projectId=%d failed", session.projectId.value)
         Result.Error(AppError.DatabaseError(e))
@@ -145,7 +147,7 @@ class SessionRepositoryImpl @Inject constructor(
         )
         val rows = sessionDao.updateSession(entity)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Сессия id=${session.id.value} не найдена"))
+            Result.Error(AppError.NotFoundError(ErrorCode.SESSION_NOT_FOUND, "id=${session.id.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -167,7 +169,7 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun updateSyncStatus(sessionId: SessionId, status: SyncStatus): Result<Unit> = try {
         val rows = sessionDao.updateSyncStatus(sessionId.value, status.name)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Сессия id=${sessionId.value} не найдена"))
+            Result.Error(AppError.NotFoundError(ErrorCode.SESSION_NOT_FOUND, "id=${sessionId.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -191,7 +193,7 @@ class SessionRepositoryImpl @Inject constructor(
         throw e
     } catch (e: NoSuchElementException) {
         Timber.w(e, "deleteSessionAndDecrementProjectTotals id=%d not found", sessionId.value)
-        Result.Error(AppError.NotFoundError("Сессия id=${sessionId.value} не найдена"))
+        Result.Error(AppError.NotFoundError(ErrorCode.SESSION_NOT_FOUND, "id=${sessionId.value}"))
     } catch (e: Exception) {
         Timber.e(e, "deleteSessionAndDecrementProjectTotals id=%d failed", sessionId.value)
         Result.Error(AppError.DatabaseError(e))

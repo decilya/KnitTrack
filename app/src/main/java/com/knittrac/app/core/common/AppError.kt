@@ -1,101 +1,55 @@
 package com.knittrac.app.core.common
 
+
 /**
- * Базовый sealed-класс для всех доменных ошибок приложения.
+ * Базовая доменная ошибка.
  *
- * Предоставляет типобезопасный способ представления различных типов ошибок,
- * которые могут возникнуть в приложении. Каждый подкласс представляет
- * конкретный тип ошибки для более точной обработки.
- *
- * @param message Человекочитаемое сообщение об ошибке на русском языке.
- * @param cause Исходное исключение (если есть) — для логирования стектрейса
- *              через Timber. У ValidationError и NotFoundError всегда null,
- *              у остальных — тот Throwable, который обернули.
- *
- * @see ValidationError Ошибка валидации входных данных.
- * @see NotFoundError Сущность не найдена.
- * @see DatabaseError Ошибка при работе с базой данных.
- * @see IoError Ошибка ввода-вывода (DataStore, SAF, файлы).
- * @see NetworkError Ошибка сетевого взаимодействия.
- * @see UnknownError Неизвестная ошибка.
+ * Содержит только [code] (для UI-маппинга) и технические детали [cause]/[details]
+ * (для логов). Текст для пользователя берётся из `@StringRes` в Presentation.
  */
 sealed class AppError(
-    open val message: String,
-    val cause: Throwable? = null
+    open val code: ErrorCode,
+    val cause: Throwable? = null,
+    open val details: String? = null
 ) {
-    /**
-     * Ошибка валидации входных данных.
-     *
-     * Возникает, когда переданные параметры не соответствуют требованиям
-     * бизнес-логики (например, пустое название проекта или отрицательная длительность).
-     *
-     * @param message Описание ошибки валидации.
-     */
-    data class ValidationError(override val message: String) : AppError(message)
+    /** Ошибка валидации входных данных. */
+    data class ValidationError(
+        override val code: ErrorCode,
+        override val details: String? = null
+    ) : AppError(code, details = details)
 
-    /**
-     * Сущность не найдена.
-     *
-     * Возникает, когда операция UPDATE затронула 0 строк (запись с таким id
-     * не существует), либо getBy* вернул null. Семантически отличается от
-     * [ValidationError]: входные данные валидны, просто искомой сущности нет.
-     *
-     * @param message Описание: какую сущность искали.
-     */
-    data class NotFoundError(override val message: String) : AppError(message)
+    /** Сущность не найдена. */
+    data class NotFoundError(
+        override val code: ErrorCode,
+        override val details: String? = null
+    ) : AppError(code, details = details)
 
-    /**
-     * Ошибка при работе с базой данных Room.
-     *
-     * Возникает при проблемах с чтением/записью в SQLite базу данных,
-     * нарушениях целостности данных или проблемах с миграцией схемы.
-     *
-     * @param exception Исключение, вызвавшее ошибку (для отладки).
-     */
+    /** Ошибка БД. */
     data class DatabaseError(val exception: Throwable) : AppError(
-        exception.message ?: "Неизвестная ошибка базы данных",
-        exception
+        ErrorCode.DATABASE_ERROR,
+        cause = exception,
+        details = exception.message
     )
 
-    /**
-     * Ошибка ввода-вывода при работе с DataStore или файловой системой.
-     *
-     * Отличается от [DatabaseError] тем, что БД в порядке, но файл не
-     * удалось прочитать/записать (диск полон, отозвано разрешение SAF,
-     * corrupted DataStore). Отличается от [NetworkError] тем, что сеть
-     * не задействована.
-     *
-     * @param exception Исключение, вызвавшее ошибку (для отладки).
-     */
+    /** Ошибка ввода-вывода. */
+    data class IoError(val exception: Throwable) : AppError(
+        ErrorCode.IO_ERROR,
+        cause = exception,
+        details = exception.message
+    )
+
+    /** Неизвестная ошибка. */
+    data class UnknownError(val exception: Throwable) : AppError(
+        ErrorCode.UNKNOWN_ERROR,
+        cause = exception,
+        details = exception.message
+    )
+
+    /** Сетевая ошибка (резерв, Фаза 3). */
     @Deprecated("Будет использоваться на Фазе 3 для сетевых ошибок (Firebase)")
     data class NetworkError(val exception: Throwable) : AppError(
-        message = "Ошибка сети",
-        cause = exception
-    )
-
-    data class IoError(val exception: Throwable) : AppError(
-        exception.message ?: "Ошибка ввода-вывода",
-        exception
-    )
-
-    /**
-     * Ошибка сетевого взаимодействия.
-     *
-     * Возникает при проблемах с подключением к интернету, таймаутах
-     * запросов или ошибках сервера.
-     *
-     * @param exception Исключение, вызвавшее ошибку (для отладки).
-     */
-
-    /**
-     * Неизвестная ошибка, не подпадающая под другие категории.
-     *
-     * Используется как запасной вариант для необработанных исключений.
-     *
-     * @param exception Исключение, вызвавшее ошибку (для отладки).
-     */
-    data class UnknownError(val exception: Throwable) : AppError(
-        exception.message ?: "Неизвестная ошибка",
-        exception
+        ErrorCode.NETWORK_ERROR,
+        cause = exception,
+        details = exception.message
     )
 }

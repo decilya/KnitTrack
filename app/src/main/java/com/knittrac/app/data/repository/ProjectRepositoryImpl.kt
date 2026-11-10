@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
@@ -69,7 +71,7 @@ class ProjectRepositoryImpl @Inject constructor(
     override suspend fun getProjectById(id: ProjectId): Result<Project> = try {
         val entity = projectDao.getProjectById(id.value)
         if (entity != null) Result.Success(entity.toDomain())
-        else Result.Error(AppError.NotFoundError("Проект id=${id.value} не найден"))
+        else Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${id.value}"))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -120,7 +122,7 @@ class ProjectRepositoryImpl @Inject constructor(
         )
         val rows = projectDao.updateProject(entity)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${project.id.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${project.id.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -147,7 +149,7 @@ class ProjectRepositoryImpl @Inject constructor(
     override suspend fun deleteProject(id: ProjectId): Result<Unit> = try {
         val rows = projectDao.deleteProjectById(id.value)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${id.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${id.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -178,7 +180,7 @@ class ProjectRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis()
         )
         if (affected == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${projectId.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -203,7 +205,7 @@ class ProjectRepositoryImpl @Inject constructor(
     ): Result<Unit> = try {
         val rows = projectDao.updateSyncStatus(projectId.value, status.name)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${projectId.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -235,7 +237,7 @@ class ProjectRepositoryImpl @Inject constructor(
             updatedAt = timeProvider.currentTimeMillis()
         )
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Проект id=${projectId.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "id=${projectId.value}"))
         } else {
             Result.Success(Unit)
         }

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -39,8 +41,8 @@ class AddProjectService @Inject constructor(
         val name = ProjectName.createOrNull(params.name)
             ?: return Result.Error(
                 AppError.ValidationError(
-                    "Название проекта не может быть пустым или длиннее " +
-                    "${ProjectName.MAX_LENGTH} символов"
+                    ErrorCode.INVALID_ARGUMENT,
+                    "name='${params.name}'"
                 )
             )
 
@@ -75,7 +77,7 @@ class AddProjectService @Inject constructor(
                 )
             )
         } catch (e: IllegalArgumentException) {
-            Result.Error(AppError.ValidationError(e.message ?: "Ошибка валидации проекта"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, e.message))
         }
     }
 }

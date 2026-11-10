@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.ErrorCode
+
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.Flow
@@ -76,7 +78,7 @@ class PatternRepositoryImpl @Inject constructor(
                 )
             }
         } else {
-            Result.Error(AppError.NotFoundError("Схема id=${id.value} не найдена"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PATTERN_NOT_FOUND, "id=${id.value}"))
         }
     } catch (e: CancellationException) {
         throw e
@@ -176,7 +178,7 @@ class PatternRepositoryImpl @Inject constructor(
     override suspend fun deleteSymbol(patternId: PatternId, code: String): Result<Unit> = try {
         val rows = symbolDao.deleteSymbol(code, patternId.value)
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Символ %s не найден".format(code)))
+            Result.Error(AppError.NotFoundError(ErrorCode.SYMBOL_NOT_FOUND, "code=$code"))
         } else {
             Result.Success(Unit)
         }
@@ -186,7 +188,7 @@ class PatternRepositoryImpl @Inject constructor(
         // FK ON DELETE RESTRICT выбросит SQLiteConstraintException, если символ используется
         Timber.e(e, "deleteSymbol code=%s failed (likely in use)", code)
         if (e.message?.contains("FOREIGN KEY constraint failed") == true) {
-            Result.Error(AppError.ValidationError("Нельзя удалить символ $code: он используется в операциях схемы"))
+            Result.Error(AppError.ValidationError(ErrorCode.SYMBOL_IN_USE, "code=$code"))
         } else {
             Result.Error(AppError.DatabaseError(e))
         }
@@ -239,7 +241,7 @@ class PatternRepositoryImpl @Inject constructor(
 
     override suspend fun getRowNumber(rowId: PatternRowId): Result<Int> = try {
         val number = patternDao.getRowNumber(rowId.value)
-        if (number != null) Result.Success(number) else Result.Error(AppError.NotFoundError("Ряд не найден"))
+        if (number != null) Result.Success(number) else Result.Error(AppError.NotFoundError(ErrorCode.ROW_NOT_FOUND))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -263,7 +265,7 @@ class PatternRepositoryImpl @Inject constructor(
     ): Result<Unit> = try {
         database.withTransaction {
             val oldRowNumber = patternDao.getRowNumber(rowId.value)
-                ?: return@withTransaction Result.Error(AppError.NotFoundError("Ряд не найден"))
+                ?: return@withTransaction Result.Error(AppError.NotFoundError(ErrorCode.ROW_NOT_FOUND))
 
             if (oldRowNumber == newRowNumber.value) {
                 return@withTransaction Result.Success(Unit)
@@ -298,7 +300,7 @@ class PatternRepositoryImpl @Inject constructor(
         }
         
         if (deletedRows == 0) {
-            Result.Error(AppError.NotFoundError("Ряд id=${rowId.value} не найден"))
+            Result.Error(AppError.NotFoundError(ErrorCode.ROW_NOT_FOUND, "id=${rowId.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -322,7 +324,7 @@ class PatternRepositoryImpl @Inject constructor(
         
         // Если 0 строк, значит операции с таким PK не было
         if (rows == 0) {
-            Result.Error(AppError.NotFoundError("Операция rowId=${operation.patternRowId.value} column=${operation.columnStart.value} не найдена"))
+            Result.Error(AppError.NotFoundError(ErrorCode.OPERATION_NOT_FOUND, "rowId=${operation.patternRowId.value}, col=${operation.columnStart.value}"))
         } else {
             Result.Success(Unit)
         }
@@ -356,7 +358,8 @@ class PatternRepositoryImpl @Inject constructor(
         if (rows == 0) {
             Result.Error(
                 AppError.NotFoundError(
-                    "Операция rowId=${rowId.value} column=${columnStart.value} не найдена"
+                    ErrorCode.OPERATION_NOT_FOUND,
+                    "rowId=${rowId.value}, col=${columnStart.value}"
                 )
             )
         } else {

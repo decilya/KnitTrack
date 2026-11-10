@@ -1,44 +1,24 @@
 package com.knittrac.app.core.common
 
+
 import android.database.SQLException
 import java.io.IOException
 
 /**
- * Утилита для маппинга стандартных исключений Java/Kotlin в доменные ошибки [AppError].
- * 
- * Этот объект предоставляет централизованный способ преобразования низкоуровневых
- * исключений (IOException, SQLException и т.д.) в высокоуровневые доменные ошибки,
- * которые понятны бизнес-логике приложения.
- * 
- * @see AppError Доменный класс ошибок.
+ * Маппинг исключений в [AppError].
  */
 object AppErrorMapper {
+
     /**
-     * Преобразует исключение в соответствующий тип доменной ошибки [AppError].
-     * 
-     * Метод анализирует тип переданного исключения и возвращает наиболее
-     * подходящий подкласс [AppError]:
-     * - [IOException] → [AppError.IoError]
-     * - [IllegalArgumentException] → [AppError.ValidationError]
-     * - [android.database.SQLException] → [AppError.DatabaseError]
-     * - Все остальные → [AppError.UnknownError]
-     * 
-     * @param e Исключение, которое необходимо преобразовать.
-     * @return Экземпляр [AppError], соответствующий типу исключения.
+     * Преобразует [e] в [AppError] по типу исключения.
+     *
+     * @param e Исключение.
+     * @param fallbackCode Код для [IllegalArgumentException] (по умолчанию `INVALID_ARGUMENT`).
      */
-    fun map(e: Throwable): AppError = when (e) {
-        // Ошибки ввода-вывода (диск, файлы, DataStore)
+    fun map(e: Exception, fallbackCode: ErrorCode = ErrorCode.INVALID_ARGUMENT): AppError = when (e) {
         is IOException -> AppError.IoError(e)
-
-        // Ошибки аргументов — это ошибки валидации данных
-        is IllegalArgumentException -> AppError.ValidationError(
-            e.message ?: "Некорректные входные данные"
-        )
-
-        // Room: SQLiteException, SQLiteConstraintException и прочие наследники.
-        // java.sql.SQLException сюда не входит.
+        is IllegalArgumentException -> AppError.ValidationError(fallbackCode, e.message)
         is SQLException -> AppError.DatabaseError(e)
-
         else -> AppError.UnknownError(e)
     }
 }

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
@@ -56,7 +58,7 @@ class NextRowService @Inject constructor(
      */
     private suspend fun selectNextRow(project: Project): Result<PatternRow> {
         val patternId = project.patternId
-            ?: return Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+            ?: return Result.Error(AppError.ValidationError(ErrorCode.PATTERN_NOT_ATTACHED))
 
         return when (val patternResult = patternRepository.getPatternById(patternId)) {
             is Result.Error -> patternResult
@@ -69,7 +71,7 @@ class NextRowService @Inject constructor(
      */
     private fun pickNextRow(project: Project, pattern: Pattern): Result<PatternRow> {
         if (pattern.rows.isEmpty()) {
-            return Result.Error(AppError.ValidationError("Схема не содержит рядов"))
+            return Result.Error(AppError.ValidationError(ErrorCode.SCHEMA_EMPTY))
         }
         return pickFromNonEmpty(project, pattern)
     }
@@ -93,10 +95,10 @@ class NextRowService @Inject constructor(
         val currentIndex = pattern.rows.indexOfFirst { it.id == currentId }
         return when {
             currentIndex < 0 -> Result.Error(
-                AppError.ValidationError("Текущий ряд id=${currentId.value} не найден в схеме")
+                AppError.ValidationError(ErrorCode.PATTERN_ROW_NOT_FOUND_IN_SCHEMA, "id=${currentId.value}")
             )
             currentIndex == pattern.rows.lastIndex -> Result.Error(
-                AppError.ValidationError("Текущий ряд последний в схеме")
+                AppError.ValidationError(ErrorCode.CURRENT_ROW_LAST_IN_SCHEMA)
             )
             else -> Result.Success(pattern.rows[currentIndex + 1])
         }

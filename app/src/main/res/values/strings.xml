@@ -133,4 +133,32 @@
     <string name="settings_legend_add_button">Always show Add button in legend</string>
     <string name="error_save_stitch">Не удалось сохранить счетчик петель</string>
     <string name="stitch_counter_label">Петли в ряду: %1$d</string>
+
+    <string name="error_invalid_backup">Invalid backup data</string>
+    <string name="error_stitch_without_row">Cannot count stitches without a row</string>
+    <string name="error_pattern_not_attached">No pattern attached to this project</string>
+    <string name="error_repeat_not_in_schema">Repeat not found in schema</string>
+    <string name="error_symbol_already_exists">Symbol already exists</string>
+    <string name="error_invalid_row_count">Row count must be at least 1</string>
+    <string name="error_system_symbol_delete">Cannot delete system symbol</string>
+    <string name="error_symbol_in_use">Symbol is used in operations</string>
+    <string name="error_row_not_in_schema">Row not found in schema</string>
+    <string name="error_schema_empty">Schema has no rows</string>
+    <string name="error_last_row_in_schema">Current row is the last one</string>
+    <string name="error_empty_session">Empty session</string>
+    <string name="error_symbol_not_in_legend">Symbol not in legend</string>
+    <string name="error_pattern_overlap">Operation overlaps with existing one</string>
+    <string name="error_row_number_out_of_bounds">Row number out of bounds</string>
+    <string name="error_unsupported_language">Unsupported language</string>
+    <string name="error_invalid_argument">Invalid argument</string>
+    <string name="error_project_not_found">Project not found</string>
+    <string name="error_pattern_not_found">Pattern not found</string>
+    <string name="error_symbol_not_found">Symbol not found</string>
+    <string name="error_row_not_found">Row not found</string>
+    <string name="error_session_not_found">Session not found</string>
+    <string name="error_operation_not_found">Operation not found</string>
+    <string name="error_database">Database error</string>
+    <string name="error_io">Input/output error</string>
+    <string name="error_network">Network error</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
@@ -65,7 +67,7 @@ class UpdatePatternOperationService @Inject constructor(
     ): Result<Symbol> {
         if (legendSymbol == null) {
             return Result.Error(
-                AppError.ValidationError("Символ ${params.symbol.code} отсутствует в легенде схемы")
+                AppError.ValidationError(ErrorCode.SYMBOL_NOT_IN_LEGEND, "code=${params.symbol.code}")
             )
         }
         return when (val existingSpans = patternRepository.getOperationSpansForRow(params.rowId)) {
@@ -94,7 +96,7 @@ class UpdatePatternOperationService @Inject constructor(
 
         return if (hasOverlap) {
             Result.Error(
-                AppError.ValidationError("Обновление создает пересечение с другой операцией в этом ряду")
+                AppError.ValidationError(ErrorCode.PATTERN_OVERLAP)
             )
         } else {
             Result.Success(legendSymbol)

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Symbol
@@ -40,7 +42,7 @@ class AddSymbolService @Inject constructor(
     ): Result<Symbol> {
         // Шаг 2. Проверяем, что символ с таким кодом еще не существует в этой схеме.
         if (existingSymbols.any { it.code == params.code }) {
-            return Result.Error(AppError.ValidationError("Символ с кодом ${params.code} уже существует"))
+            return Result.Error(AppError.ValidationError(ErrorCode.SYMBOL_ALREADY_EXISTS, "code=${params.code}"))
         }
 
         // Шаг 3. Формируем Domain-объект кастомного символа.

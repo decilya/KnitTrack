@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.TimeProvider
@@ -41,7 +43,7 @@ class SaveSessionService @Inject constructor(
         // 1. Валидация: длительность должна быть строго больше нуля секунд.
         val durationSeconds = (params.endTimestamp - params.startTimestamp) / 1000L
         if (durationSeconds <= 0L) {
-            return Result.Error(AppError.ValidationError("Пустая сессия"))
+            return Result.Error(AppError.ValidationError(ErrorCode.EMPTY_SESSION))
         }
         val duration = Duration.create(durationSeconds)
 

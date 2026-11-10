@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
@@ -156,7 +157,7 @@ class AddPatternOperationServiceTest {
     @Test
     fun add_patternRepositoryError_propagates() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns
-            Result.Error(AppError.NotFoundError("нет"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = service.add(params())
 

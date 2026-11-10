@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
@@ -122,7 +123,7 @@ class RowMarkServiceTest {
     fun markRow_patternRepositoryError_propagates() = runTest {
         val p = project()
         val r = row(1L)
-        coEvery { patternRepository.getPatternById(any()) } returns Result.Error(AppError.NotFoundError("нет"))
+        coEvery { patternRepository.getPatternById(any()) } returns Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = service.markRow(p, r)
 

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.entity
 
+import com.knittrac.app.core.common.ErrorCode
+
 import androidx.annotation.Keep
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -58,9 +60,9 @@ data class Project(
      */
     fun markRow(row: PatternRow): Result<MarkResult> = when {
         currentStitch.value > 0 && currentPatternRowId == null ->
-            Result.Error(AppError.ValidationError("Петли без ряда невозможны"))
+            Result.Error(AppError.ValidationError(ErrorCode.STITCH_WITHOUT_ROW))
         patternId == null ->
-            Result.Error(AppError.ValidationError("У проекта нет привязанной схемы"))
+            Result.Error(AppError.ValidationError(ErrorCode.PATTERN_NOT_ATTACHED))
         else -> successMarkResult(row)
     }
 

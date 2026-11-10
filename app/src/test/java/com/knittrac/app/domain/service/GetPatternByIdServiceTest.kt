@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -50,7 +51,7 @@ class GetPatternByIdServiceTest : BaseTest() {
     @Test
     fun executePropagatesNotFoundError() = runTest {
         coEvery { patternRepository.getPatternById(any()) } returns
-            Result.Error(AppError.NotFoundError("нет"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = service(PatternId.create(999L))
 

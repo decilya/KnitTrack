@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -72,7 +74,8 @@ class AddPatternOperationService @Inject constructor(
         val legendSymbol = pattern.legend.firstOrNull { it.code == params.symbol.code }
             ?: return Result.Error(
                 AppError.ValidationError(
-                    "Символ ${params.symbol.code} отсутствует в легенде схемы"
+                    ErrorCode.SYMBOL_NOT_IN_LEGEND,
+                    "code=${params.symbol.code}"
                 )
             )
         return when (val repeatCheck = validateRepeat(pattern, params)) {
@@ -91,7 +94,7 @@ class AddPatternOperationService @Inject constructor(
         val repeatCode = params.repeatCode ?: return Result.Success(Unit)
         return if (pattern.repeats.none { it.code == repeatCode }) {
             Result.Error(
-                AppError.ValidationError("Раппорт '$repeatCode' не найден в схеме")
+                AppError.ValidationError(ErrorCode.REPEAT_NOT_FOUND_IN_SCHEMA, "code=$repeatCode")
             )
         } else {
             Result.Success(Unit)
@@ -127,7 +130,8 @@ class AddPatternOperationService @Inject constructor(
         return if (conflict != null) {
             Result.Error(
                 AppError.ValidationError(
-                    "Операция пересекается с существующей по колонке ${conflict.columnStart.value}"
+                    ErrorCode.PATTERN_OVERLAP,
+                    "col=${conflict.columnStart.value}"
                 )
             )
         } else {

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -155,8 +156,8 @@ class LocaleService @Inject constructor(
         if (supportedLanguages.none { it.code == langCode }) {
             return Result.Error(
                 AppError.ValidationError(
-                    "Unsupported language: $langCode. " +
-                    "Supported: ${supportedLanguages.map { it.code }}"
+                    ErrorCode.UNSUPPORTED_LANGUAGE,
+                    "Unsupported: $langCode. Supported: ${supportedLanguages.map { it.code }}"
                 )
             )
         }

@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -27,7 +29,7 @@ class UpdateStitchUseCase @Inject constructor(
                 val project = projectResult.data
                 val currentRowId = project.currentPatternRowId
                 if (currentRowId == null) {
-                    Result.Error(AppError.ValidationError("Нельзя считать петли без выбранного ряда"))
+                    Result.Error(AppError.ValidationError(ErrorCode.STITCH_WITHOUT_ROW))
                 } else {
                     val result = projectRepository.updateProjectProgress(
                         projectId = params.projectId,

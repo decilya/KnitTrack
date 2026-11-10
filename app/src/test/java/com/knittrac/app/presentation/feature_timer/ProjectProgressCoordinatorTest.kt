@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Category
@@ -70,7 +71,7 @@ class ProjectProgressCoordinatorTest {
     @Test
     fun markNext_error_propagates() = runTest {
         coEvery { markNextRowUseCase(any()) } returns
-            Result.Error(AppError.ValidationError("нет схемы"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет схемы"))
 
         val result = coordinator.markNext(ProjectId.create(1L))
 

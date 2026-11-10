@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.PatternId
@@ -72,7 +73,7 @@ class DeleteSymbolServiceTest {
             category = SymbolCategory.CUSTOM
         )
         coEvery { repo.getSymbolsForPattern(any()) } returns Result.Success(listOf(custom))
-        coEvery { repo.deleteSymbol(any(), any()) } returns Result.Error(AppError.ValidationError("используется"))
+        coEvery { repo.deleteSymbol(any(), any()) } returns Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "используется"))
 
         val result = service.delete(params())
 

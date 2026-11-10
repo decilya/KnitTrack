@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -76,7 +77,7 @@ class AddPatternOperationUseCaseTest : BaseTest() {
     @Test
     fun executeReturnsValidationErrorFromService() = runTest {
         coEvery { service.add(any()) } returns
-            Result.Error(AppError.ValidationError("нет в легенде"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет в легенде"))
 
         val result = useCase(params())
 

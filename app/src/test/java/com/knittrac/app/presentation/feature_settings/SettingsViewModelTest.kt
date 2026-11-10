@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_settings
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.localization.LanguageOption
@@ -188,7 +189,7 @@ class SettingsViewModelTest {
     @Test
     fun changeLanguage_onUnsupportedCode_emitsShowError() = runTest(testDispatcher) {
         coEvery { localeService.setLanguage("xx") } returns
-            Result.Error(AppError.ValidationError("Unsupported language: xx"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "Unsupported language: xx"))
 
         val viewModel = createViewModel()
 

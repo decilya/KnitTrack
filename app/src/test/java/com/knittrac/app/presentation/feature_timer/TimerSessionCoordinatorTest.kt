@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.service.SaveSessionParams
@@ -71,7 +72,7 @@ class TimerSessionCoordinatorTest {
     @Test
     fun saveSession_error_propagates() = runTest {
         coEvery { saveSessionService(any()) } returns
-            Result.Error(AppError.ValidationError("пустая сессия"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "пустая сессия"))
 
         val result = coordinator.saveSession(params())
 

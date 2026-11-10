@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.knittrac.app.core.common.AppError
@@ -62,7 +64,7 @@ class DataImporterImpl @Inject constructor(
                 Result.Error(AppError.IoError(e))
             } catch (e: InvalidBackupOperationsException) {
                 Timber.e(e, "importFrom failed: invalid operations in backup")
-                Result.Error(AppError.ValidationError("В бэкапе найдены невалидные операции (нарушение связей). Импорт отменен."))
+                Result.Error(AppError.ValidationError(ErrorCode.INVALID_BACKUP_OPERATIONS))
             } catch (e: Exception) {
                 Timber.e(e, "importFrom failed")
                 Result.Error(AppError.DatabaseError(e))

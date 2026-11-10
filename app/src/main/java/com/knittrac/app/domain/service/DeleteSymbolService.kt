@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Symbol
@@ -42,9 +44,9 @@ class DeleteSymbolService @Inject constructor(
 
         // Шаг 3. Валидация: символ должен существовать и быть кастомным.
         return when {
-            symbol == null -> Result.Error(AppError.NotFoundError("Символ ${params.code} не найден в схеме"))
+            symbol == null -> Result.Error(AppError.NotFoundError(ErrorCode.SYMBOL_NOT_FOUND, "code=${params.code}"))
             symbol.ownerPatternId != params.patternId -> Result.Error(
-                AppError.ValidationError("Нельзя удалить системный символ ${params.code}")
+                AppError.ValidationError(ErrorCode.SYMBOL_SYSTEM_DELETE_FORBIDDEN, "code=${params.code}")
             )
             else -> {
                 // Шаг 4. Пытаемся удалить. Если символ используется в операциях,

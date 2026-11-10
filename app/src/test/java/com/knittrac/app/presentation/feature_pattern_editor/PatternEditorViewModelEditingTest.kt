@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -70,7 +71,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
     fun addOperationErrorEmitsShowError() = runTest {
         coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
         coEvery { addPatternOperationUseCase(any()) } returns
-            Result.Error(AppError.ValidationError("overlap"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "overlap"))
         val vm = createViewModel()
         vm.onIntent(PatternEditorContract.Intent.LoadPattern(PatternId.create(1L)))
         advanceUntilIdle()
@@ -172,7 +173,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
     fun undoLastOperationErrorEmitsShowErrorAndKeepsStack() = runTest {
         coEvery { addPatternOperationUseCase(any()) } returns Result.Success(operation(0))
         coEvery { deleteOperationUseCase(any()) } returns
-            Result.Error(AppError.NotFoundError("нет"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
         val vm = loadedVm()
         advanceUntilIdle()
         vm.onIntent(PatternEditorContract.Intent.SelectSymbol("K"))
@@ -272,7 +273,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
     @Test
     fun updateOperationErrorEmitsShowError() = runTest {
         coEvery { updatePatternOperationUseCase(any()) } returns
-            Result.Error(AppError.ValidationError("overlap"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "overlap"))
         val vm = loadedVm()
         advanceUntilIdle()
         val effectDeferred = async { vm.effect.first() }
@@ -382,7 +383,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
     @Test
     fun addSymbolErrorEmitsShowError() = runTest {
         coEvery { addSymbolUseCase(any()) } returns
-            Result.Error(AppError.ValidationError("duplicate"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "duplicate"))
         val vm = loadedVm()
         advanceUntilIdle()
         val effectDeferred = async { vm.effect.first() }

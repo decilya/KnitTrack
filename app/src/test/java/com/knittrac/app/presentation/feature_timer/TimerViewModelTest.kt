@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import com.knittrac.app.core.common.ErrorCode
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
@@ -242,7 +243,7 @@ class TimerViewModelTest {
     @Test
     fun markNextPatternRow_error_emitsShowErrorAndResetsFlag() = runTest {
         coEvery { progressCoordinator.markNext(any()) } returns
-            Result.Error(AppError.ValidationError("нет привязанной схемы"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет привязанной схемы"))
 
         val viewModel = TimerViewModel(
             sessionCoordinator,

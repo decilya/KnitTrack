@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.base.BaseUseCase
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -20,7 +22,7 @@ class CreatePatternUseCase @Inject constructor(
 
     override suspend fun execute(params: CreatePatternParams): Result<PatternId> {
         if (params.rowCount.value < 1) {
-            return Result.Error(AppError.ValidationError("Количество рядов должно быть >= 1"))
+            return Result.Error(AppError.ValidationError(ErrorCode.INVALID_ROW_COUNT))
         }
         val pattern = Pattern(
             id = PatternId.ZERO,

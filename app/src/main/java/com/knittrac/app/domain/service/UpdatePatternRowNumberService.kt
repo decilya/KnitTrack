@@ -1,5 +1,7 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
+
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.repository.PatternRepository
@@ -25,7 +27,7 @@ class UpdatePatternRowNumberService @Inject constructor(
             is Result.Error -> existsResult
             is Result.Success -> {
                 if (!existsResult.data) {
-                    Result.Error(AppError.NotFoundError("Ряд ${params.rowId.value} не найден в схеме ${params.patternId.value}"))
+                    Result.Error(AppError.NotFoundError(ErrorCode.ROW_NOT_FOUND, "id=${params.rowId.value}"))
                 } else {
                     validateBoundsAndMove(params)
                 }
@@ -46,7 +48,7 @@ class UpdatePatternRowNumberService @Inject constructor(
                         val rowCount = countResult.data
                         when {
                             params.newRowNumber.value > rowCount -> Result.Error(
-                                AppError.ValidationError("Новый номер ряда ${params.newRowNumber.value} выходит за пределы (всего $rowCount рядов)")
+                                AppError.ValidationError(ErrorCode.ROW_NUMBER_OUT_OF_BOUNDS, "new=${params.newRowNumber.value}, total=$rowCount")
                             )
                             oldNumber == params.newRowNumber.value -> Result.Success(Unit)
                             else -> patternRepository.updateRowNumber(params.patternId, params.rowId, params.newRowNumber)

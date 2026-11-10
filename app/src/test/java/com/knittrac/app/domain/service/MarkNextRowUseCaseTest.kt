@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -67,7 +68,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
     @Test
     fun executeReturnsNotFoundErrorWhenProjectMissing() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns
-            Result.Error(AppError.NotFoundError("нет"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = useCase(params())
 
@@ -83,7 +84,7 @@ class MarkNextRowUseCaseTest : BaseTest() {
     fun executeReturnsValidationErrorFromNextRowService() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { nextRowService.markNextRow(any()) } returns
-            Result.Error(AppError.ValidationError("нет схемы"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет схемы"))
 
         val result = useCase(params())
 

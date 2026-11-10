@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -111,7 +112,7 @@ class MarkRowUseCaseTest : BaseTest() {
     @Test
     fun executeReturnsNotFoundErrorWhenProjectMissing() = runTest {
         coEvery { projectRepository.getProjectById(ProjectId.create(99L)) } returns
-            Result.Error(AppError.NotFoundError("нет"))
+            Result.Error(AppError.NotFoundError(ErrorCode.PROJECT_NOT_FOUND, "нет"))
 
         val result = useCase(MarkRowParams(projectId = ProjectId.create(99L), rowId = PatternRowId.create(10L)))
 
@@ -170,7 +171,7 @@ class MarkRowUseCaseTest : BaseTest() {
         coEvery { projectRepository.getProjectById(ProjectId.create(1L)) } returns Result.Success(project())
         coEvery { patternRepository.getPatternById(any()) } returns Result.Success(pattern())
         coEvery { rowMarkService.markRow(any(), any()) } returns
-            Result.Error(AppError.ValidationError("чужой ряд"))
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "чужой ряд"))
 
         val result = useCase(params())
 

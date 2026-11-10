@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.core.common.ErrorCode
 import com.google.gson.GsonBuilder
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -114,6 +115,6 @@ class DataImporterImplTest {
         assertTrue(result is Result.Error)
         val error = (result as Result.Error).error
         assertTrue("Expected ValidationError, got ${error::class.simpleName}: $error", error is AppError.ValidationError)
-        assertTrue(error.message.contains("невалидные операции"))
+        assertTrue(error.code == ErrorCode.INVALID_BACKUP_OPERATIONS)
     }
 }

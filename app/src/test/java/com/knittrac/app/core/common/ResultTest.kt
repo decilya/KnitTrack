@@ -14,7 +14,7 @@ import org.junit.Test
  */
 class ResultTest {
 
-    private val error = AppError.ValidationError("test error")
+    private val error = AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "test error")
 
     // --- map ---
 

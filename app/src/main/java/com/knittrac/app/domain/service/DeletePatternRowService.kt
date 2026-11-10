@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.service
 
+import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
@@ -30,7 +31,8 @@ class DeletePatternRowService @Inject constructor(
         return if (!rowExists) {
             Result.Error(
                 AppError.NotFoundError(
-                    "Ряд ${params.rowId.value} не найден в схеме ${params.patternId.value}"
+                    ErrorCode.ROW_NOT_FOUND,
+                    "id=${params.rowId.value}"
                 )
             )
         } else {
