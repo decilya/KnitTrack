@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.data.local.DatabaseCallback
+
 import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.SessionId
 import android.content.Context
@@ -92,7 +94,7 @@ class DataRoundTripTest {
     private fun openDb(context: Context): AppDatabase =
         Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
 
     private fun exporter(db: AppDatabase) = DataExporterImpl(

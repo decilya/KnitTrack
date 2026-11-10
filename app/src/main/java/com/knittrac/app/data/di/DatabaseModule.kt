@@ -1,5 +1,8 @@
 package com.knittrac.app.data.di
 
+import com.knittrac.app.data.local.AppDatabaseMigrations
+import com.knittrac.app.data.local.DatabaseCallback
+
 import android.content.Context
 import androidx.room.Room
 import com.knittrac.app.data.local.AppDatabase
@@ -28,13 +31,13 @@ object DatabaseModule {
             "knittrac_database"
         )
             .addMigrations(
-                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9,
-                AppDatabase.MIGRATION_9_10
+                AppDatabaseMigrations.MIGRATION_1_2, AppDatabaseMigrations.MIGRATION_2_3,
+                AppDatabaseMigrations.MIGRATION_3_4, AppDatabaseMigrations.MIGRATION_4_5,
+                AppDatabaseMigrations.MIGRATION_5_6, AppDatabaseMigrations.MIGRATION_6_7,
+                AppDatabaseMigrations.MIGRATION_7_8, AppDatabaseMigrations.MIGRATION_8_9,
+                AppDatabaseMigrations.MIGRATION_9_10
             )
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
     }
 

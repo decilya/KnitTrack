@@ -1,5 +1,7 @@
 package com.knittrac.app.data.repository
 
+import com.knittrac.app.data.local.DatabaseCallback
+
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -42,7 +44,7 @@ class ProjectRepositoryImplRoomTest {
     private fun openDb(context: Context): AppDatabase =
         Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
 
     private suspend fun seedPatternWithRows(db: AppDatabase) {

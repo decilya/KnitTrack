@@ -74,7 +74,7 @@ class Migration5To6Test {
     /** Открывает через Room с MIGRATION_5_6 — триггер создаётся, санитизация. */
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7, AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
+            .addMigrations(AppDatabaseMigrations.MIGRATION_5_6, AppDatabaseMigrations.MIGRATION_6_7, AppDatabaseMigrations.MIGRATION_7_8, AppDatabaseMigrations.MIGRATION_8_9, AppDatabaseMigrations.MIGRATION_9_10)
             .build()
         room.openHelper.writableDatabase  // forces migration
         return room
@@ -255,11 +255,11 @@ class Migration5To6Test {
         context.deleteDatabase(dbName)
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
             .addMigrations(
-                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6
+                AppDatabaseMigrations.MIGRATION_1_2, AppDatabaseMigrations.MIGRATION_2_3,
+                AppDatabaseMigrations.MIGRATION_3_4, AppDatabaseMigrations.MIGRATION_4_5,
+                AppDatabaseMigrations.MIGRATION_5_6
             )
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
         room.openHelper.writableDatabase
         assertEquals(2, triggerCount(room))
@@ -274,7 +274,7 @@ class Migration5To6Test {
     fun freshInstall_createsCheckConstraints() {
         context.deleteDatabase(dbName)
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
         room.openHelper.writableDatabase
 

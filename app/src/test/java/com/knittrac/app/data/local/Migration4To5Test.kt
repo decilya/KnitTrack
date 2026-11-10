@@ -61,11 +61,11 @@ class Migration4To5Test {
         // 2. Открываем базу через Room с миграцией v5
         val db = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
             .addMigrations(
-                AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6,
-                AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9,
-                AppDatabase.MIGRATION_9_10
+                AppDatabaseMigrations.MIGRATION_4_5,
+                AppDatabaseMigrations.MIGRATION_5_6,
+                AppDatabaseMigrations.MIGRATION_6_7,
+                AppDatabaseMigrations.MIGRATION_7_8, AppDatabaseMigrations.MIGRATION_8_9,
+                AppDatabaseMigrations.MIGRATION_9_10
             )
             .allowMainThreadQueries() // Разрешаем для теста
             .build()

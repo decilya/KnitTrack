@@ -63,7 +63,7 @@ class Migration7To8Test {
 
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
+            .addMigrations(AppDatabaseMigrations.MIGRATION_7_8, AppDatabaseMigrations.MIGRATION_8_9, AppDatabaseMigrations.MIGRATION_9_10)
             .build()
         room.openHelper.writableDatabase
         return room
@@ -152,7 +152,7 @@ class Migration7To8Test {
     fun freshInstall_createsTriggerWithRuleD() {
         context.deleteDatabase(dbName)
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addCallback(DatabaseCallback)
             .build()
         room.openHelper.writableDatabase
 

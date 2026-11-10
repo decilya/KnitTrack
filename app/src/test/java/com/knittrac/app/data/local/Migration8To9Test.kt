@@ -60,8 +60,8 @@ class Migration8To9Test {
 
     private fun runMigration(): AppDatabase {
         val room = Room.databaseBuilder(context, AppDatabase::class.java, dbName)
-            .addMigrations(AppDatabase.MIGRATION_8_9, AppDatabase.MIGRATION_9_10)
-            .addCallback(AppDatabase.DATABASE_CALLBACK)
+            .addMigrations(AppDatabaseMigrations.MIGRATION_8_9, AppDatabaseMigrations.MIGRATION_9_10)
+            .addCallback(DatabaseCallback)
             .build()
         room.openHelper.writableDatabase // forces migration
         return room
