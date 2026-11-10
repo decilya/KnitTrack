@@ -78,7 +78,6 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("com.yandex.android:mobileads:8.3.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("co.yml:ycharts:2.1.0")
