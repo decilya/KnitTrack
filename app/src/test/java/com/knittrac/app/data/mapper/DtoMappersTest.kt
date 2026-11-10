@@ -215,8 +215,8 @@ class DtoMappersTest {
      * что старые бэкапы требуют миграции.
      */
     @Test
-    fun currentVersion_isOneTwo() {
-        assertEquals("1.2", ExportDataDto.CURRENT_VERSION)
+    fun currentVersion_isOneThree() {
+        assertEquals("1.3", ExportDataDto.CURRENT_VERSION)
     }
 
     /**

@@ -32,7 +32,7 @@ class DataExporterImplTest {
     private val exporter = DataExporterImpl(backupRepository, gson, timeProvider, UnconfinedTestDispatcher())
 
     @Test
-    fun exportToWritesJSONVersion12WithProjectsSessionsAndPatternTables() =
+    fun exportToWritesJSONVersion13WithProjectsSessionsAndPatternTables() =
         runTest(UnconfinedTestDispatcher()) {
         val project = Project(
             id = ProjectId.create(1L), 
@@ -78,7 +78,7 @@ class DataExporterImplTest {
 
         assertTrue(result is Result.Success)
         val json = outputStream.toString(Charsets.UTF_8.name())
-        assertTrue(json.contains("\"version\":\"1.2\""))
+        assertTrue(json.contains("\"version\":\"1.3\""))
         assertTrue(json.contains("\"exportDate\":123456789"))
         assertTrue(json.contains("\"name\":\"Project A\""))
         assertTrue(json.contains("\"rowCount\":10"))

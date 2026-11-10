@@ -51,12 +51,6 @@ data class ProjectDto(
     val patternId: Long? = null,
 
     /**
-     * Текущий ряд по схеме (для UI). Может отличаться от общего счетчика.
-     */
-    @SerializedName("currentRowNumber")
-    val currentRowNumber: Int = 0,
-
-    /**
      * Идентификатор текущего ряда в схеме. Null, если схемы нет.
      */
     @SerializedName("currentPatternRowId")

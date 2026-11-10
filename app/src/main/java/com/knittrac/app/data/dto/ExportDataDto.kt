@@ -70,6 +70,6 @@ data class ExportDataDto(
          * Текущая версия формата. 1.2 добавляет таблицы схем.
          * Файлы 1.0 и 1.1 читаются, но без привязки проекта к схеме.
          */
-        const val CURRENT_VERSION = "1.2"
+        const val CURRENT_VERSION = "1.3"
     }
 }

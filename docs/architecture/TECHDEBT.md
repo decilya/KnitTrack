@@ -384,6 +384,10 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [x] **P2 (DB/DDD, 3NF):** `projects.current_row_number` удалена (миграция v9→v10). Поле было транзитивной зависимостью: `currentRowNumber` derived от `current_pattern_row_id` через `pattern_rows.row_number`. §11.2 считал это «примером правильной денормализации» — ошибка (профилирования не было, единственный потребитель — badge). Теперь: `LEFT JOIN pattern_rows` в `ProjectDao.getAllProjectsFlow`/`getAllProjects`/`getProjectById`, маппер `ProjectWithCurrentRowNumber.toDomain`, `Project.currentRowNumber` остаётся в Domain как derived (UI не меняется). Триггеры B и C сняты (инвариант не существует физически), A и D сохранены. `onCreate` переведён на `CREATE_PROJECTS_V10`. Это открывает D&D-reorder: bulk-shift `pattern_rows.row_number` без второго writer-а на `projects`. Факт: `refactor(data): 3NF — drop current_row_number (P2)`.
 
+## Backup DTO 1.3 — currentRowNumber удалён (P2) — закрыт 10.11.2026
+
+- [x] **P2 (Backup/3NF):** `ProjectDto.currentRowNumber` удалён (формат бэкапа 1.2 → 1.3). Поле было денормализацией, устранённой в v10 (`f989e0a`). При импорте 1.2 и старше Gson игнорирует `"currentRowNumber"`, `DtoMappers.ProjectDto.toDomain` выставляет `currentRowNumber = RowCount.ZERO`; реальное значение восстанавливается через `LEFT JOIN pattern_rows` при первом чтении из БД. `DataImporterImpl.withoutPatternLink()` упрощён (`currentRowNumber = 0` убран, поле исчезло). Тесты: `DtoMappersTest.currentVersion_isOneThree`, `DataExporterImplTest.exportToWritesJSONVersion13WithProjectsSessionsAndPatternTables`, `DataImporterImplTest` (импорт 1.2 с `"currentRowNumber": 4` → 0, обратная совместимость). Факт: `feat(backup): DTO 1.3 — drop currentRowNumber (P2)`.
+
 ## Архитектурные рекомендации (08.11.2026)
 
 - [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).

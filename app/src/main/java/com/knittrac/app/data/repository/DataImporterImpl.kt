@@ -176,7 +176,6 @@ class DataImporterImpl @Inject constructor(
     /** Старый бэкап не содержит рядов. Триггер требует номер 0, если ряда нет. */
     private fun ProjectDto.withoutPatternLink(): ProjectDto = copy(
         patternId = null,
-        currentPatternRowId = null,
-        currentRowNumber = 0
+        currentPatternRowId = null
     )
 }

@@ -219,7 +219,6 @@ class ProjectRepositoryImpl @Inject constructor(
      *
      * @param projectId Идентификатор проекта.
      * @param currentPatternRowId Текущий ряд схемы (null — нет прогресса).
-     * @param currentRowNumber Денормализованный номер ряда для UI badge.
      * @param currentStitch Текущая петля (0 до per-stitch tracking, P3).
      * @return [Result.Success], [Result.Error] с [AppError.NotFoundError]
      *   если проекта нет, или [AppError.DatabaseError].
