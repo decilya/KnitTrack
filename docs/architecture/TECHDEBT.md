@@ -388,6 +388,41 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [x] **P2 (Backup/3NF):** `ProjectDto.currentRowNumber` удалён (формат бэкапа 1.2 → 1.3). Поле было денормализацией, устранённой в v10 (`f989e0a`). При импорте 1.2 и старше Gson игнорирует `"currentRowNumber"`, `DtoMappers.ProjectDto.toDomain` выставляет `currentRowNumber = RowCount.ZERO`; реальное значение восстанавливается через `LEFT JOIN pattern_rows` при первом чтении из БД. `DataImporterImpl.withoutPatternLink()` упрощён (`currentRowNumber = 0` убран, поле исчезло). Тесты: `DtoMappersTest.currentVersion_isOneThree`, `DataExporterImplTest.exportToWritesJSONVersion13WithProjectsSessionsAndPatternTables`, `DataImporterImplTest` (импорт 1.2 с `"currentRowNumber": 4` → 0, обратная совместимость). Факт: `feat(backup): DTO 1.3 — drop currentRowNumber (P2)`.
 
+## Аудит архитектуры (10.11.2026)
+
+- [ ] **P1 (Clean Arch):** Парсинг текста исключения в `DataImporterImpl`. Завязка на `message.contains("Раппорт не принадлежит схеме")` хрупка к изменению текста триггера и мультиязычности. Заменить на типизированное исключение `InvalidBackupOperationsException` (Data layer), ловя `SQLiteConstraintException` по классу, без парсинга строк (закрывается в P1-5).
+- [ ] **P1 (i18n):** Хардкод русского текста в `AppError` и `IllegalStateException` в Data/Domain. Сообщения об ошибках захардкожены (например, `AppError.ValidationError("В бэкапе...")`). UI не может их локализовать. Внедрить `ErrorCode` (enum) в `AppError` и маппинг в `@StringRes` на уровне Presentation.
+- [ ] **P1 (SRP):** `AppDatabase` — God Class (644 строки). Содержит `@Database`, все 10 миграций, `DATABASE_CALLBACK`, DDL-триггеры и сидеры. Вынести миграции в `AppDatabaseMigrations`, callback в `DatabaseCallback`, триггеры в `DatabaseTriggers` (закрывается в P1-7).
+- [ ] **P2 (DDD/VO):** `BackupRepository` использует `Pair<Long, T>`. Примитив `Long` вместо `PatternId` VO, `Pair` скрывает семантику. Заменить на явные data class (`PatternRowWithId`, `PatternRepeatWithId`).
+- [ ] **P2 (DIP):** Gson внутри `DataImporterImpl`/`DataExporterImpl`. Application-слой знает про инфраструктуру парсинга JSON. Вынести в интерфейс `BackupParser` (Data), чтобы можно было заменить Gson на `kotlinx.serialization` без правок Application.
+- [ ] **P3 (Kotlin):** `inner class SnapshotContext` в `BackupRepositoryImpl`. Неявная ссылка на внешний класс (потенциальная утечка, если передать наружу). Сделать `private class` и передавать `database` через конструктор.
+
+## Глобальные выводы Большого код-ревью (10.11.2026)
+
+### DDD / Domain
+- [ ] **P2 (DDD):** `Pattern` — God Aggregate (13+ полей). Разделить на `PatternMetadata`, `PatternCalibration`, `PatternContent`.
+- [ ] **P2 (DDD):** `Project` — God Aggregate. Смешаны прогресс, метаданные и sync. Кандидат на разделение.
+- [ ] **P3 (DDD):** `PatternRow` без `patternId` — утечка границ агрегата в Data-слой (`getOperationsForRow` требует оба id).
+
+### Presentation / Android
+- [ ] **P2 (SRP):** `PatternEditorViewModel` — God State (15+ полей), `@Suppress("LargeClass")`, `TODO(P2)` без issue.
+- [ ] **P2 (Bug):** `TimerViewModel.combine` — race condition: чтение `_state.value` внутри `combine` может терять обновления.
+- [ ] **P2 (Compose):** `PatternCanvas` — конфликт жестов (`pointerInput` × 3: tap vs pan vs long-press). Нужен `awaitEachGesture` + `touchSlop`.
+- [ ] **P2 (QA):** Нет Compose-тестов (`createComposeRule`). UI не покрыт.
+
+### Стратегия / CTO / PM / SMM
+- [ ] **P1 (Strategy):** Scope Creep. Pattern Editor (v1.1) вытеснил Sync (v1.0). Нужен пересмотр приоритетов.
+- [ ] **P1 (SMM):** Package name `com.knittrac.app` ≠ бренд `KnitTrack`. Блокер для Google Play (переименование до релиза).
+- [ ] **P2 (CTO):** Нет Crashlytics / remote-сбора крэшей.
+- [ ] **P2 (CTO):** Нет benchmark-тестов (производительность JOIN на Canvas не измерена).
+- [ ] **P2 (SMM):** Нет скриншотов и описания для Google Play.
+- [ ] **P2 (PM):** Нет Acceptance Criteria для D&D-reorder рядов.
+- [ ] **P3 (PM):** Нет метрик успеха (DAU/MAU, Retention).
+
+### QA
+- [ ] **P2 (QA):** Нет теста на полный путь миграций (v5 → v10).
+- [ ] **P2 (QA):** `ProjectRepositoryImplRoomTest` неполный: нет тестов на `getAllProjects` (без Flow) и `updateProjectProgress` с `rowId = null`.
+
 ## Архитектурные рекомендации (08.11.2026)
 
 - [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).
