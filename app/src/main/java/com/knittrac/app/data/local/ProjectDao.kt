@@ -16,30 +16,15 @@ import kotlinx.coroutines.flow.Flow
 interface ProjectDao {
 
     /** Реактивный поток всех проектов, сначала новые. */
-    @Query("""
-        SELECT p.*, pr.row_number AS derived_current_row_number
-        FROM projects p
-        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
-        ORDER BY p.created_at DESC
-    """)
+    @Query("$BASE_PROJECT_QUERY ORDER BY p.created_at DESC")
     fun getAllProjectsFlow(): Flow<List<ProjectWithCurrentRowNumber>>
 
     /** Разовый запрос всех проектов, сначала новые. */
-    @Query("""
-        SELECT p.*, pr.row_number AS derived_current_row_number
-        FROM projects p
-        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
-        ORDER BY p.created_at DESC
-    """)
+    @Query("$BASE_PROJECT_QUERY ORDER BY p.created_at DESC")
     suspend fun getAllProjects(): List<ProjectWithCurrentRowNumber>
 
     /** Запрос проекта по id. null — если не найден. */
-    @Query("""
-        SELECT p.*, pr.row_number AS derived_current_row_number
-        FROM projects p
-        LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id
-        WHERE p.id = :projectId
-    """)
+    @Query("$BASE_PROJECT_QUERY WHERE p.id = :projectId")
     suspend fun getProjectById(projectId: Long): ProjectWithCurrentRowNumber?
 
     /** Вставка проекта. REPLACE как upsert. @return id новой строки. */
@@ -120,4 +105,11 @@ interface ProjectDao {
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int
+
+    companion object {
+        private const val BASE_PROJECT_QUERY =
+            "SELECT p.*, pr.row_number AS derived_current_row_number " +
+                "FROM projects p " +
+                "LEFT JOIN pattern_rows pr ON pr.id = p.current_pattern_row_id"
+    }
 }
