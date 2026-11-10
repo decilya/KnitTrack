@@ -61,6 +61,14 @@ internal fun SymbolPickerBottomSheet(
     }
 }
 
+/**
+ * Диалог создания новой схемы.
+ *
+ * Позволяет ввести имя, количество рядов, выбрать технику и направление.
+ *
+ * @param onDismiss Колбэк отмены (закрытие диалога).
+ * @param onCreate Колбэк подтверждения с валидными [CreatePatternParams].
+ */
 @Composable
 internal fun CreatePatternDialog(
     onDismiss: () -> Unit,
@@ -129,6 +137,12 @@ private fun parseCreateInput(
     }
 }
 
+/**
+ * Нижний шит (bottom sheet) с сеткой символов для выбора в sheet-режиме.
+ *
+ * @param symbols Множество доступных символов (легенда схемы).
+ * @param onSymbolSelected Колбэк выбора символа (передаёт code).
+ */
 @Composable
 internal fun SymbolPickerSheet(
     symbols: Set<Symbol>,
