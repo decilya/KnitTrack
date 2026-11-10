@@ -86,16 +86,16 @@ class DataExporterImpl @Inject constructor(
             context.forEachPattern { gson.toJson(it.toDto(), PatternDto::class.java, this) }
         }
         writer.writeItems("patternRows") {
-            context.forEachPatternRow { patternId, row ->
-                gson.toJson(row.toDto(patternId), PatternRowDto::class.java, this)
+            context.forEachPatternRow { it ->
+                gson.toJson(it.row.toDto(it.patternId.value), PatternRowDto::class.java, this)
             }
         }
         writer.writeItems("symbols") {
             context.forEachSymbol { gson.toJson(it.toDto(), SymbolDto::class.java, this) }
         }
         writer.writeItems("patternRepeats") {
-            context.forEachPatternRepeat { patternId, repeat ->
-                gson.toJson(repeat.toDto(patternId), PatternRepeatDto::class.java, this)
+            context.forEachPatternRepeat { it ->
+                gson.toJson(it.repeat.toDto(it.patternId.value), PatternRepeatDto::class.java, this)
             }
         }
         writer.writeItems("patternOperations") {

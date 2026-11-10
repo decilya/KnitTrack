@@ -26,6 +26,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
+import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.model.PatternRepeatWithId
+import com.knittrac.app.domain.model.PatternRowWithId
 
 /**
  * Реализация [DataImporter] с потоковым парсингом через [JsonReader].
@@ -105,13 +108,13 @@ class DataImporterImpl @Inject constructor(
         "patterns" -> readSaved(reader, PatternDto::class.java, { it.toDomain() }) {
             backupRepository.savePatternsBatch(it)
         }
-        "patternRows" -> readSaved(reader, PatternRowDto::class.java, { it.patternId to it.toDomain() }) {
+        "patternRows" -> readSaved(reader, PatternRowDto::class.java, { dto -> PatternRowWithId(PatternId.createOrDefault(dto.patternId), dto.toDomain()) }) {
             backupRepository.savePatternRowsBatch(it)
         }
         "symbols" -> readSaved(reader, SymbolDto::class.java, { it.toDomain() }) {
             backupRepository.saveSymbolsBatch(it)
         }
-        "patternRepeats" -> readSaved(reader, PatternRepeatDto::class.java, { it.patternId to it.toDomain() }) {
+        "patternRepeats" -> readSaved(reader, PatternRepeatDto::class.java, { dto -> PatternRepeatWithId(PatternId.createOrDefault(dto.patternId), dto.toDomain()) }) {
             backupRepository.savePatternRepeatsBatch(it)
         }
         "patternOperations" -> readSaved(reader, PatternOperationDto::class.java, { it.toDomain() }) {

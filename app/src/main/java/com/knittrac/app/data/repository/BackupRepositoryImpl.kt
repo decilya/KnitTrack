@@ -9,14 +9,15 @@ import com.knittrac.app.data.mapper.toDomain
 import com.knittrac.app.data.mapper.toEntity
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternOperation
-import com.knittrac.app.domain.entity.PatternRepeat
-import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.entity.Symbol
 import com.knittrac.app.domain.repository.BackupRepository
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.knittrac.app.domain.entity.PatternId
+import com.knittrac.app.domain.model.PatternRepeatWithId
+import com.knittrac.app.domain.model.PatternRowWithId
 
 /**
  * Реализация [BackupRepository] на базе Room.
@@ -39,17 +40,17 @@ class BackupRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun savePatternRowsBatch(rows: List<Pair<Long, PatternRow>>) {
-        database.patternDao().insertRows(rows.map { (patternId, row) -> row.toEntity(patternId) })
+    override suspend fun savePatternRowsBatch(rows: List<PatternRowWithId>) {
+        database.patternDao().insertRows(rows.map { it.row.toEntity(it.patternId.value) })
     }
 
     override suspend fun saveSymbolsBatch(symbols: List<Symbol>) {
         database.symbolDao().insertSymbols(symbols.map { it.toEntity() })
     }
 
-    override suspend fun savePatternRepeatsBatch(repeats: List<Pair<Long, PatternRepeat>>) {
+    override suspend fun savePatternRepeatsBatch(repeats: List<PatternRepeatWithId>) {
         database.patternRepeatDao().insertRepeats(
-            repeats.map { (patternId, repeat) -> repeat.toEntity(patternId) }
+            repeats.map { it.repeat.toEntity(it.patternId.value) }
         )
     }
 
@@ -83,11 +84,10 @@ class BackupRepositoryImpl @Inject constructor(
             }
         }
 
-        override suspend fun forEachPatternRow(
-            action: suspend (patternId: Long, row: PatternRow) -> Unit
-        ) {
+        override suspend fun forEachPatternRow(action: suspend (PatternRowWithId) -> Unit) {
             for (entity in database.patternDao().getAllRows()) {
-                action(entity.patternId, entity.toDomain())
+                val patternId = PatternId.createOrDefault(entity.patternId)
+                action(PatternRowWithId(patternId, entity.toDomain()))
             }
         }
 
@@ -97,11 +97,10 @@ class BackupRepositoryImpl @Inject constructor(
             }
         }
 
-        override suspend fun forEachPatternRepeat(
-            action: suspend (patternId: Long, repeat: PatternRepeat) -> Unit
-        ) {
+        override suspend fun forEachPatternRepeat(action: suspend (PatternRepeatWithId) -> Unit) {
             for (entity in database.patternRepeatDao().getAllRepeats()) {
-                action(entity.patternId, entity.toDomain())
+                val patternId = PatternId.createOrDefault(entity.patternId)
+                action(PatternRepeatWithId(patternId, entity.toDomain()))
             }
         }
 

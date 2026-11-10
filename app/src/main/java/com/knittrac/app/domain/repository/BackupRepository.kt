@@ -2,11 +2,11 @@ package com.knittrac.app.domain.repository
 
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternOperation
-import com.knittrac.app.domain.entity.PatternRepeat
-import com.knittrac.app.domain.entity.PatternRow
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.Session
 import com.knittrac.app.domain.entity.Symbol
+import com.knittrac.app.domain.model.PatternRepeatWithId
+import com.knittrac.app.domain.model.PatternRowWithId
 
 /**
  * Контракт для работы с бэкапом на уровне БД.
@@ -16,9 +16,19 @@ import com.knittrac.app.domain.entity.Symbol
 interface BackupRepository {
     suspend fun <T> withTransaction(block: suspend () -> T): T
     suspend fun savePatternsBatch(patterns: List<Pattern>)
-    suspend fun savePatternRowsBatch(rows: List<Pair<Long, PatternRow>>)
+    /**
+     * Сохраняет батч рядов схем вместе с их patternId.
+     *
+     * @param rows Список пар (patternId, row).
+     */
+    suspend fun savePatternRowsBatch(rows: List<PatternRowWithId>)
     suspend fun saveSymbolsBatch(symbols: List<Symbol>)
-    suspend fun savePatternRepeatsBatch(repeats: List<Pair<Long, PatternRepeat>>)
+    /**
+     * Сохраняет батч раппортов схем вместе с их patternId.
+     *
+     * @param repeats Список пар (patternId, repeat).
+     */
+    suspend fun savePatternRepeatsBatch(repeats: List<PatternRepeatWithId>)
     suspend fun savePatternOperationsBatch(operations: List<PatternOperation>)
     suspend fun saveProjectsBatch(batch: List<Project>)
     suspend fun saveSessionsBatch(batch: List<Session>)
@@ -26,9 +36,19 @@ interface BackupRepository {
 
     interface ExportContext {
         suspend fun forEachPattern(action: suspend (Pattern) -> Unit)
-        suspend fun forEachPatternRow(action: suspend (patternId: Long, row: PatternRow) -> Unit)
+        /**
+         * Итерирует по всем рядам всех схем (с patternId).
+         *
+         * @param action Колбэк, вызываемый для каждого ряда.
+         */
+        suspend fun forEachPatternRow(action: suspend (PatternRowWithId) -> Unit)
         suspend fun forEachSymbol(action: suspend (Symbol) -> Unit)
-        suspend fun forEachPatternRepeat(action: suspend (patternId: Long, repeat: PatternRepeat) -> Unit)
+        /**
+         * Итерирует по всем раппортам всех схем (с patternId).
+         *
+         * @param action Колбэк, вызываемый для каждого раппорта.
+         */
+        suspend fun forEachPatternRepeat(action: suspend (PatternRepeatWithId) -> Unit)
         suspend fun forEachPatternOperation(action: suspend (PatternOperation) -> Unit)
         suspend fun forEachProject(action: suspend (Project) -> Unit)
         suspend fun forEachSession(action: suspend (Session) -> Unit)
