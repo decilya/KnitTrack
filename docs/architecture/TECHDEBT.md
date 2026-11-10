@@ -390,7 +390,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 ## Аудит архитектуры (10.11.2026)
 
-- [ ] **P1 (Clean Arch):** Парсинг текста исключения в `DataImporterImpl`. Завязка на `message.contains("Раппорт не принадлежит схеме")` хрупка к изменению текста триггера и мультиязычности. Заменить на типизированное исключение `InvalidBackupOperationsException` (Data layer), ловя `SQLiteConstraintException` по классу, без парсинга строк (закрывается в P1-5).
+- [x] **P1 (Clean Arch):** Парсинг текста исключения в `DataImporterImpl`. **Закрыто 10.11.2026.** Заменено на типизированное `InvalidBackupOperationsException` в Data-слое (`BackupRepositoryImpl`). `DataImporterImpl` ловит его без парсинга строк.
 - [ ] **P1 (i18n):** Хардкод русского текста в `AppError` и `IllegalStateException` в Data/Domain. Сообщения об ошибках захардкожены (например, `AppError.ValidationError("В бэкапе...")`). UI не может их локализовать. Внедрить `ErrorCode` (enum) в `AppError` и маппинг в `@StringRes` на уровне Presentation.
 - [ ] **P1 (SRP):** `AppDatabase` — God Class (644 строки). Содержит `@Database`, все 10 миграций, `DATABASE_CALLBACK`, DDL-триггеры и сидеры. Вынести миграции в `AppDatabaseMigrations`, callback в `DatabaseCallback`, триггеры в `DatabaseTriggers` (закрывается в P1-7).
 - [ ] **P2 (DDD/VO):** `BackupRepository` использует `Pair<Long, T>`. Примитив `Long` вместо `PatternId` VO, `Pair` скрывает семантику. Заменить на явные data class (`PatternRowWithId`, `PatternRepeatWithId`).

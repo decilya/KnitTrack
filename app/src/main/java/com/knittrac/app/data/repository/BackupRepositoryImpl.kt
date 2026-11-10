@@ -1,5 +1,6 @@
 package com.knittrac.app.data.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
 import com.knittrac.app.data.local.AppDatabase
 import com.knittrac.app.data.local.ProjectDao
@@ -53,7 +54,14 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePatternOperationsBatch(operations: List<PatternOperation>) {
-        database.patternDao().insertOperations(operations.map { it.toEntity() })
+        try {
+            database.patternDao().insertOperations(operations.map { it.toEntity() })
+        } catch (e: SQLiteConstraintException) {
+            // Нарушение FK (row/symbol) или триггера repeat_code.
+            // Для Application-слоя это единая семантика: бэкап содержит
+            // невалидные операции.
+            throw InvalidBackupOperationsException(e)
+        }
     }
 
     override suspend fun saveProjectsBatch(batch: List<Project>) {

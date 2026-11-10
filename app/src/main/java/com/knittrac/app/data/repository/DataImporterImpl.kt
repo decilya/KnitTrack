@@ -1,6 +1,5 @@
 package com.knittrac.app.data.repository
 
-import android.database.sqlite.SQLiteConstraintException
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.knittrac.app.core.common.AppError
@@ -61,23 +60,12 @@ class DataImporterImpl @Inject constructor(
             } catch (e: IllegalStateException) {
                 Timber.e(e, "importFrom failed: malformed JSON")
                 Result.Error(AppError.IoError(e))
+            } catch (e: InvalidBackupOperationsException) {
+                Timber.e(e, "importFrom failed: invalid operations in backup")
+                Result.Error(AppError.ValidationError("В бэкапе найдены невалидные операции (нарушение связей). Импорт отменен."))
             } catch (e: Exception) {
-                var cause: Throwable? = e
-                var isOrphanError = false
-                while (cause != null) {
-                    if (cause is SQLiteConstraintException && cause.message?.contains("Раппорт не принадлежит схеме") == true) {
-                        isOrphanError = true
-                        break
-                    }
-                    cause = cause.cause
-                }
-                if (isOrphanError) {
-                    Timber.e(e, "importFrom failed: orphan repeat_code found")
-                    Result.Error(AppError.ValidationError("В бэкапе найдены операции с несуществующими раппортами. Импорт отменен."))
-                } else {
-                    Timber.e(e, "importFrom failed")
-                    Result.Error(AppError.DatabaseError(e))
-                }
+                Timber.e(e, "importFrom failed")
+                Result.Error(AppError.DatabaseError(e))
             }
         }
 

@@ -1,6 +1,5 @@
 package com.knittrac.app.data.repository
 
-import android.database.sqlite.SQLiteConstraintException
 import com.google.gson.GsonBuilder
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
@@ -97,7 +96,7 @@ class DataImporterImplTest {
         val backupRepo = mockk<BackupRepository>()
         
         coEvery { backupRepo.withTransaction<Unit>(any()) } throws 
-            SQLiteConstraintException("Раппорт не принадлежит схеме")
+            InvalidBackupOperationsException(IllegalStateException("Orphan repeat code"))
 
         val importer = DataImporterImpl(backupRepo, GsonBuilder().create(), UnconfinedTestDispatcher())
         
@@ -114,7 +113,7 @@ class DataImporterImplTest {
         
         assertTrue(result is Result.Error)
         val error = (result as Result.Error).error
-        assertTrue(error is AppError.ValidationError)
-        assertTrue(error.message.contains("несуществующими раппортами"))
+        assertTrue("Expected ValidationError, got ${error::class.simpleName}: $error", error is AppError.ValidationError)
+        assertTrue(error.message.contains("невалидные операции"))
     }
 }
