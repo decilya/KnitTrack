@@ -3,13 +3,504 @@
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>LongMethod:AppDatabase.kt$AppDatabase.Companion.&lt;no name provided&gt;$override fun migrate(db: SupportSQLiteDatabase)</ID>
-    <ID>LongMethod:DataExporterImpl.kt$DataExporterImpl$override suspend fun exportTo(outputStream: OutputStream): Result&lt;Unit&gt;</ID>
-    <ID>LongMethod:DataImporterImpl.kt$DataImporterImpl$override suspend fun importFrom(inputStream: InputStream): Result&lt;Unit&gt;</ID>
     <ID>LongMethod:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsContract.Action)</ID>
-    <ID>LongMethod:TimerViewModel.kt$TimerViewModel$private fun saveSession()</ID>
-    <ID>LongParameterList:DataExporterImpl.kt$DataExporterImpl$( private val projectDao: ProjectDao, private val sessionDao: SessionDao, private val gson: Gson, private val appDatabase: AppDatabase, @IoDispatcher private val dispatcher: CoroutineDispatcher )</ID>
-    <ID>LongParameterList:DataImporterImpl.kt$DataImporterImpl$( private val database: AppDatabase, private val projectDao: ProjectDao, private val sessionDao: SessionDao, private val gson: Gson, @IoDispatcher private val dispatcher: CoroutineDispatcher )</ID>
     <ID>LongParameterList:EmptyStateView.kt$( icon: ImageVector, title: String, description: String, modifier: Modifier = Modifier, actionText: String? = null, onActionClick: (() -&gt; Unit)? = null )</ID>
+    <ID>UndocumentedPublicClass:AdService.kt$AdService</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract$Effect</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract$Intent</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract$State</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Effect$ProjectAdded : Effect</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Effect$ShowError : Effect</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Intent$SaveProject : Intent</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Intent$SelectCategory : Intent</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Intent$UpdateName : Intent</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectContract.Intent$UpdateTargetRowCount : Intent</ID>
+    <ID>UndocumentedPublicClass:AddProjectViewModel.kt$AddProjectViewModel : ViewModel</ID>
+    <ID>UndocumentedPublicClass:AddSymbolServiceTest.kt$AddSymbolServiceTest</ID>
+    <ID>UndocumentedPublicClass:AppDatabase.kt$AppDatabase$Companion</ID>
+    <ID>UndocumentedPublicClass:AppError.kt$AppError$IoError : AppError</ID>
+    <ID>UndocumentedPublicClass:BackupRepository.kt$BackupRepository$ExportContext</ID>
+    <ID>UndocumentedPublicClass:BaseTest.kt$BaseTest</ID>
+    <ID>UndocumentedPublicClass:Category.kt$Category$Companion</ID>
+    <ID>UndocumentedPublicClass:ColumnStart.kt$ColumnStart$Companion</ID>
+    <ID>UndocumentedPublicClass:CoroutineTestRule.kt$CoroutineTestRule : TestRule</ID>
+    <ID>UndocumentedPublicClass:CreatePatternParams.kt$CreatePatternParams</ID>
+    <ID>UndocumentedPublicClass:CreatePatternUseCaseTest.kt$CreatePatternUseCaseTest : BaseTest</ID>
+    <ID>UndocumentedPublicClass:DailyStat.kt$DailyStat</ID>
+    <ID>UndocumentedPublicClass:DataExporterImplTest.kt$DataExporterImplTest</ID>
+    <ID>UndocumentedPublicClass:DataImporterImpl.kt$DataImporterImpl$Companion</ID>
+    <ID>UndocumentedPublicClass:DataImporterImplTest.kt$DataImporterImplTest</ID>
+    <ID>UndocumentedPublicClass:DataRoundTripTest.kt$DataRoundTripTest</ID>
+    <ID>UndocumentedPublicClass:DataStoreModule.kt$DataStoreModule</ID>
+    <ID>UndocumentedPublicClass:DatabaseModule.kt$DatabaseModule</ID>
+    <ID>UndocumentedPublicClass:DatabaseModuleMigrationsTest.kt$DatabaseModuleMigrationsTest$Companion</ID>
+    <ID>UndocumentedPublicClass:DeleteOperationUseCaseTest.kt$DeleteOperationUseCaseTest : BaseTest</ID>
+    <ID>UndocumentedPublicClass:DeletePatternRowServiceTest.kt$DeletePatternRowServiceTest</ID>
+    <ID>UndocumentedPublicClass:DeleteProjectServiceTest.kt$DeleteProjectServiceTest : BaseTest</ID>
+    <ID>UndocumentedPublicClass:DeleteSymbolServiceTest.kt$DeleteSymbolServiceTest</ID>
+    <ID>UndocumentedPublicClass:DispatchersModule.kt$DispatchersModule</ID>
+    <ID>UndocumentedPublicClass:DispatchersModule.kt$IoDispatcher</ID>
+    <ID>UndocumentedPublicClass:Duration.kt$Duration$Companion</ID>
+    <ID>UndocumentedPublicClass:ExportDataDto.kt$ExportDataDto$Companion</ID>
+    <ID>UndocumentedPublicClass:FileLoggingTree.kt$FileLoggingTree$Companion</ID>
+    <ID>UndocumentedPublicClass:GetAllProjectsService.kt$GetAllProjectsService : BaseFlowUseCase</ID>
+    <ID>UndocumentedPublicClass:GetProjectStatisticsServiceTest.kt$GetProjectStatisticsServiceTest : BaseTest</ID>
+    <ID>UndocumentedPublicClass:LocaleService.kt$LocaleService$Companion</ID>
+    <ID>UndocumentedPublicClass:MarkResult.kt$MarkResult</ID>
+    <ID>UndocumentedPublicClass:MarkResult.kt$MarkResult$Added : MarkResult</ID>
+    <ID>UndocumentedPublicClass:MarkResult.kt$MarkResult$AlreadyExists : MarkResult</ID>
+    <ID>UndocumentedPublicClass:NoOpPaymentService.kt$NoOpPaymentService : PaymentService</ID>
+    <ID>UndocumentedPublicClass:PatternDirection.kt$PatternDirection$Companion</ID>
+    <ID>UndocumentedPublicClass:PatternDtoMappersTest.kt$PatternDtoMappersTest</ID>
+    <ID>UndocumentedPublicClass:PatternEditorContract.kt$PatternEditorContract.Effect$ShowError : Effect</ID>
+    <ID>UndocumentedPublicClass:PatternEditorContract.kt$PatternEditorContract.Intent$CreatePattern : Intent</ID>
+    <ID>UndocumentedPublicClass:PatternEditorContract.kt$PatternEditorContract.Intent$SelectColumn : Intent</ID>
+    <ID>UndocumentedPublicClass:PatternEditorContract.kt$PatternEditorContract.Intent$SelectRow : Intent</ID>
+    <ID>UndocumentedPublicClass:PatternEditorContract.kt$PatternEditorContract.Intent$SelectSymbol : Intent</ID>
+    <ID>UndocumentedPublicClass:PatternId.kt$PatternId$Companion</ID>
+    <ID>UndocumentedPublicClass:PatternMappersTest.kt$PatternMappersTest</ID>
+    <ID>UndocumentedPublicClass:PatternName.kt$PatternName$Companion</ID>
+    <ID>UndocumentedPublicClass:PatternOperationDtoMappersTest.kt$PatternOperationDtoMappersTest</ID>
+    <ID>UndocumentedPublicClass:PatternRepeatDtoMappersTest.kt$PatternRepeatDtoMappersTest</ID>
+    <ID>UndocumentedPublicClass:PatternRepository.kt$PatternRepository</ID>
+    <ID>UndocumentedPublicClass:PatternRowId.kt$PatternRowId$Companion</ID>
+    <ID>UndocumentedPublicClass:PaymentService.kt$PaymentService</ID>
+    <ID>UndocumentedPublicClass:ProjectDao.kt$ProjectDao$Companion</ID>
+    <ID>UndocumentedPublicClass:ProjectId.kt$ProjectId$Companion</ID>
+    <ID>UndocumentedPublicClass:ProjectName.kt$ProjectName$Companion</ID>
+    <ID>UndocumentedPublicClass:ProjectRepositoryImplProgressTest.kt$ProjectRepositoryImplProgressTest</ID>
+    <ID>UndocumentedPublicClass:ProjectTest.kt$ProjectTest</ID>
+    <ID>UndocumentedPublicClass:ProjectsListViewModel.kt$ProjectsContract$Action</ID>
+    <ID>UndocumentedPublicClass:ProjectsListViewModel.kt$ProjectsContract$AddMode</ID>
+    <ID>UndocumentedPublicClass:ProjectsListViewModel.kt$ProjectsContract$Effect</ID>
+    <ID>UndocumentedPublicClass:ProjectsListViewModel.kt$ProjectsContract$State</ID>
+    <ID>UndocumentedPublicClass:ProjectsListViewModel.kt$ProjectsContract.Effect$OpenTimer : Effect</ID>
+    <ID>UndocumentedPublicClass:RowCount.kt$RowCount$Companion</ID>
+    <ID>UndocumentedPublicClass:RowCountTest.kt$RowCountTest</ID>
+    <ID>UndocumentedPublicClass:RowNumber.kt$RowNumber$Companion</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$AddProject : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$PatternEditor : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$PatternEditorNew : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$ProjectsList : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$Settings : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$Stats : Screen</ID>
+    <ID>UndocumentedPublicClass:Screen.kt$Screen$Timer : Screen</ID>
+    <ID>UndocumentedPublicClass:SessionId.kt$SessionId$Companion</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract$Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract$Effect</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract$State</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Action$ChangeThemeMode : Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Action$ImportData : Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Action$RequestExport : Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Action$ToggleLegendAddButton : Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Action$ToggleNotifications : Action</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Effect$ExportError : Effect</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Effect$ExportSuccess : Effect</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Effect$ImportError : Effect</ID>
+    <ID>UndocumentedPublicClass:SettingsContract.kt$SettingsContract.Effect$ImportSuccess : Effect</ID>
+    <ID>UndocumentedPublicClass:SettingsKeys.kt$SettingsKeys</ID>
+    <ID>UndocumentedPublicClass:Span.kt$Span$Companion</ID>
+    <ID>UndocumentedPublicClass:StatsViewModel.kt$StatsContract</ID>
+    <ID>UndocumentedPublicClass:StatsViewModel.kt$StatsContract$Action</ID>
+    <ID>UndocumentedPublicClass:StatsViewModel.kt$StatsContract$State</ID>
+    <ID>UndocumentedPublicClass:StatsViewModel.kt$StatsViewModel : ViewModel</ID>
+    <ID>UndocumentedPublicClass:StitchCount.kt$StitchCount$Companion</ID>
+    <ID>UndocumentedPublicClass:StitchCountTest.kt$StitchCountTest</ID>
+    <ID>UndocumentedPublicClass:SymbolCategory.kt$SymbolCategory$Companion</ID>
+    <ID>UndocumentedPublicClass:SymbolDtoMappersTest.kt$SymbolDtoMappersTest</ID>
+    <ID>UndocumentedPublicClass:SyncStatus.kt$SyncStatus$Companion</ID>
+    <ID>UndocumentedPublicClass:Technique.kt$Technique$Companion</ID>
+    <ID>UndocumentedPublicClass:ThemeMode.kt$ThemeMode$Companion</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract$Effect</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract$Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract$State</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Effect$NavigateToProjects : Effect</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Effect$SessionSaved : Effect</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Effect$ShowError : Effect</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$DecrementRow : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$DecrementStitch : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$IncrementRow : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$IncrementStitch : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$Pause : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$Reset : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$SaveSession : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$SelectProject : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerContract.kt$TimerContract.Intent$Start : Intent</ID>
+    <ID>UndocumentedPublicClass:TimerForegroundService.kt$TimerForegroundService$Companion</ID>
+    <ID>UndocumentedPublicFunction:AdService.kt$AdService$fun hideBanner()</ID>
+    <ID>UndocumentedPublicFunction:AdService.kt$AdService$fun initialize()</ID>
+    <ID>UndocumentedPublicFunction:AdService.kt$AdService$fun showBanner()</ID>
+    <ID>UndocumentedPublicFunction:AdService.kt$AdService$fun showInterstitial()</ID>
+    <ID>UndocumentedPublicFunction:AdService.kt$AdService$fun showRewarded()</ID>
+    <ID>UndocumentedPublicFunction:AdServiceImpl.kt$AdServiceImpl$fun initialize()</ID>
+    <ID>UndocumentedPublicFunction:AdServiceImpl.kt$AdServiceImpl$fun loadBannerAd()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_addOperationError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_adjacentSpans_noOverlap_success()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_overlap_partial_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_overlap_sameColumn_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_patternRepositoryError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_repeatCodeNotFound_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_spansRepositoryError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_success_returnsOperation()</ID>
+    <ID>UndocumentedPublicFunction:AddPatternOperationServiceTest.kt$AddPatternOperationServiceTest$@Test fun add_symbolNotInLegend_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AddProjectScreen( viewModel: AddProjectViewModel = hiltViewModel(), onNavigateBack: () -&gt; Unit, onProjectAdded: () -&gt; Unit )</ID>
+    <ID>UndocumentedPublicFunction:AddProjectServiceTest.kt$AddProjectServiceTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectServiceTest.kt$AddProjectServiceTest$@Test fun execute_withNegativeTargetRowCount_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectServiceTest.kt$AddProjectServiceTest$@Test fun execute_withNullTargetRowCount_passesNullToProject()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectServiceTest.kt$AddProjectServiceTest$@Test fun execute_withPendingSyncStatus_savesProject()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectServiceTest.kt$AddProjectServiceTest$@Test fun execute_withValidTargetRowCount_passesToProject()</ID>
+    <ID>UndocumentedPublicFunction:AddProjectViewModel.kt$AddProjectViewModel$fun onIntent(intent: AddProjectContract.Intent)</ID>
+    <ID>UndocumentedPublicFunction:AddProjectViewModelTest.kt$AddProjectViewModelTest$@Before fun createViewModel()</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun patternDao(): PatternDao</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun patternRepeatDao(): PatternRepeatDao</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun projectDao(): ProjectDao</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun sessionDao(): SessionDao</ID>
+    <ID>UndocumentedPublicFunction:AppDatabase.kt$AppDatabase$abstract fun symbolDao(): SymbolDao</ID>
+    <ID>UndocumentedPublicFunction:AppErrorMapperTest.kt$AppErrorMapperTest$@Test fun map_illegalArgument_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:AppErrorMapperTest.kt$AppErrorMapperTest$@Test fun map_ioException_returnsIoError()</ID>
+    <ID>UndocumentedPublicFunction:AppErrorMapperTest.kt$AppErrorMapperTest$@Test fun map_runtimeException_returnsUnknownError()</ID>
+    <ID>UndocumentedPublicFunction:AppErrorMapperTest.kt$AppErrorMapperTest$@Test fun map_sqliteException_returnsDatabaseError()</ID>
+    <ID>UndocumentedPublicFunction:AppNavHost.kt$@Composable fun AppNavHost()</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun &lt;T&gt; exportSnapshot(block: suspend (ExportContext) -&gt; T): T</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun &lt;T&gt; withTransaction(block: suspend () -&gt; T): T</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun savePatternOperationsBatch(operations: List&lt;PatternOperation&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun savePatternRepeatsBatch(repeats: List&lt;Pair&lt;Long, PatternRepeat&gt;&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun savePatternRowsBatch(rows: List&lt;Pair&lt;Long, PatternRow&gt;&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun savePatternsBatch(patterns: List&lt;Pattern&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun saveProjectsBatch(batch: List&lt;Project&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun saveSessionsBatch(batch: List&lt;Session&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository$suspend fun saveSymbolsBatch(symbols: List&lt;Symbol&gt;)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachPattern(action: suspend (Pattern) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachPatternOperation(action: suspend (PatternOperation) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachPatternRepeat(action: suspend (patternId: Long, repeat: PatternRepeat) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachPatternRow(action: suspend (patternId: Long, row: PatternRow) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachProject(action: suspend (Project) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachSession(action: suspend (Session) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BackupRepository.kt$BackupRepository.ExportContext$suspend fun forEachSymbol(action: suspend (Symbol) -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:BaseTest.kt$BaseTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:BaseTest.kt$BaseTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:CategoryLocalizerTest.kt$CategoryLocalizerTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:ColumnStartTest.kt$ColumnStartTest$@Test fun createOrDefault_withNegative_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:ColumnStartTest.kt$ColumnStartTest$@Test fun createOrNull_withNegative_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:ColumnStartTest.kt$ColumnStartTest$@Test fun create_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:ColumnStartTest.kt$ColumnStartTest$@Test fun create_withZero_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:ColumnStartTest.kt$ColumnStartTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:CreatePatternUseCaseTest.kt$CreatePatternUseCaseTest$@Test fun execute_callsRepositoryWithEmptyRows()</ID>
+    <ID>UndocumentedPublicFunction:CreatePatternUseCaseTest.kt$CreatePatternUseCaseTest$@Test fun execute_repositoryError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:CreatePatternUseCaseTest.kt$CreatePatternUseCaseTest$@Test fun execute_rowCountZero_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:DataExporterImplTest.kt$DataExporterImplTest$@Test fun exportToWritesJSONVersion13WithProjectsSessionsAndPatternTables()</ID>
+    <ID>UndocumentedPublicFunction:DataImporterImplTest.kt$DataImporterImplTest$@Test fun importFromReturnsIoErrorOnInvalidJSON()</ID>
+    <ID>UndocumentedPublicFunction:DataImporterImplTest.kt$DataImporterImplTest$@Test fun importFromSuccessfullyParsesJSONAndInsertsIntoDAOs()</ID>
+    <ID>UndocumentedPublicFunction:DataRoundTripTest.kt$DataRoundTripTest$@Test fun exportThenImport_restoresPatternTablesAndProjectLink()</ID>
+    <ID>UndocumentedPublicFunction:DataStoreModule.kt$DataStoreModule$@Provides @Singleton fun provideDataStore(@ApplicationContext context: Context): DataStore&lt;Preferences&gt;</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun providePatternDao(database: AppDatabase): PatternDao</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun providePatternRepeatDao(database: AppDatabase): PatternRepeatDao</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun provideProjectDao(database: AppDatabase): ProjectDao</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun provideSessionDao(database: AppDatabase): SessionDao</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModule.kt$DatabaseModule$@Provides @Singleton fun provideSymbolDao(database: AppDatabase): SymbolDao</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModuleMigrationsTest.kt$DatabaseModuleMigrationsTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:DatabaseModuleMigrationsTest.kt$DatabaseModuleMigrationsTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:DeleteOperationUseCaseTest.kt$DeleteOperationUseCaseTest$@Test fun execute_repositoryError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:DeleteOperationUseCaseTest.kt$DeleteOperationUseCaseTest$@Test fun execute_success_callsRepositoryDelete()</ID>
+    <ID>UndocumentedPublicFunction:DeletePatternRowService.kt$DeletePatternRowService$suspend fun delete(params: DeletePatternRowParams): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:DeletePatternRowServiceTest.kt$DeletePatternRowServiceTest$@Test fun deleteDatabaseErrorPropagates()</ID>
+    <ID>UndocumentedPublicFunction:DeletePatternRowServiceTest.kt$DeletePatternRowServiceTest$@Test fun deleteRowNotInPatternReturnsNotFound()</ID>
+    <ID>UndocumentedPublicFunction:DeletePatternRowServiceTest.kt$DeletePatternRowServiceTest$@Test fun deleteSuccessReturnsUnit()</ID>
+    <ID>UndocumentedPublicFunction:DeleteProjectServiceTest.kt$DeleteProjectServiceTest$@Test fun executeReturnsSuccessOnDelete()</ID>
+    <ID>UndocumentedPublicFunction:DispatchersModule.kt$DispatchersModule$@Provides @IoDispatcher @Singleton fun providesIoDispatcher(): CoroutineDispatcher</ID>
+    <ID>UndocumentedPublicFunction:ExportDataServiceTest.kt$ExportDataServiceTest$@Test fun invokeDelegatesToDataExporterAndReturnsSuccess()</ID>
+    <ID>UndocumentedPublicFunction:ExportDataServiceTest.kt$ExportDataServiceTest$@Test fun invokeReturnsErrorOnExporterFailure()</ID>
+    <ID>UndocumentedPublicFunction:FileLoggingTreeTest.kt$FileLoggingTreeTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:FileLoggingTreeTest.kt$FileLoggingTreeTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:GetProjectStatisticsServiceTest.kt$GetProjectStatisticsServiceTest$@Test fun executeReturnsDailyStatsOnSuccess()</ID>
+    <ID>UndocumentedPublicFunction:ImportDataServiceTest.kt$ImportDataServiceTest$@Test fun invokeDelegatesToDataImporterAndReturnsSuccess()</ID>
+    <ID>UndocumentedPublicFunction:ImportDataServiceTest.kt$ImportDataServiceTest$@Test fun invokeReturnsErrorOnImporterFailure()</ID>
+    <ID>UndocumentedPublicFunction:LocaleServiceTest.kt$LocaleServiceTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:LocaleServiceTest.kt$LocaleServiceTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration4To5Test.kt$Migration4To5Test$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:Migration4To5Test.kt$Migration4To5Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration4To5Test.kt$Migration4To5Test$@Test fun migrate4To5_preservesSessionsAndProjects()</ID>
+    <ID>UndocumentedPublicFunction:Migration5To6Test.kt$Migration5To6Test$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:Migration5To6Test.kt$Migration5To6Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration6To7Test.kt$Migration6To7Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration6To7Test.kt$Migration6To7Test$@Test fun freshInstall_hasDefaultSymbols()</ID>
+    <ID>UndocumentedPublicFunction:Migration6To7Test.kt$Migration6To7Test$@Test fun migrate6To7_idempotent()</ID>
+    <ID>UndocumentedPublicFunction:Migration6To7Test.kt$Migration6To7Test$@Test fun migrate6To7_insertsDefaultSymbols()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@Test fun freshInstall_createsTriggerWithRuleD()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@Test fun migrate7To8_preservesValidStitch()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@Test fun migrate7To8_sanitizesStitchWithoutRow()</ID>
+    <ID>UndocumentedPublicFunction:Migration7To8Test.kt$Migration7To8Test$@Test fun trigger_rejectsStitchWithoutRowOnUpdate()</ID>
+    <ID>UndocumentedPublicFunction:Migration8To9Test.kt$Migration8To9Test$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:Migration8To9Test.kt$Migration8To9Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:Migration9To10Test.kt$Migration9To10Test$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:Migration9To10Test.kt$Migration9To10Test$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertOperations(operations: List&lt;PatternOperationEntity&gt;)</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertPattern(pattern: PatternEntity): Long</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertRows(rows: List&lt;PatternRowEntity&gt;)</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query(""" SELECT po.column_start AS columnStart, COALESCE(po.column_span_override, s.default_column_span) AS effectiveSpan FROM pattern_operations po INNER JOIN symbols s ON s.code = po.symbol_code WHERE po.pattern_row_id = :rowId ORDER BY po.column_start ASC """) suspend fun getOperationSpansForRow(rowId: Long): List&lt;OperationSpanProjection&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("DELETE FROM pattern_operations WHERE pattern_row_id = :rowId AND column_start = :columnStart") suspend fun deleteOperation(rowId: Long, columnStart: Int): Int</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("DELETE FROM pattern_rows WHERE id = :rowId") suspend fun deleteRow(rowId: Long): Int</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM pattern_operations ORDER BY pattern_row_id ASC, column_start ASC") suspend fun getAllOperations(): List&lt;PatternOperationEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM pattern_operations WHERE pattern_row_id = :rowId ORDER BY column_start ASC") suspend fun getOperationsForRow(rowId: Long): List&lt;PatternOperationEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM pattern_rows ORDER BY pattern_id ASC, row_number ASC") suspend fun getAllRows(): List&lt;PatternRowEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM pattern_rows WHERE pattern_id = :patternId ORDER BY row_number ASC") suspend fun getRowsForPattern(patternId: Long): List&lt;PatternRowEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM patterns ORDER BY id ASC") suspend fun getAllPatterns(): List&lt;PatternEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM patterns ORDER BY name ASC") fun getAllPatternsFlow(): Flow&lt;List&lt;PatternEntity&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT * FROM patterns WHERE id = :id") suspend fun getPatternById(id: Long): PatternEntity?</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT EXISTS(SELECT 1 FROM pattern_rows WHERE id = :rowId AND pattern_id = :patternId)") suspend fun existsRow(rowId: Long, patternId: Long): Boolean</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("SELECT row_number FROM pattern_rows WHERE id = :rowId") suspend fun getRowNumber(rowId: Long): Int?</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("UPDATE pattern_rows SET row_number = :newNumber WHERE id = :rowId") suspend fun updateRowNumber(rowId: Long, newNumber: Int): Int</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("UPDATE pattern_rows SET row_number = row_number + 1 WHERE pattern_id = :patternId AND row_number &gt;= :newNumber AND row_number &lt; :oldNumber") suspend fun shiftRowNumbersUp(patternId: Long, newNumber: Int, oldNumber: Int): Int</ID>
+    <ID>UndocumentedPublicFunction:PatternDao.kt$PatternDao$@Query("UPDATE pattern_rows SET row_number = row_number - 1 WHERE pattern_id = :patternId AND row_number &gt; :oldNumber AND row_number &lt;= :newNumber") suspend fun shiftRowNumbersDown(patternId: Long, oldNumber: Int, newNumber: Int): Int</ID>
+    <ID>UndocumentedPublicFunction:PatternDirectionTest.kt$PatternDirectionTest$@Test fun fromNameOrDefault_withAlternating_returnsAlternating()</ID>
+    <ID>UndocumentedPublicFunction:PatternDirectionTest.kt$PatternDirectionTest$@Test fun fromNameOrDefault_withLtr_returnsLtr()</ID>
+    <ID>UndocumentedPublicFunction:PatternDirectionTest.kt$PatternDirectionTest$@Test fun fromNameOrDefault_withRtl_returnsRtl()</ID>
+    <ID>UndocumentedPublicFunction:PatternDirectionTest.kt$PatternDirectionTest$@Test fun fromNameOrDefault_withUnknown_returnsLtr()</ID>
+    <ID>UndocumentedPublicFunction:PatternDirectionTest.kt$PatternDirectionTest$@Test fun name_isStable()</ID>
+    <ID>UndocumentedPublicFunction:PatternDtoMappers.kt$fun Pattern.toDto(): PatternDto</ID>
+    <ID>UndocumentedPublicFunction:PatternDtoMappers.kt$fun PatternRow.toDto(patternId: Long): PatternRowDto</ID>
+    <ID>UndocumentedPublicFunction:PatternDtoMappers.kt$fun PatternRowDto.toDomain(): PatternRow</ID>
+    <ID>UndocumentedPublicFunction:PatternDtoMappers.kt$fun PatternRowDto.toEntity(): PatternRowEntity</ID>
+    <ID>UndocumentedPublicFunction:PatternDtoMappersTest.kt$PatternDtoMappersTest$@Test fun patternAndRow_roundTripKeepsIds()</ID>
+    <ID>UndocumentedPublicFunction:PatternEditorCanvasHelpersTest.kt$PatternEditorCanvasHelpersTest$@Test fun colorOrDefault_invalidHex_returnsFallback()</ID>
+    <ID>UndocumentedPublicFunction:PatternEditorCanvasHelpersTest.kt$PatternEditorCanvasHelpersTest$@Test fun colorOrDefault_null_returnsFallback()</ID>
+    <ID>UndocumentedPublicFunction:PatternEditorCanvasHelpersTest.kt$PatternEditorCanvasHelpersTest$@Test fun maxColumnsOf_emptyRows_returns10()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun createOrDefault_withNegative_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun createOrNull_withNegative_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun createOrNull_withZero_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun create_withMaxLong_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun create_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test fun zero_isValidZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternIdTest.kt$PatternIdTest$@Test(expected = IllegalArgumentException::class) fun create_withZero_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternMappersTest.kt$PatternMappersTest$@Test fun patternEntity_toDomain_emptyRows()</ID>
+    <ID>UndocumentedPublicFunction:PatternMappersTest.kt$PatternMappersTest$@Test fun patternEntity_toDomain_mapsRows()</ID>
+    <ID>UndocumentedPublicFunction:PatternMappersTest.kt$PatternMappersTest$@Test fun patternEntity_toSummary_mapsIdAndName()</ID>
+    <ID>UndocumentedPublicFunction:PatternMappersTest.kt$PatternMappersTest$@Test fun patternRowEntity_toDomain_mapsFields()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun createOrDefault_withBlankName_returnsDefault()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun createOrNull_withBlankName_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun create_withExactlyMaxLength_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun create_withValidName_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun maxLength_isSynchronizedWithProjectName()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test fun valueClass_structuralEquality()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test(expected = IllegalArgumentException::class) fun create_withBlankName_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternNameTest.kt$PatternNameTest$@Test(expected = IllegalArgumentException::class) fun create_withTooLongName_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationDtoMappers.kt$fun PatternOperation.toDto(): PatternOperationDto</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationDtoMappers.kt$fun PatternOperationDto.toEntity(): PatternOperationEntity</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationDtoMappersTest.kt$PatternOperationDtoMappersTest$@Test fun operation_domainDropsRowSpan_dtoKeepsIt()</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationMappersTest.kt$PatternOperationMappersTest$@Test fun entityToDomain_mapsFields()</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationMappersTest.kt$PatternOperationMappersTest$@Test fun patternOperation_toEntity_mapsFields()</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationMappersTest.kt$PatternOperationMappersTest$@Test fun patternOperation_toEntity_nullOptionals()</ID>
+    <ID>UndocumentedPublicFunction:PatternOperationMappersTest.kt$PatternOperationMappersTest$@Test fun patternOperation_toEntity_rowSpanAlwaysNull()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDao.kt$PatternRepeatDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertRepeats(repeats: List&lt;PatternRepeatEntity&gt;)</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDao.kt$PatternRepeatDao$@Query("SELECT * FROM pattern_repeats ORDER BY pattern_id ASC, code ASC") suspend fun getAllRepeats(): List&lt;PatternRepeatEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDtoMappers.kt$fun PatternRepeat.toDto(patternId: Long): PatternRepeatDto</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDtoMappers.kt$fun PatternRepeatDto.toDomain(): PatternRepeat</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDtoMappers.kt$fun PatternRepeatDto.toEntity(): PatternRepeatEntity</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatDtoMappersTest.kt$PatternRepeatDtoMappersTest$@Test fun repeat_roundTripKeepsPatternId()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatTest.kt$PatternRepeatTest$@Test fun create_withValidValues_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatTest.kt$PatternRepeatTest$@Test(expected = IllegalArgumentException::class) fun create_withBlankCode_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatTest.kt$PatternRepeatTest$@Test(expected = IllegalArgumentException::class) fun create_withZeroRowCount_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepeatTest.kt$PatternRepeatTest$@Test(expected = IllegalArgumentException::class) fun create_withZeroStitchCount_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun addOperation(operation: PatternOperation): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun addSymbol(symbol: Symbol): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun deleteRow(rowId: PatternRowId): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun deleteSymbol(patternId: PatternId, code: String): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun existsRow(patternId: PatternId, rowId: PatternRowId): Result&lt;Boolean&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun getRowNumber(rowId: PatternRowId): Result&lt;Int&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun getSymbolsForPattern(patternId: PatternId): Result&lt;List&lt;Symbol&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun updateOperation(operation: PatternOperation): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepository.kt$PatternRepository$suspend fun updateRowNumber(patternId: PatternId, rowId: PatternRowId, newRowNumber: RowNumber): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplRoomTest.kt$PatternRepositoryImplRoomTest$@Test fun addPattern_insertsPatternAndNumberedRows()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplRoomTest.kt$PatternRepositoryImplRoomTest$@Test fun addPattern_writeFailure_returnsDatabaseError()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplRoomTest.kt$PatternRepositoryImplRoomTest$@Test fun deleteOperation_realRoom_deletesRow()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplRoomTest.kt$PatternRepositoryImplRoomTest$@Test fun deleteOperation_realRoom_missing_returnsNotFoundError()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplRoomTest.kt$PatternRepositoryImplRoomTest$@Test fun getPatternById_returnsOperationsOnTheirRow()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun deleteOperation_rows0_returnsNotFoundError()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun deleteOperation_rows1_returnsSuccess()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getAllPatternSummariesMapsEntitiesToSummaries()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getOperationsForRowReturnsDatabaseErrorWhenSymbolMissing()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getOperationsForRowReturnsOperationsWithResolvedSymbols()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getPatternById_includesOperationsOnMatchingRow()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getPatternById_keepsDaoOrderInsideRow()</ID>
+    <ID>UndocumentedPublicFunction:PatternRepositoryImplTest.kt$PatternRepositoryImplTest$@Test fun getPatternById_missingSymbol_returnsDatabaseError()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test fun createOrDefault_withNegative_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test fun createOrNull_withNegative_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test fun createOrNull_withZero_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test fun create_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test fun zero_isValidZero()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowIdTest.kt$PatternRowIdTest$@Test(expected = IllegalArgumentException::class) fun create_withZero_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowTest.kt$PatternRowTest$@Test fun create_withDistinctColumnsAndSameSymbol_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowTest.kt$PatternRowTest$@Test fun create_withEmptyOperations_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternRowTest.kt$PatternRowTest$@Test(expected = IllegalArgumentException::class) fun create_withDuplicateColumns_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun create_withEmptyRows_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun create_withIndependentIdsAndOrderedRowNumbers_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun create_withOrderedRows_ok()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun findRowById_returnsNull_whenAbsent()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun findRowById_returnsRow_whenPresent()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun findSymbolByCode_returnsNull_whenAbsent()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun findSymbolByCode_returnsSymbol_whenPresent()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun getDirectionForRow_alternatingSingleRow_returnsLtr()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun getDirectionForRow_alternating_returnsAlternating()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun getDirectionForRow_ltr_returnsLtrForAllRows()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun getDirectionForRow_rowWithSameIdDifferentObject_returnsDirection()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test fun getDirectionForRow_rtl_returnsRtlForAllRows()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withDuplicateRepeatCode_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withDuplicateRowId_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withDuplicateRows_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withInfiniteOffsetX_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withInfiniteOffsetYPositive_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withInfiniteScale_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withNaNOffsetX_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withNaNOffsetY_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withNaNScale_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withPositiveInfiniteOffsetX_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withUnorderedRows_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun create_withZeroScale_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun getDirectionForRow_emptyRows_throws()</ID>
+    <ID>UndocumentedPublicFunction:PatternTest.kt$PatternTest$@Test(expected = IllegalArgumentException::class) fun getDirectionForRow_rowNotInRows_throws()</ID>
+    <ID>UndocumentedPublicFunction:PaymentService.kt$PaymentService$fun checkSubscriptionStatus(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:PaymentService.kt$PaymentService$fun isReady(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:PaymentService.kt$PaymentService$suspend fun purchaseSubscription(productId: String): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:PermissionViewModelTest.kt$PermissionViewModelTest$@Test fun isGranted_returnsFalse_whenCheckerDenies()</ID>
+    <ID>UndocumentedPublicFunction:PermissionViewModelTest.kt$PermissionViewModelTest$@Test fun isGranted_returnsTrue_whenCheckerGrants()</ID>
+    <ID>UndocumentedPublicFunction:PlatformModules.kt$PlatformModules$@Binds @Singleton abstract fun bindNotificationPermissionChecker( impl: AndroidNotificationPermissionChecker ): NotificationPermissionChecker</ID>
+    <ID>UndocumentedPublicFunction:PlatformModules.kt$PlatformModules$@Binds @Singleton abstract fun bindPaymentService(impl: NoOpPaymentService): PaymentService</ID>
+    <ID>UndocumentedPublicFunction:ProjectDao.kt$ProjectDao$@Query(""" UPDATE projects SET current_pattern_row_id = :currentPatternRowId, current_stitch = :currentStitch, updated_at = :updatedAt, sync_status = :pendingStatus WHERE id = :projectId """) suspend fun updateProjectProgress( projectId: Long, currentPatternRowId: Long?, currentStitch: Int, updatedAt: Long, pendingStatus: String = SyncStatus.PENDING.name ): Int</ID>
+    <ID>UndocumentedPublicFunction:ProjectDao.kt$ProjectDao$@Query("DELETE FROM projects WHERE id = :id") suspend fun deleteProjectById(id: Long): Int</ID>
+    <ID>UndocumentedPublicFunction:ProjectProgressCoordinatorTest.kt$ProjectProgressCoordinatorTest$@Test fun markNext_error_propagates()</ID>
+    <ID>UndocumentedPublicFunction:ProjectProgressCoordinatorTest.kt$ProjectProgressCoordinatorTest$@Test fun markNext_success_returnsRowNumber()</ID>
+    <ID>UndocumentedPublicFunction:ProjectProgressCoordinatorTest.kt$ProjectProgressCoordinatorTest$@Test fun projects_delegatesToGetAllProjectsService()</ID>
+    <ID>UndocumentedPublicFunction:ProjectProgressCoordinatorTest.kt$ProjectProgressCoordinatorTest$@Test fun updateStitch_delegatesToUseCase()</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$fun getAllProjectsFlow(): Flow&lt;List&lt;Project&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun addProject(project: Project): Result&lt;ProjectId&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun deleteProject(id: ProjectId): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun getAllProjects(): Result&lt;List&lt;Project&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun getProjectById(id: ProjectId): Result&lt;Project&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun updateProject(project: Project): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun updateProjectProgress( projectId: ProjectId, currentPatternRowId: PatternRowId?, currentStitch: StitchCount ): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun updateProjectTotals(projectId: ProjectId, duration: Duration, rows: Int): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepository.kt$ProjectRepository$suspend fun updateSyncStatus(projectId: ProjectId, status: SyncStatus): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepositoryImplProgressTest.kt$ProjectRepositoryImplProgressTest$@Test fun updateProjectProgress_rows0_notFoundError()</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepositoryImplProgressTest.kt$ProjectRepositoryImplProgressTest$@Test fun updateProjectProgress_rows1_success()</ID>
+    <ID>UndocumentedPublicFunction:ProjectRepositoryImplProgressTest.kt$ProjectRepositoryImplProgressTest$@Test fun updateProjectProgress_sqlException_databaseError()</ID>
+    <ID>UndocumentedPublicFunction:ProjectTest.kt$ProjectTest$@Test fun markRow_returnsAdded_whenCurrentRowDiffers()</ID>
+    <ID>UndocumentedPublicFunction:ProjectTest.kt$ProjectTest$@Test fun markRow_returnsAlreadyExists_whenCurrentRowMatches()</ID>
+    <ID>UndocumentedPublicFunction:ProjectTest.kt$ProjectTest$@Test fun markRow_returnsValidationError_whenPatternIdIsNull()</ID>
+    <ID>UndocumentedPublicFunction:ProjectTest.kt$ProjectTest$@Test fun markRow_returnsValidationError_whenStitchPositiveWithoutRow()</ID>
+    <ID>UndocumentedPublicFunction:ProjectsListViewModelTest.kt$ProjectsListViewModelTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:ProjectsListViewModelTest.kt$ProjectsListViewModelTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:ProjectsListViewModelTest.kt$ProjectsListViewModelTest$@Test fun init_mapsNullTargetRowCountForProjectsWithoutTarget()</ID>
+    <ID>UndocumentedPublicFunction:ProjectsListViewModelTest.kt$ProjectsListViewModelTest$@Test fun init_mapsPatternIdAndCanOpenPatternEditor()</ID>
+    <ID>UndocumentedPublicFunction:RepositoryModule.kt$RepositoryModule$@Binds @Singleton abstract fun bindPatternRepository(impl: PatternRepositoryImpl): PatternRepository</ID>
+    <ID>UndocumentedPublicFunction:RowCountTest.kt$RowCountTest$@Test fun createOrDefault_withNegative_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:RowCountTest.kt$RowCountTest$@Test fun createOrNull_withNegative_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:RowCountTest.kt$RowCountTest$@Test fun createOrNull_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:RowCountTest.kt$RowCountTest$@Test fun create_withZero_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:RowCountTest.kt$RowCountTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_alreadyExists_doesNotCallUpdate()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_patternIdNull_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_patternRepositoryError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_rowNotInPattern_returnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_success_added_callsUpdateProjectProgress()</ID>
+    <ID>UndocumentedPublicFunction:RowMarkServiceTest.kt$RowMarkServiceTest$@Test fun markRow_updateProjectProgressError_propagates()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test fun createOrDefault_withZero_returnsOne()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test fun createOrNull_withZero_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test fun create_withOne_returnsOne()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test fun create_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:RowNumberTest.kt$RowNumberTest$@Test(expected = IllegalArgumentException::class) fun create_withZero_throws()</ID>
+    <ID>UndocumentedPublicFunction:SessionDao.kt$SessionDao$@Query(""" UPDATE projects SET total_time_seconds = MAX(0, total_time_seconds - :durationSeconds), total_rows = MAX(0, total_rows - :rows), updated_at = :updatedAt, sync_status = :pendingStatus WHERE id = :projectId """) suspend fun decrementProjectTotals( projectId: Long, durationSeconds: Long, rows: Int, updatedAt: Long, pendingStatus: String = SyncStatus.PENDING.name ): Int</ID>
+    <ID>UndocumentedPublicFunction:SessionDao.kt$SessionDao$@Query("DELETE FROM sessions WHERE id = :id") suspend fun deleteSessionById(id: Long): Int</ID>
+    <ID>UndocumentedPublicFunction:SessionDao.kt$SessionDao$@Query("SELECT * FROM sessions WHERE id = :id") suspend fun getSessionById(id: Long): SessionEntity?</ID>
+    <ID>UndocumentedPublicFunction:SessionDao.kt$SessionDao$@Transaction suspend fun deleteSessionAndDecrementProjectTotals( sessionId: Long, updatedAt: Long )</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$fun getSessionsByProjectIdFlow(projectId: ProjectId): Flow&lt;List&lt;Session&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun deleteSessionAndDecrementProjectTotals(sessionId: SessionId): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun getAllSessions(): Result&lt;List&lt;Session&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun getDailyStats(projectId: ProjectId): Result&lt;List&lt;DailyStat&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun getPendingSessions(): Result&lt;List&lt;Session&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun getSessionsByProjectId(projectId: ProjectId): Result&lt;List&lt;Session&gt;&gt;</ID>
+    <ID>UndocumentedPublicFunction:SessionRepository.kt$SessionRepository$suspend fun updateSyncStatus(sessionId: SessionId, status: SyncStatus): Result&lt;Unit&gt;</ID>
+    <ID>UndocumentedPublicFunction:SettingsViewModel.kt$SettingsViewModel$fun onAction(action: SettingsContract.Action)</ID>
+    <ID>UndocumentedPublicFunction:SettingsViewModelTest.kt$SettingsViewModelTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:SettingsViewModelTest.kt$SettingsViewModelTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:SettingsViewModelTest.kt$SettingsViewModelTest$@Test fun toggleLegendAddButtonSuccess()</ID>
+    <ID>UndocumentedPublicFunction:SpanTest.kt$SpanTest$@Test fun createOrDefault_withZero_returnsOne()</ID>
+    <ID>UndocumentedPublicFunction:SpanTest.kt$SpanTest$@Test fun createOrNull_withZero_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:SpanTest.kt$SpanTest$@Test fun create_withOne_returnsOne()</ID>
+    <ID>UndocumentedPublicFunction:SpanTest.kt$SpanTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:SpanTest.kt$SpanTest$@Test(expected = IllegalArgumentException::class) fun create_withZero_throws()</ID>
+    <ID>UndocumentedPublicFunction:StatsViewModelTest.kt$StatsViewModelTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:StatsViewModelTest.kt$StatsViewModelTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:StitchCountTest.kt$StitchCountTest$@Test fun createOrDefault_withNegative_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:StitchCountTest.kt$StitchCountTest$@Test fun createOrNull_withNegative_returnsNull()</ID>
+    <ID>UndocumentedPublicFunction:StitchCountTest.kt$StitchCountTest$@Test fun createOrNull_withPositive_returnsValue()</ID>
+    <ID>UndocumentedPublicFunction:StitchCountTest.kt$StitchCountTest$@Test fun create_withZero_returnsZero()</ID>
+    <ID>UndocumentedPublicFunction:StitchCountTest.kt$StitchCountTest$@Test(expected = IllegalArgumentException::class) fun create_withNegative_throws()</ID>
+    <ID>UndocumentedPublicFunction:SymbolCategoryTest.kt$SymbolCategoryTest$@Test fun fromNameOrDefault_withCustom_returnsCustom()</ID>
+    <ID>UndocumentedPublicFunction:SymbolCategoryTest.kt$SymbolCategoryTest$@Test fun fromNameOrDefault_withStandard_returnsStandard()</ID>
+    <ID>UndocumentedPublicFunction:SymbolCategoryTest.kt$SymbolCategoryTest$@Test fun fromNameOrDefault_withUnknown_returnsStandard()</ID>
+    <ID>UndocumentedPublicFunction:SymbolCategoryTest.kt$SymbolCategoryTest$@Test fun name_isStable()</ID>
+    <ID>UndocumentedPublicFunction:SymbolDao.kt$SymbolDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSymbol(symbol: SymbolEntity)</ID>
+    <ID>UndocumentedPublicFunction:SymbolDao.kt$SymbolDao$@Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSymbols(symbols: List&lt;SymbolEntity&gt;)</ID>
+    <ID>UndocumentedPublicFunction:SymbolDao.kt$SymbolDao$@Query("DELETE FROM symbols WHERE code = :code AND owner_pattern_id = :patternId") suspend fun deleteSymbol(code: String, patternId: Long): Int</ID>
+    <ID>UndocumentedPublicFunction:SymbolDao.kt$SymbolDao$@Query("SELECT * FROM symbols ORDER BY code ASC") suspend fun getAllSymbols(): List&lt;SymbolEntity&gt;</ID>
+    <ID>UndocumentedPublicFunction:SymbolDtoMappers.kt$fun Symbol.toDto(): SymbolDto</ID>
+    <ID>UndocumentedPublicFunction:SymbolDtoMappers.kt$fun SymbolDto.toDomain(): Symbol</ID>
+    <ID>UndocumentedPublicFunction:SymbolDtoMappers.kt$fun SymbolDto.toEntity(): SymbolEntity</ID>
+    <ID>UndocumentedPublicFunction:SymbolDtoMappersTest.kt$SymbolDtoMappersTest$@Test fun symbol_roundTripKeepsCodeAndSpans()</ID>
+    <ID>UndocumentedPublicFunction:SymbolLocalizerTest.kt$SymbolLocalizerTest$@Test fun localize_returnsTextGlyph()</ID>
+    <ID>UndocumentedPublicFunction:SymbolMappers.kt$fun PatternRepeatEntity.toDomain(): PatternRepeat</ID>
+    <ID>UndocumentedPublicFunction:SymbolMappers.kt$fun SymbolEntity.toDomain(): Symbol</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun fromNameOrDefault_withBeading_returnsBeading()</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun fromNameOrDefault_withCrochet_returnsCrochet()</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun fromNameOrDefault_withCrossStitch_returnsCrossStitch()</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun fromNameOrDefault_withKnitting_returnsKnitting()</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun fromNameOrDefault_withUnknown_returnsKnitting()</ID>
+    <ID>UndocumentedPublicFunction:TechniqueTest.kt$TechniqueTest$@Test fun name_isStable()</ID>
+    <ID>UndocumentedPublicFunction:Theme.kt$@Composable fun KnitTracTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun entriesContainThreeModesInStableOrder()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringDoesNotTrimTrailingSpaceFallsBackToSYSTEM()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringFallsBackToSYSTEMOnEmptyString()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringFallsBackToSYSTEMOnUnknownValue()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringFallsBackToSYSTEMOnWhitespace()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringIsCaseSensitiveLowercaseFallsBackToSYSTEM()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringIsInverseOfNameForAllEntries()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringRestoresDARKFromCanonicalName()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringRestoresLIGHTFromCanonicalName()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun fromStringRestoresSYSTEMFromCanonicalName()</ID>
+    <ID>UndocumentedPublicFunction:ThemeModeTest.kt$ThemeModeTest$@Test fun nameValuesMatchCanonicalStringsStoredInDataStore()</ID>
+    <ID>UndocumentedPublicFunction:TimerModule.kt$TimerModule$@Binds @Singleton abstract fun bindTimeProvider(systemTimeProvider: SystemTimeProvider): TimeProvider</ID>
+    <ID>UndocumentedPublicFunction:TimerModule.kt$TimerModule$@Binds @Singleton abstract fun bindTimerService(timerManagerImpl: TimerServiceImpl): TimerService</ID>
+    <ID>UndocumentedPublicFunction:TimerService.kt$TimerService$fun pause()</ID>
+    <ID>UndocumentedPublicFunction:TimerService.kt$TimerService$fun reset()</ID>
+    <ID>UndocumentedPublicFunction:TimerService.kt$TimerService$fun start()</ID>
+    <ID>UndocumentedPublicFunction:TimerServiceImplTest.kt$TimerServiceImplTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:TimerSessionCoordinatorTest.kt$TimerSessionCoordinatorTest$@Test fun pause_delegatesToTimerService()</ID>
+    <ID>UndocumentedPublicFunction:TimerSessionCoordinatorTest.kt$TimerSessionCoordinatorTest$@Test fun reset_delegatesToTimerService()</ID>
+    <ID>UndocumentedPublicFunction:TimerSessionCoordinatorTest.kt$TimerSessionCoordinatorTest$@Test fun saveSession_error_propagates()</ID>
+    <ID>UndocumentedPublicFunction:TimerSessionCoordinatorTest.kt$TimerSessionCoordinatorTest$@Test fun saveSession_success_delegatesToService()</ID>
+    <ID>UndocumentedPublicFunction:TimerSessionCoordinatorTest.kt$TimerSessionCoordinatorTest$@Test fun start_delegatesToTimerService()</ID>
+    <ID>UndocumentedPublicFunction:TimerViewModelTest.kt$TimerViewModelTest$@After fun tearDown()</ID>
+    <ID>UndocumentedPublicFunction:TimerViewModelTest.kt$TimerViewModelTest$@Before fun setUp()</ID>
+    <ID>UndocumentedPublicFunction:TimerViewModelTest.kt$TimerViewModelTest$@Test fun init_restoresRowCountAndProjectIdFromSavedStateHandle()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updateCreatingOverlapWithAnotherColumnReturnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updateOverlapWithSelfIsIgnored()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updatePropagatingNotFoundErrorWhenOperationMissing()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updateSuccessReturnsUpdatedOperation()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updateWithLargerSpanNoOverlapReturnsSuccess()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternOperationServiceTest.kt$UpdatePatternOperationServiceTest$@Test fun updateWithSymbolNotInLegendReturnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternRowNumberServiceTest.kt$UpdatePatternRowNumberServiceTest$@Test fun updateDatabaseErrorOnGetRowNumberPropagates()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternRowNumberServiceTest.kt$UpdatePatternRowNumberServiceTest$@Test fun updateOutOfBoundsReturnsValidationError()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternRowNumberServiceTest.kt$UpdatePatternRowNumberServiceTest$@Test fun updateRowNotFoundReturnsNotFound()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternRowNumberServiceTest.kt$UpdatePatternRowNumberServiceTest$@Test fun updateSameNumberEarlyReturnsSuccess()</ID>
+    <ID>UndocumentedPublicFunction:UpdatePatternRowNumberServiceTest.kt$UpdatePatternRowNumberServiceTest$@Test fun updateSuccess()</ID>
     <ID>WildcardImport:StatsScreen.kt$import co.yml.charts.ui.linechart.model.*</ID>
   </CurrentIssues>
 </SmellBaseline>

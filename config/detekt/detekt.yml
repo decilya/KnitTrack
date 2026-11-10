@@ -87,3 +87,15 @@ coroutines:
   RedundantSuspendModifier:
     active: false
 
+comments:
+  UndocumentedPublicClass:
+    active: true
+    searchInNestedClass: true
+    searchInInnerClass: true
+    searchInInnerObject: true
+    searchInInnerInterface: true
+  UndocumentedPublicFunction:
+    active: true
+    searchProtectedFunction: true
+  UndocumentedPublicProperty:
+    active: false # Пока выключено, чтобы не было сотен ошибок на data class
