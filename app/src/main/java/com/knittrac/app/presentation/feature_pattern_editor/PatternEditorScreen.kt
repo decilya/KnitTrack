@@ -303,12 +303,6 @@ private data class PendingCell(
     val column: ColumnStart
 )
 
-private data class PatternEditorCallbacks(
-    val onIntent: (Intent) -> Unit,
-    val onCellTap: (PatternRowId, ColumnStart) -> Unit,
-    val onCellLongPress: (PatternRowId, ColumnStart) -> Unit
-)
-
 @Composable
 private fun PatternEditorBody(
     pattern: Pattern,
