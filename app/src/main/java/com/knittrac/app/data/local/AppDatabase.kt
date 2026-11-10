@@ -18,8 +18,7 @@ import com.knittrac.app.data.local.entity.PatternRepeatEntity
  *
  * ВАЖНО:
  * 1. Все классы, аннотированные @Entity, перечислены в `entities`.
- * 2. version = 3: миграция 2->3 добавляет CHECK constraints для
- *    защиты инвариантов Value Objects (ProjectName, Duration).
+ * 2. Текущая версия схемы: 10 (см. `version = 10`).
  * 3. Каждая миграция должна вручную переносить CHECK constraints
  *    в новую CREATE TABLE — Room их не видит и не сохраняет.
  *    См. docs/architecture/vo-pattern.md.

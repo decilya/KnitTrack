@@ -49,12 +49,12 @@ data class Project(
      *    (defense-in-depth к триггеру v8; writer сейчас ZERO, D недостижим
      *    через app-код — см. TECHDEBT P2-4).
      * 2. У проекта привязана схема.
-     * 3. Денормализация currentRowNumber = row.rowNumber (B-инвариант).
+     * 3. B-инвариант снят в v10 (3NF): currentRowNumber derived через JOIN.
      *
      * @param row Ряд схемы.
      * @return [Result.Success] с [MarkResult] (Added / AlreadyExists);
      *   [Result.Error] с [AppError.ValidationError] если нарушен D-инвариант,
-     *   у проекта нет схемы, или рассинхронизирован currentRowNumber.
+     *   у проекта нет схемы.
      */
     fun markRow(row: PatternRow): Result<MarkResult> = when {
         currentStitch.value > 0 && currentPatternRowId == null ->
