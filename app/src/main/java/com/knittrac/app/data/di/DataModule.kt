@@ -1,6 +1,8 @@
 package com.knittrac.app.data.di
 
 import com.google.gson.Gson
+import com.knittrac.app.data.parser.BackupJsonParser
+import com.knittrac.app.data.parser.GsonBackupParser
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,4 +32,9 @@ object DataModule {
     @Provides
     @Singleton
     fun provideGson(): Gson = Gson()
+
+    @Provides
+    @Singleton
+    /** Предоставляет [BackupJsonParser] на базе [GsonBackupParser]. */
+    fun provideBackupJsonParser(gson: Gson): BackupJsonParser = GsonBackupParser(gson)
 }

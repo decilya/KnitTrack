@@ -4,6 +4,7 @@ import com.knittrac.app.domain.entity.ProjectId
 import com.knittrac.app.domain.entity.RowCount
 import com.knittrac.app.domain.entity.SessionId
 import com.google.gson.Gson
+import com.knittrac.app.data.parser.GsonBackupParser
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.core.common.SyncStatus
 import com.knittrac.app.core.common.Result
@@ -29,7 +30,7 @@ class DataExporterImplTest {
     private val backupRepository = mockk<BackupRepository>()
     private val gson = Gson()
     private val timeProvider = FakeTimeProvider(wallClock = 123456789L)
-    private val exporter = DataExporterImpl(backupRepository, gson, timeProvider, UnconfinedTestDispatcher())
+    private val exporter = DataExporterImpl(backupRepository, GsonBackupParser(gson), timeProvider, UnconfinedTestDispatcher())
 
     @Test
     fun exportToWritesJSONVersion13WithProjectsSessionsAndPatternTables() =

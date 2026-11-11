@@ -2,6 +2,7 @@ package com.knittrac.app.data.repository
 
 import com.knittrac.app.core.common.ErrorCode
 import com.google.gson.GsonBuilder
+import com.knittrac.app.data.parser.GsonBackupParser
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.RowCount
@@ -24,7 +25,7 @@ class DataImporterImplTest {
 
     private val backupRepository = mockk<BackupRepository>(relaxed = true)
     private val gson = GsonBuilder().create()
-    private val importer = DataImporterImpl(backupRepository, gson, UnconfinedTestDispatcher())
+    private val importer = DataImporterImpl(backupRepository, GsonBackupParser(gson), UnconfinedTestDispatcher())
 
     private val testJson = """
         {
@@ -99,7 +100,7 @@ class DataImporterImplTest {
         coEvery { backupRepo.withTransaction<Unit>(any()) } throws 
             InvalidBackupOperationsException(IllegalStateException("Orphan repeat code"))
 
-        val importer = DataImporterImpl(backupRepo, GsonBuilder().create(), UnconfinedTestDispatcher())
+        val importer = DataImporterImpl(backupRepo, GsonBackupParser(GsonBuilder().create()), UnconfinedTestDispatcher())
         
         val json = """
             {

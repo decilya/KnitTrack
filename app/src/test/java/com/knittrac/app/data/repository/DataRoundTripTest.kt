@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
+import com.knittrac.app.data.parser.GsonBackupParser
 import com.knittrac.app.core.common.FakeTimeProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.common.SyncStatus
@@ -99,14 +100,14 @@ class DataRoundTripTest {
 
     private fun exporter(db: AppDatabase) = DataExporterImpl(
         BackupRepositoryImpl(db, db.projectDao(), db.sessionDao()),
-        Gson(),
+        GsonBackupParser(Gson()),
         FakeTimeProvider(wallClock = 1L),
         UnconfinedTestDispatcher()
     )
 
     private fun importer(db: AppDatabase) = DataImporterImpl(
         BackupRepositoryImpl(db, db.projectDao(), db.sessionDao()),
-        Gson(),
+        GsonBackupParser(Gson()),
         UnconfinedTestDispatcher()
     )
 
