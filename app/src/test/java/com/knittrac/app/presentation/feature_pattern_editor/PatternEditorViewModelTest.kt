@@ -1,8 +1,8 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
 import com.knittrac.app.core.common.ErrorCode
+import com.knittrac.app.core.common.ErrorMapper
 import androidx.lifecycle.SavedStateHandle
-import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.PatternDirection
@@ -144,7 +144,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         val effect = effectDeferred.await()
         assertTrue(effect is PatternEditorContract.Effect.ShowError)
         assertEquals(
-            R.string.pattern_editor_create_error,
+            ErrorMapper.map(ErrorCode.INVALID_ARGUMENT),
             (effect as PatternEditorContract.Effect.ShowError).messageResId
         )
     }

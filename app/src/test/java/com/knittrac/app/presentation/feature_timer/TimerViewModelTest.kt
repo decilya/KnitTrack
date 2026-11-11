@@ -1,8 +1,8 @@
 package com.knittrac.app.presentation.feature_timer
 
 import com.knittrac.app.core.common.ErrorCode
+import com.knittrac.app.core.common.ErrorMapper
 import androidx.lifecycle.SavedStateHandle
-import com.knittrac.app.R
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ProjectId
@@ -237,7 +237,7 @@ class TimerViewModelTest {
     }
 
     /**
-     * MarkNextPatternRow error: эмитит ShowError(pattern_row_mark_error),
+     * MarkNextPatternRow error: эмитит ShowError с ErrorMapper-ресурсом для INVALID_ARGUMENT,
      * currentPatternRowNumber не меняется, isMarkingRow снят в finally.
      */
     @Test
@@ -263,7 +263,7 @@ class TimerViewModelTest {
         )
         val showError = effect as TimerContract.Effect.ShowError
         assertEquals(
-            com.knittrac.app.R.string.pattern_row_mark_error,
+            ErrorMapper.map(ErrorCode.INVALID_ARGUMENT),
             showError.messageResId
         )
         assertNull(viewModel.state.value.currentPatternRowNumber)
@@ -350,7 +350,7 @@ class TimerViewModelTest {
 
         assertTrue(effect is TimerContract.Effect.ShowError)
         assertEquals(
-            R.string.error_load_projects,
+            ErrorMapper.map(ErrorCode.UNKNOWN_ERROR),
             (effect as TimerContract.Effect.ShowError).messageResId
         )
     }

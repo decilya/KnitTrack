@@ -442,7 +442,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 ## Ревью сессии 11.11.2026 (Архитектурные долги)
 
-- [ ] **P1 (Android/UI):** Интеграция `ErrorMapper` в UI. Сейчас ViewModels отправляют generic `R.string.error_unknown`, игнорируя специфичные `ErrorCode`. Нужно научить ViewModels маппить `Result.Error(AppError)` через `ErrorMapper.map(error.code)` перед отправкой в Effect.
+- [x] **P1 (Android/UI):** Интеграция `ErrorMapper` в UI. Сейчас ViewModels отправляют generic `R.string.error_unknown`, игнорируя специфичные `ErrorCode`. Нужно научить ViewModels маппить `Result.Error(AppError)` через `ErrorMapper.map(error.code)` перед отправкой в Effect. — **Закрыто 11.11.2026:** ViewModels (PatternEditor, Timer) маппят `ErrorMapper.map(error.code)`; тесты ассертят через `ErrorMapper.map`.
 - [ ] **P2 (Clean Arch):** `ErrorMapper` — это `object`, жестко завязанный на Android `R.string`. В будущем (KMP/Wear OS) это вызовет проблемы. Заменить на `@Composable` extension `fun ErrorCode.asString(): String` или внедряемый интерфейс `ErrorStringProvider`.
 - [ ] **P2 (DDD/SRP):** `AppDatabaseMigrations` — God File (500+ строк). Миграции 2→3, 4→5, 9→10 лежат в одном `object`. Вынести каждую миграцию в отдельный файл (`Migration2To3.kt` и т.д.) или сгруппировать по версиям (`MigrationsV2.kt`).
 - [ ] **P2 (Kotlin/ISP):** `BackupImportVisitor` и `BackupExportSource` — интерфейсы с 8 методами. Это не совсем Kotlin-way и нарушает ISP. Переделать в `data class` с лямбдами (по аналогии с `PatternEditorCallbacks`) или разбить на более мелкие интерфейсы.

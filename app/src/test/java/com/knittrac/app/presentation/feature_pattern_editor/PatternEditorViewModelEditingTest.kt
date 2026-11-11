@@ -1,7 +1,7 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
 import com.knittrac.app.core.common.ErrorCode
-import com.knittrac.app.R
+import com.knittrac.app.core.common.ErrorMapper
 import com.knittrac.app.core.common.AppError
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
@@ -65,7 +65,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
     /**
      * Проверяет, что AddOperation при ошибке UseCase эмитит ShowError
-     * с ресурсом pattern_editor_add_error.
+     * с ресурсом от ErrorMapper для ErrorCode.INVALID_ARGUMENT.
      */
     @Test
     fun addOperationErrorEmitsShowError() = runTest {
@@ -88,7 +88,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         val effect = effectDeferred.await()
         assertTrue(effect is PatternEditorContract.Effect.ShowError)
         assertEquals(
-            R.string.pattern_editor_add_error,
+            ErrorMapper.map(ErrorCode.INVALID_ARGUMENT),
             (effect as PatternEditorContract.Effect.ShowError).messageResId
         )
     }
@@ -192,7 +192,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         assertEquals(listOf(operation(0)), vm.state.value.lastOperations)
         assertTrue(effect is PatternEditorContract.Effect.ShowError)
         assertEquals(
-            R.string.pattern_editor_undo_error,
+            ErrorMapper.map(ErrorCode.PROJECT_NOT_FOUND),
             (effect as PatternEditorContract.Effect.ShowError).messageResId
         )
     }

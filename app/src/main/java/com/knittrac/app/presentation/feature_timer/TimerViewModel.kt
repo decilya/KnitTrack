@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_timer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.knittrac.app.R
+import com.knittrac.app.core.common.ErrorMapper
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
@@ -97,7 +97,7 @@ class TimerViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to load projects in TimerViewModel")
-                        _effect.send(TimerContract.Effect.ShowError(R.string.error_load_projects))
+                        _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
                     }
                 }
             }
@@ -188,7 +188,7 @@ class TimerViewModel @Inject constructor(
                         it.copy(currentPatternRowNumber = result.data.value)
                     }
                     is Result.Error -> _effect.send(
-                        TimerContract.Effect.ShowError(R.string.pattern_row_mark_error)
+                        TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                     )
                 }
             } finally {
@@ -237,7 +237,7 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             val result = progressCoordinator.updateStitch(projectId, StitchCount.createOrDefault(newStitchValue))
             if (result is Result.Error) {
-                _effect.send(TimerContract.Effect.ShowError(R.string.error_save_stitch))
+                _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
             }
         }
     }
@@ -259,18 +259,24 @@ class TimerViewModel @Inject constructor(
                     endTimestamp = endTimestamp,
                     rowCount = RowCount.createOrDefault(currentState.rowCount)
                 )
-
-                val result = sessionCoordinator.saveSession(params)
-                if (result is Result.Success) {
-                    _effect.send(TimerContract.Effect.SessionSaved)
-                    sessionCoordinator.reset()
-                    _state.update { it.copy(rowCount = 0) }
-                    savedStateHandle["rowCount"] = 0
-                } else {
-                    _effect.send(TimerContract.Effect.ShowError(R.string.timer_save_error))
-                }
+                handleSessionResult(sessionCoordinator.saveSession(params))
             } finally {
                 _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private suspend fun handleSessionResult(result: Result<*>) {
+        when (result) {
+            is Result.Success -> {
+                _effect.send(TimerContract.Effect.SessionSaved)
+                sessionCoordinator.reset()
+                _state.update { it.copy(rowCount = 0) }
+                savedStateHandle["rowCount"] = 0
+            }
+            is Result.Error -> {
+                Timber.e(result.error.cause, "Failed to save session")
+                _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
             }
         }
     }

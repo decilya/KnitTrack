@@ -3,6 +3,7 @@ package com.knittrac.app.presentation.feature_pattern_editor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.knittrac.app.R
+import com.knittrac.app.core.common.ErrorMapper
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
@@ -240,7 +241,7 @@ class PatternEditorViewModel @Inject constructor(
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to create pattern")
                         _effect.send(
-                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_create_error)
+                            PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                         )
                     }
                 }
@@ -327,7 +328,7 @@ class PatternEditorViewModel @Inject constructor(
             is Result.Error -> {
                 Timber.e(result.error.cause, "Failed to add operation")
                 _effect.send(
-                    PatternEditorContract.Effect.ShowError(R.string.pattern_editor_add_error)
+                    PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                 )
             }
         }
@@ -356,7 +357,7 @@ class PatternEditorViewModel @Inject constructor(
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to undo operation")
                         _effect.send(
-                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_undo_error)
+                            PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                         )
                     }
                 }
@@ -431,7 +432,7 @@ class PatternEditorViewModel @Inject constructor(
             is Result.Error -> {
                 Timber.e(result.error.cause, "Failed to update operation")
                 _effect.send(
-                    PatternEditorContract.Effect.ShowError(R.string.pattern_editor_update_error)
+                    PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                 )
             }
         }
@@ -450,7 +451,7 @@ class PatternEditorViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to delete operation")
-                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_error))
+                        _effect.send(PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
                     }
                 }
             } finally {
@@ -473,7 +474,7 @@ class PatternEditorViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to update row number")
-                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_update_error))
+                        _effect.send(PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
                     }
                 }
             } finally {
@@ -496,7 +497,7 @@ class PatternEditorViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to delete row")
-                        _effect.send(PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_error))
+                        _effect.send(PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
                     }
                 }
             } finally {
@@ -534,7 +535,7 @@ class PatternEditorViewModel @Inject constructor(
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to add symbol")
                         _effect.send(
-                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_add_symbol_error)
+                            PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                         )
                     }
                 }
@@ -568,7 +569,7 @@ class PatternEditorViewModel @Inject constructor(
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to delete symbol")
                         _effect.send(
-                            PatternEditorContract.Effect.ShowError(R.string.pattern_editor_delete_symbol_error)
+                            PatternEditorContract.Effect.ShowError(ErrorMapper.map(result.error.code))
                         )
                     }
                 }
