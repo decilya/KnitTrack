@@ -95,3 +95,14 @@ fun SessionDto.toDomain(): Session = Session(
     updatedAt = updatedAt,
     syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
 )
+
+/**
+ * Очищает ссылки на схему для старых версий бэкапа.
+ *
+ * Старый бэкап не содержит рядов. Триггер требует номер 0, если ряда нет.
+ * Используется при импорте версий < 1.3.
+ */
+fun ProjectDto.withoutPatternLink(): ProjectDto = copy(
+    patternId = null,
+    currentPatternRowId = null
+)

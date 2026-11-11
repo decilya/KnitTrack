@@ -13,6 +13,7 @@ import com.knittrac.app.data.dto.ProjectDto
 import com.knittrac.app.data.dto.SessionDto
 import com.knittrac.app.data.dto.SymbolDto
 import com.knittrac.app.data.mapper.toDomain
+import com.knittrac.app.data.mapper.withoutPatternLink
 import com.knittrac.app.data.parser.BackupImportVisitor
 import com.knittrac.app.data.parser.BackupJsonParser
 import com.knittrac.app.domain.entity.PatternId
@@ -116,10 +117,4 @@ class DataImporterImpl @Inject constructor(
             )
         }
     }
-
-    /** Старый бэкап не содержит рядов. Триггер требует номер 0, если ряда нет. */
-    private fun ProjectDto.withoutPatternLink(): ProjectDto = copy(
-        patternId = null,
-        currentPatternRowId = null
-    )
 }
