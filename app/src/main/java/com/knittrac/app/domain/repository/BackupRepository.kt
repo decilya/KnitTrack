@@ -1,5 +1,6 @@
 package com.knittrac.app.domain.repository
 
+import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.Project
@@ -29,7 +30,11 @@ interface BackupRepository {
      * @param repeats Список пар (patternId, repeat).
      */
     suspend fun savePatternRepeatsBatch(repeats: List<PatternRepeatWithId>)
-    suspend fun savePatternOperationsBatch(operations: List<PatternOperation>)
+    /**
+     * Сохраняет батч операций.
+     * @return [Result.Success] или [Result.Error] при нарушении FK/триггеров.
+     */
+    suspend fun savePatternOperationsBatch(operations: List<PatternOperation>): Result<Unit>
     suspend fun saveProjectsBatch(batch: List<Project>)
     suspend fun saveSessionsBatch(batch: List<Session>)
     suspend fun <T> exportSnapshot(block: suspend (ExportContext) -> T): T

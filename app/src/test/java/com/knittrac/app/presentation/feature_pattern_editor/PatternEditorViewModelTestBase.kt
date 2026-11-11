@@ -1,5 +1,8 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
+import com.knittrac.app.core.common.ErrorStringProvider
+import com.knittrac.app.core.common.ErrorMapper
+import com.knittrac.app.core.common.ErrorCode
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.core.base.BaseTest
 import com.knittrac.app.core.common.Result
@@ -59,6 +62,10 @@ abstract class PatternEditorViewModelTestBase : BaseTest() {
     protected val addSymbolUseCase: AddSymbolUseCase = mockk()
     protected val deleteSymbolUseCase: DeleteSymbolUseCase = mockk()
     protected val settingsRepository: SettingsRepository = mockk()
+
+    private val errorStringProvider: ErrorStringProvider = object : ErrorStringProvider {
+        override fun getStringRes(code: ErrorCode): Int = ErrorMapper.map(code)
+    }
 
     /**
      * Стандартный символ для операций и легенды.
@@ -167,7 +174,8 @@ abstract class PatternEditorViewModelTestBase : BaseTest() {
             ),
             platformDeps = PatternEditorPlatformDeps(
                 settingsRepository = settingsRepository,
-                savedStateHandle = savedState
+                savedStateHandle = savedState,
+                errorStringProvider = errorStringProvider
             )
         )
     }

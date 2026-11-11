@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_pattern_editor
 
 import androidx.lifecycle.SavedStateHandle
 import com.knittrac.app.domain.repository.SettingsRepository
+import com.knittrac.app.core.common.ErrorStringProvider
 import javax.inject.Inject
 
 /**
@@ -13,8 +14,10 @@ import javax.inject.Inject
  *
  * @property settingsRepository DataStore-репозиторий (настройка «видимость кнопки Add»).
  * @property savedStateHandle Process death state (patternId, selectedRowId, isStickyMode).
+ * @property errorStringProvider Провайдер строковых ресурсов для ошибок.
  */
 data class PatternEditorPlatformDeps @Inject constructor(
     val settingsRepository: SettingsRepository,
-    val savedStateHandle: SavedStateHandle
+    val savedStateHandle: SavedStateHandle,
+    val errorStringProvider: ErrorStringProvider
 )

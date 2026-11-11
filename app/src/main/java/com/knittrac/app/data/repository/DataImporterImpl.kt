@@ -1,7 +1,6 @@
 package com.knittrac.app.data.repository
 
 import com.knittrac.app.core.common.AppError
-import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.core.di.IoDispatcher
 import com.knittrac.app.data.dto.ExportDataDto
@@ -34,6 +33,13 @@ import javax.inject.Inject
  *
  * Оркестрирует транзакцию и маппинг DTO -> Domain, делегируя парсинг JSON
  * и работу с БД в [BackupJsonParser] и [BackupRepository].
+ */
+
+/** Техническое исключение для отката транзакции при ошибке импорта. */
+private class ImportRollbackException(val error: AppError) : Exception()
+
+/**
+ * Реализация [DataImporter], выполняющая импорт через [BackupJsonParser].
  */
 class DataImporterImpl @Inject constructor(
     private val backupRepository: BackupRepository,
@@ -73,7 +79,10 @@ class DataImporterImpl @Inject constructor(
                         }
 
                         override suspend fun onPatternOperationsBatch(batch: List<PatternOperationDto>) {
-                            backupRepository.savePatternOperationsBatch(batch.map { it.toDomain() })
+                            when (val result = backupRepository.savePatternOperationsBatch(batch.map { it.toDomain() })) {
+                                is Result.Success -> Unit
+                                is Result.Error -> throw ImportRollbackException(result.error)
+                            }
                         }
 
                         override suspend fun onProjectsBatch(batch: List<ProjectDto>) {
@@ -99,9 +108,9 @@ class DataImporterImpl @Inject constructor(
             } catch (e: IllegalStateException) {
                 Timber.e(e, "importFrom failed: malformed JSON")
                 Result.Error(AppError.IoError(e))
-            } catch (e: InvalidBackupOperationsException) {
-                Timber.e(e, "importFrom failed: invalid operations in backup")
-                Result.Error(AppError.ValidationError(ErrorCode.INVALID_BACKUP_OPERATIONS))
+            } catch (e: ImportRollbackException) {
+                Timber.e("importFrom failed: invalid operations in backup")
+                Result.Error(e.error)
             } catch (e: Exception) {
                 Timber.e(e, "importFrom failed")
                 Result.Error(AppError.DatabaseError(e))

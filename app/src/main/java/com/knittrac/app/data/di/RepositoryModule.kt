@@ -12,6 +12,8 @@ import com.knittrac.app.domain.repository.DataImporter
 import com.knittrac.app.domain.repository.PatternRepository
 import com.knittrac.app.domain.repository.ProjectRepository
 import com.knittrac.app.domain.repository.SessionRepository
+import com.knittrac.app.core.common.ErrorStringProvider
+import com.knittrac.app.data.local.AndroidErrorStringProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -53,6 +55,11 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDataExporter(impl: DataExporterImpl): DataExporter
+
+    /** Связывает [ErrorStringProvider] с реализацией. */
+    @Binds
+    @Singleton
+    abstract fun bindErrorStringProvider(impl: AndroidErrorStringProvider): ErrorStringProvider
 
     /** Связывает [DataImporter] с реализацией. */
     @Binds

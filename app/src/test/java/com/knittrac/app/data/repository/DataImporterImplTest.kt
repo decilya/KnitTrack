@@ -95,10 +95,13 @@ class DataImporterImplTest {
      */
     @Test
     fun importFrom_returnsValidationError_onOrphanRepeatCode() = runTest {
-        val backupRepo = mockk<BackupRepository>()
+        val backupRepo = mockk<BackupRepository>(relaxed = true)
         
-        coEvery { backupRepo.withTransaction<Unit>(any()) } throws 
-            InvalidBackupOperationsException(IllegalStateException("Orphan repeat code"))
+        coEvery { backupRepo.savePatternOperationsBatch(any()) } returns
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_BACKUP_OPERATIONS))
+        coEvery { backupRepo.withTransaction<Unit>(any()) } coAnswers {
+            firstArg<suspend () -> Unit>()()
+        }
 
         val importer = DataImporterImpl(backupRepo, GsonBackupParser(GsonBuilder().create()), UnconfinedTestDispatcher())
         

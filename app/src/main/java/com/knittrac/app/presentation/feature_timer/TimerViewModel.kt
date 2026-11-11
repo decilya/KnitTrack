@@ -3,7 +3,7 @@ package com.knittrac.app.presentation.feature_timer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.knittrac.app.core.common.ErrorMapper
+import com.knittrac.app.core.common.ErrorStringProvider
 import com.knittrac.app.core.common.Result
 import com.knittrac.app.domain.entity.Project
 import com.knittrac.app.domain.entity.ProjectId
@@ -48,7 +48,8 @@ import javax.inject.Inject
 class TimerViewModel @Inject constructor(
     private val sessionCoordinator: TimerSessionCoordinator,
     private val progressCoordinator: ProjectProgressCoordinator,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val errorStringProvider: ErrorStringProvider
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -97,7 +98,7 @@ class TimerViewModel @Inject constructor(
                     }
                     is Result.Error -> {
                         Timber.e(result.error.cause, "Failed to load projects in TimerViewModel")
-                        _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
+                        _effect.send(TimerContract.Effect.ShowError(errorStringProvider.getStringRes(result.error.code)))
                     }
                 }
             }
@@ -188,7 +189,7 @@ class TimerViewModel @Inject constructor(
                         it.copy(currentPatternRowNumber = result.data.value)
                     }
                     is Result.Error -> _effect.send(
-                        TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code))
+                        TimerContract.Effect.ShowError(errorStringProvider.getStringRes(result.error.code))
                     )
                 }
             } finally {
@@ -237,7 +238,7 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             val result = progressCoordinator.updateStitch(projectId, StitchCount.createOrDefault(newStitchValue))
             if (result is Result.Error) {
-                _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
+                _effect.send(TimerContract.Effect.ShowError(errorStringProvider.getStringRes(result.error.code)))
             }
         }
     }
@@ -276,7 +277,7 @@ class TimerViewModel @Inject constructor(
             }
             is Result.Error -> {
                 Timber.e(result.error.cause, "Failed to save session")
-                _effect.send(TimerContract.Effect.ShowError(ErrorMapper.map(result.error.code)))
+                _effect.send(TimerContract.Effect.ShowError(errorStringProvider.getStringRes(result.error.code)))
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.knittrac.app.presentation.feature_timer
 
+import com.knittrac.app.core.common.ErrorStringProvider
 import com.knittrac.app.core.common.ErrorCode
 import com.knittrac.app.core.common.ErrorMapper
 import androidx.lifecycle.SavedStateHandle
@@ -50,9 +51,16 @@ import org.junit.Test
 class TimerViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val errorStringProvider = mockk<ErrorStringProvider>(relaxed = true)
 
     private lateinit var sessionCoordinator: TimerSessionCoordinator
     private lateinit var progressCoordinator: ProjectProgressCoordinator
+
+    @Before
+    /** Настраивает мок-провайдер строковых ресурсов для тестов. */
+    fun setupProvider() {
+        every { errorStringProvider.getStringRes(any()) } answers { ErrorMapper.map(firstArg()) }
+    }
 
     @Before
     fun setUp() {
@@ -93,7 +101,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            SavedStateHandle()
+            SavedStateHandle(),
+            errorStringProvider
         )
 
         val effectDeferred = async { viewModel.effect.first() }
@@ -124,7 +133,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            SavedStateHandle()
+            SavedStateHandle(),
+            errorStringProvider
         )
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
@@ -142,7 +152,7 @@ class TimerViewModelTest {
      */
     @Test
     fun incrementRow_increasesCount() = runTest {
-        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle())
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.IncrementRow)
@@ -157,7 +167,7 @@ class TimerViewModelTest {
      */
     @Test
     fun decrementRow_decreasesCount() = runTest {
-        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle())
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
 
         repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
         assertEquals(5, viewModel.state.value.rowCount)
@@ -171,7 +181,7 @@ class TimerViewModelTest {
      */
     @Test
     fun decrementRow_atZero_staysZero() = runTest {
-        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle())
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
 
         assertEquals(0, viewModel.state.value.rowCount)
         viewModel.onIntent(TimerContract.Intent.DecrementRow)
@@ -194,7 +204,7 @@ class TimerViewModelTest {
         )
         every { progressCoordinator.projects() } returns flowOf(Result.Success(listOf(project)))
 
-        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle())
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
 
         assertEquals(120, viewModel.state.value.targetRowCount)
@@ -206,7 +216,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            savedStateHandle
+            savedStateHandle,
+            errorStringProvider
         )
 
         assertEquals(5L, viewModel.state.value.projectId)
@@ -225,7 +236,8 @@ class TimerViewModelTest {
             sessionCoordinator,
             progressCoordinator,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
-        )
+        ),
+            errorStringProvider
         )
 
         viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
@@ -249,7 +261,8 @@ class TimerViewModelTest {
             sessionCoordinator,
             progressCoordinator,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
-        )
+        ),
+            errorStringProvider
         )
 
         val effectDeferred = async { viewModel.effect.first() }
@@ -285,7 +298,8 @@ class TimerViewModelTest {
             sessionCoordinator,
             progressCoordinator,
             SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
-        )
+        ),
+            errorStringProvider
         )
 
         viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
@@ -306,7 +320,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            SavedStateHandle()
+            SavedStateHandle(),
+            errorStringProvider
         )
 
         viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
@@ -324,7 +339,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            SavedStateHandle()
+            SavedStateHandle(),
+            errorStringProvider
         )
         viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
         viewModel.onIntent(TimerContract.Intent.Start)
@@ -343,7 +359,8 @@ class TimerViewModelTest {
         val viewModel = TimerViewModel(
             sessionCoordinator,
             progressCoordinator,
-            SavedStateHandle()
+            SavedStateHandle(),
+            errorStringProvider
         )
 
         val effect = viewModel.effect.first()
