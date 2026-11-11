@@ -291,7 +291,7 @@
 | SessionDao / DailyStat | `getDailyStats` возвращает `com.knittrac.app.domain.entity.DailyStat` — утечка Domain-модели в Data | Projection-класс в `data/local/`, маппинг в репозитории |
 | TimerViewModelTest | `mockk<Project>` bypasses `init { require(...) }` — ложно-зелёные тесты при будущих правках | Реальный `data class` конструктор в тестах |
 
-- [ ] **P2 #7 (rowSpanOverride)**: `UpdatePatternOperationService` (7f-D-1) работает в текущей модели (`overrideSpan` -> `columnSpanOverride`), `rowSpanOverride` = `null`. Не трогаем до появления вертикального span в Domain.
+- [ ] **P1 (Pattern Editor, эскалировано из P2 #7, 11.11.2026):** `Symbol.defaultRowSpan` не используется, `rowSpanOverride` теряется в маппере. Блокирует символы с вертикальной протяжённостью (шишечки, листья, жаккардовые фигуры). Косы и араны (сетка клеток) от этого не зависят — работают как есть. Полная таксономия, архитектурный задел (ChartLayout) и план тестов — в секции «Ревью 11.11.2026 — Полная таксономия схем» ниже.
 - [ ] **P3**: Перемещение ряда использует временный номер `999999` (`TEMP_ROW_NUMBER`) для обхода `UNIQUE(pattern_id, row_number)` при сдвиге. Альтернатива: `MAX(row_number) + 1` или удаление+вставка. Текущий вариант быстрый и работает, но магическое число.
 
 - [ ] **P3**: `ownerPatternId` в `Symbol` — это `Long?`, а не `PatternId?`. Символы нельзя проверить на принадлежность схеме через VO. Нужно будет отрефакторить при внедрении `PatternId` во все места.
@@ -448,3 +448,123 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 - [ ] **P2 (Kotlin/ISP):** `BackupImportVisitor` и `BackupExportSource` — интерфейсы с 8 методами. Это не совсем Kotlin-way и нарушает ISP. Переделать в `data class` с лямбдами (по аналогии с `PatternEditorCallbacks`) или разбить на более мелкие интерфейсы.
 - [x] **P2 (Clean Arch):** Extension `ProjectDto.withoutPatternLink()` — **закрыт 11.11.2026**. Перенесен из `DataImporterImpl` в `DtoMappers.kt` (Data-слой) с добавлением KDoc.
 - [ ] **P3 (Code Quality):** Detekt Baseline (`baseline.xml`, 64 KB) скрывает старый долг по KDoc. Постепенно вычищать baseline: удалять игнорируемые файлы из XML и дописывать KDoc при касании этих файлов.
+
+## Ревью 11.11.2026 — Полная таксономия схем (Консилиум)
+
+**Контекст:** Анализ конкурентов (Stitchmastery, KnitCompanion, Pattern Keeper, Crochet Chart, Pattern Weaver) и стандартов (Craft Yarn Council, JIS) выявил: текущая модель `Pattern` покрывает **только прямоугольные символьные схемы** (GridLayout). Для полноты продукта нужна систематизация всех типов схем, форматов и бисерных техник.
+
+### 1. Типы схем (по геометрии)
+
+| Тип | Пример | Поддержка | Приоритет |
+|---|---|---|---|
+| Прямоугольная (Grid) | Спицы, крючок, filet, пиксельные | ⚠️ Частично (нет rowSpan, colorwork UI) | — |
+| Радиальная (Radial) | Круговое вязание, спираль | ❌ Нет (нужен ChartLayout) | P2 |
+| Смещённая (Offset) | Бисер: пейот, кирпич | ❌ Нет (нужен OffsetGridLayout) | P3 |
+| Диагональная (C2C) | Corner-to-Corner крючком | ❌ Нет | P3 |
+| Свободная (Freeform) | Ирландское кружево, фриформ | ❌ Нет (YAGNI) | — |
+
+### 2. Типы схем (по содержимому)
+
+| Тип | Что важно | Поддержка | Приоритет |
+|---|---|---|---|
+| Символьная | K, P, O, K2tog и т.д. | ⚠️ 6 символов, нужно 100+ | P2 |
+| Цветная (Colorwork) | Fair Isle, Intarsia | ⚠️ colorHex есть, UI нет | P2 |
+| Косы/Араны | Перекрещивания, шишечки, листья | ⚠️ Косы-сетки работают, шишечки — нет | P1 |
+| Ажурная (Lace) | Накиды, убавки | ✅ Работает | — |
+| Бриошь (Brioche) | Двухцветные, спец-символы | ❌ Нет | P3 |
+| Тунисское (Tunisian) | TSS, TKS, TPS (70+ символов) | ❌ Нет | P3 |
+| Энтрелак (Entrelac) | Вязание квадратами | ❌ Нет | P3 |
+
+### 3. Бисероплетение
+
+| Техника | Геометрия | Поддержка | Приоритет |
+|---|---|---|---|
+| Пейот (Peyote) | Смещённая сетка | ❌ Нет | P3 |
+| Кирпичный (Brick) | Смещённая сетка (поворот) | ❌ Нет | P3 |
+| Станок (Loom) | Прямоугольная сетка | ⚠️ Технически возможно, UI нет | P3 |
+| Ндебеле (Herringbone) | Смещённая сетка | ❌ Нет | P3 |
+| Сетка (Netting) | Радиальная/диагональная | ❌ Нет | P3 |
+
+### 4. Форматы (импорт/экспорт)
+
+| Формат | Назначение | Поддержка | Приоритет |
+|---|---|---|---|
+| PDF | Pattern Keeper, печать | ❌ Нет | **P1** |
+| SVG | Векторный экспорт | ❌ Нет | **P1** |
+| PNG | Растровый экспорт | ❌ Нет | P2 |
+| .knt2 | Stitchmastery | ❌ Нет | P3 (миграция) |
+| .PAT / .OXS / .XSD | Pattern Keeper / Stitchmate | ❌ Нет | P3 (миграция) |
+
+### 5. Архитектурный задел (SOLID + DDD)
+
+**Проблема (OCP):** `Pattern` и `PatternCanvas` жёстко завязаны на прямоугольную 
+сетку. Добавление радиальной или смещённой схемы потребует переписывания.
+
+**Решение (P2, не блокер v1.0):**
+
+1. Domain: `sealed class ChartLayout`:
+   - `GridLayout(rows, columns)` — текущая, единственная реализация сейчас.
+   - `RadialLayout(center, radius, rings)` — круговое вязание.
+   - `OffsetGridLayout(staggerAxis, staggerAmount)` — бисер (пейот, кирпич).
+2. Domain: `Pattern.layout: ChartLayout`. Инварианты операций (позиция, overlap, 
+   bounds) переносятся в методы `ChartLayout` (полиморфизм, OCP).
+3. Presentation: `PatternCanvas` — стратегия отрисовки по `layout` 
+   (прямоугольная / полярная / смещённая).
+4. Data: миграции не нужны — `ChartLayout` сериализуется в JSON 
+   (поле `layout_type` + параметры).
+
+**YAGNI-оговорка (§11.7):** `ChartLayout` не создаётся «на будущее». Он вводится 
+вместе с первой не-Grid реализацией (P2). До этого `Pattern` остаётся плоским 
+(rows + operations + columnStart) — этого достаточно для v1.0.
+
+**Contract-first для родителя:** когда `ChartLayout` будет создан — сначала 
+пишутся contract-тесты на родителя (общие инварианты: bounds, position, 
+overlap detection, iteration order), затем для каждой реализации 
+(`RadialLayoutTest`, `OffsetGridLayoutTest`). Это гарантирует, что все типы 
+схем ведут себя согласованно на уровне Domain.
+
+### 6. Приоритеты (итог Консилиума)
+
+| Приоритет | Задача | Почему |
+|---|---|---|
+| P1 | `rowSpan` (вертикальные символы) | Шишечки, листья, японские араны. Без этого Pattern Editor неполный. |
+| P1 | Экспорт PDF + SVG | Без этого нет конкуренции с Pattern Keeper / Stitchmastery. |
+| P2 | Библиотека символов (100+) | Сейчас 6 символов, стандарт (Craft Yarn Council, JIS) — 100+. |
+| P2 | Colorwork UI (цвет на клетку) | Fair Isle / Intarsia — большой сегмент. |
+| P2 | `ChartLayout` (radial, offset) | Круговое вязание — стандарт. |
+| P3 | Бисер (пейот, кирпич, станок) | Отдельный домен, требует `OffsetGridLayout`. |
+| P3 | Импорт .knt2 / .PAT / .OXS | Миграция пользователей с десктопа. |
+
+### 7. Тесты (QA)
+
+**Сейчас (P1, текущая модель `GridLayout`):**
+- [ ] `PatternOperationMappersTest`: round-trip `OperationSpan(col, row)` — 
+      `rowSpanOverride` не теряется.
+- [ ] `PatternRepositoryImplRoomTest`: save/load `rowSpan > 1` (шишечка).
+- [ ] `PatternRepositoryImplRoomTest`: save/load `colorHex` (colorwork).
+- [ ] `PatternRepositoryImplRoomTest`: save/load `repeatCode` (раппорт).
+- [ ] `PatternTest`: инварианты агрегата (уже есть база — расширить 
+      под новые атрибуты по мере появления).
+- [ ] Фикстура `test_assets/aran_with_bobbles.json` — японский аран с 
+      `rowSpan = 2-3`.
+
+**При добавлении `ChartLayout` (P2):**
+- [ ] Contract-тесты для `ChartLayout` (родитель): bounds, position, 
+      overlap detection, iteration order — для ВСЕХ реализаций.
+- [ ] `RadialLayoutTest`, `OffsetGridLayoutTest` — конкретные реализации.
+- [ ] Фикстуры: `circle.json`, `peyote.json`, `c2c.json`.
+
+**При добавлении Colorwork UI (P2):**
+- [ ] `PatternCanvasTest` (Robolectric): отрисовка `colorHex`.
+- [ ] Фикстура `fair_isle.json`.
+
+**Compose/Robolectric:** `createComposeRule` в проекте нет (P3 в TECHDEBT). 
+`PatternCanvasTest` возможен через Robolectric + симуляцию `PointerInput`, 
+либо через `composeTestRule` — решать при старте задачи.
+
+### 8. Ссылки
+- Stitchmastery: PDF / SVG / .knt2 (десктоп, $50).
+- Crochet Chart: бриошь, тунис (70+ символов).
+- Pattern Keeper / Stitchmate: .PAT / .OXS / .XSD.
+- Схемы-источники (11.11.2026): японский аран, шарф с косами, кардиган соты — 
+  требуют `rowSpan` (шишечки) и/или `colorHex` (colorwork).
