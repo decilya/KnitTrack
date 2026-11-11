@@ -406,7 +406,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 ### Presentation / Android
 - [ ] **P2 (SRP):** `PatternEditorViewModel` — God State (15+ полей), `@Suppress("LargeClass")`, `TODO(P2)` без issue.
-- [ ] **P2 (Bug):** `TimerViewModel.combine` — race condition: чтение `_state.value` внутри `combine` может терять обновления.
+- [x] **P2 (Bug):** `TimerViewModel.combine` — race condition — **Закрыто 11.11.2026:** `combine` больше не читает `_state.value` и не делает `_state.value = it`; только `_state.update { current -> current.copy(elapsedTime, status, startTimestamp) }`. CAS по контракту `MutableStateFlow`, конкурентные `onIntent`-апдейты не затираются.
 - [ ] **P2 (Compose):** `PatternCanvas` — конфликт жестов (`pointerInput` × 3: tap vs pan vs long-press). Нужен `awaitEachGesture` + `touchSlop`.
 - [ ] **P2 (QA):** Нет Compose-тестов (`createComposeRule`). UI не покрыт.
 

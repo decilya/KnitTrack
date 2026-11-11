@@ -64,24 +64,29 @@ class TimerViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-        // combine: elapsedTime + status из sessionCoordinator + локальный state VM.
-        // State собирается в одном месте — ответственность VM (оркестратор).
+        // combine: elapsedTime + status из sessionCoordinator.
+        //
+        // ВАЖНО: не читать _state.value в combine-лямбде и не делать
+        // _state.value = it в collect. combine-эмиссии и onIntent-апдейты
+        // конкурируют: чтение снимка + полная замена затирают конкурентные
+        // _state.update { } (rowCount, isSaving, projects и т.д.) — race.
+        // Безопасно только _state.update { current -> current.copy(...) } —
+        // CAS по контракту MutableStateFlow, non-flow поля сохраняются.
         viewModelScope.launch {
-            combine(sessionCoordinator.elapsedTime, sessionCoordinator.state) { elapsed, status ->
-                TimerContract.State(
-                    elapsedTime = elapsed,
-                    status = status,
-                    projectId = _state.value.projectId,
-                    startTimestamp = sessionCoordinator.sessionStartTime,
-                    rowCount = _state.value.rowCount,
-                    targetRowCount = _state.value.targetRowCount,
-                    projects = _state.value.projects,
-                    isSaving = _state.value.isSaving,
-                    currentPatternRowNumber = _state.value.currentPatternRowNumber,
-                    currentStitch = _state.value.currentStitch,
-                    isMarkingRow = _state.value.isMarkingRow
-                )
-            }.collect { _state.value = it }
+            combine(
+                sessionCoordinator.elapsedTime,
+                sessionCoordinator.state,
+            ) { elapsed, status -> elapsed to status }
+                .collect { (elapsed, status) ->
+                    val startTimestamp = sessionCoordinator.sessionStartTime
+                    _state.update { current ->
+                        current.copy(
+                            elapsedTime = elapsed,
+                            status = status,
+                            startTimestamp = startTimestamp,
+                        )
+                    }
+                }
         }
 
         // Подписка на поток проектов — обновление State (targetRowCount, currentPatternRowNumber).
