@@ -318,7 +318,8 @@ class PatternRepositoryImpl @Inject constructor(
             symbolCode = operation.symbol.code,
             backSymbolCode = operation.backSymbol?.code,
             colorHex = operation.colorHex,
-            columnSpanOverride = operation.overrideSpan?.value,
+            columnSpanOverride = operation.columnSpanOverride?.value,
+                rowSpanOverride = operation.rowSpanOverride?.value,
             repeatCode = operation.repeatCode
         )
         

@@ -97,6 +97,7 @@ interface PatternDao {
             back_symbol_code = :backSymbolCode,
             color_hex = :colorHex,
             column_span_override = :columnSpanOverride,
+            row_span_override = :rowSpanOverride,
             repeat_code = :repeatCode
         WHERE pattern_row_id = :rowId AND column_start = :columnStart
         """
@@ -108,6 +109,7 @@ interface PatternDao {
         backSymbolCode: String?,
         colorHex: String?,
         columnSpanOverride: Int?,
+        rowSpanOverride: Int?,
         repeatCode: String?
     ): Int
 

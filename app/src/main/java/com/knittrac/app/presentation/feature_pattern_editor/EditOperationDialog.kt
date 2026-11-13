@@ -52,7 +52,7 @@ fun EditOperationDialog(
     onDelete: () -> Unit
 ) {
     var selectedSymbolCode by remember { mutableStateOf(operation.symbol.code) }
-    var spanText by remember { mutableStateOf(operation.overrideSpan?.value?.toString() ?: "") }
+    var spanText by remember { mutableStateOf(operation.columnSpanOverride?.value?.toString() ?: "") }
     var colorHex by remember { mutableStateOf(operation.colorHex ?: "") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 

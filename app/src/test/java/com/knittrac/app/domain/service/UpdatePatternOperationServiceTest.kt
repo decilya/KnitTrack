@@ -54,14 +54,16 @@ class UpdatePatternOperationServiceTest {
     private fun params(
         columnStart: Int = 0, 
         sym: Symbol = symbol(),
-        overrideSpan: Span? = null
+        columnSpanOverride: Span? = null,
+        rowSpanOverride: Span? = null
     ): UpdatePatternOperationParams =
         UpdatePatternOperationParams(
             patternId = PatternId.create(1L),
             rowId = PatternRowId.create(10L),
             columnStart = ColumnStart.create(columnStart),
             symbol = sym,
-            overrideSpan = overrideSpan
+            columnSpanOverride = columnSpanOverride,
+            rowSpanOverride = rowSpanOverride
         )
 
     @Test
@@ -93,7 +95,7 @@ class UpdatePatternOperationServiceTest {
             Result.Success(listOf(OperationSpan(ColumnStart.create(1), Span.ONE)))
 
         // Пытаемся обновить операцию на колонке 0, но расширяем до span 2 (заденет колонку 1)
-        val result = service.update(params(columnStart = 0, overrideSpan = Span.create(2)))
+        val result = service.update(params(columnStart = 0, columnSpanOverride = Span.create(2)))
 
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).error is AppError.ValidationError)
@@ -134,7 +136,7 @@ class UpdatePatternOperationServiceTest {
         coEvery { patternRepository.updateOperation(any()) } returns Result.Success(Unit)
 
         // Обновляем операцию на колонке 0, расширяем до span 2 (0 и 1). До 5 не достает.
-        val result = service.update(params(columnStart = 0, overrideSpan = Span.create(2)))
+        val result = service.update(params(columnStart = 0, columnSpanOverride = Span.create(2)))
 
         assertTrue(result is Result.Success)
     }

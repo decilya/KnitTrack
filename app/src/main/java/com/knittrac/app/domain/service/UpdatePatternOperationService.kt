@@ -89,7 +89,7 @@ class UpdatePatternOperationService @Inject constructor(
         val otherSpans = existingSpans.filter { it.columnStart != params.columnStart }
 
         // Эффективная ширина: либо явно заданная (override), либо из легенды.
-        val effectiveSpan = params.overrideSpan ?: legendSymbol.defaultColumnSpan
+        val effectiveSpan = params.columnSpanOverride ?: legendSymbol.defaultColumnSpan
         val newSpan = OperationSpan(columnStart = params.columnStart, span = effectiveSpan)
 
         val hasOverlap = otherSpans.any { it.overlapsWith(newSpan) }
@@ -117,7 +117,8 @@ class UpdatePatternOperationService @Inject constructor(
             symbol = legendSymbol,
             backSymbol = params.backSymbol,
             colorHex = params.colorHex,
-            overrideSpan = params.overrideSpan,
+            columnSpanOverride = params.columnSpanOverride,
+            rowSpanOverride = params.rowSpanOverride,
             repeatCode = params.repeatCode
         )
         return when (val saveResult = patternRepository.updateOperation(operation)) {

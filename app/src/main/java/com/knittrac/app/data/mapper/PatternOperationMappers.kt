@@ -10,10 +10,8 @@ import com.knittrac.app.domain.entity.PatternOperation
 /**
  * Маппер [PatternOperation] (Domain) в [PatternOperationEntity] (Data).
  *
- * ВАЖНО: `PatternOperation` (Domain) имеет один `overrideSpan: Span?`, а
- * `PatternOperationEntity` — два поля (`columnSpanOverride`, `rowSpanOverride`).
- * `rowSpanOverride` всегда пишется как null (P2 в TECHDEBT: потеря вертикального
- * span при маппинге; восстановление — при появлении rowSpan в Domain).
+ * ВАЖНО: `PatternOperation` (Domain) имеет две оси спана (`columnSpanOverride`,
+ * `rowSpanOverride`), которые мапятся в соответствующие поля Entity.
  *
  * Символы в БД — по `code` (PK), поэтому `symbol.code` / `backSymbol?.code`.
  *
@@ -25,8 +23,8 @@ fun PatternOperation.toEntity(): PatternOperationEntity = PatternOperationEntity
     symbolCode = symbol.code,
     backSymbolCode = backSymbol?.code,
     colorHex = colorHex,
-    columnSpanOverride = overrideSpan?.value,
-    rowSpanOverride = null,
+    columnSpanOverride = columnSpanOverride?.value,
+    rowSpanOverride = rowSpanOverride?.value,
     repeatCode = repeatCode
 )
 
@@ -47,6 +45,7 @@ fun PatternOperationEntity.toDomain(
     symbol = symbol,
     backSymbol = backSymbol,
     colorHex = colorHex,
-    overrideSpan = columnSpanOverride?.let { Span.createOrNull(it) },
+    columnSpanOverride = columnSpanOverride?.let { Span.createOrNull(it) },
+    rowSpanOverride = rowSpanOverride?.let { Span.createOrNull(it) },
     repeatCode = repeatCode
 )

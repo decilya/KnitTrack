@@ -34,7 +34,7 @@ class AddPatternOperationService @Inject constructor(
      * Добавляет операцию в ряд.
      *
      * @param params Параметры: схема, ряд, колонка, символ, опциональные
-     *   backSymbol / colorHex / overrideSpan / repeatCode.
+     *   backSymbol / colorHex / columnSpanOverride / rowSpanOverride / repeatCode.
      * @return [Result.Success] с созданной [PatternOperation];
      *   [Result.Error] с [AppError.ValidationError] при нарушении инварианта
      *   (символ не в легенде, раппорт не найден, overlap по колонкам)
@@ -113,7 +113,7 @@ class AddPatternOperationService @Inject constructor(
         params: AddPatternOperationParams,
         legendSymbol: Symbol
     ): Result<Unit> {
-        val effectiveSpan = params.overrideSpan ?: legendSymbol.defaultColumnSpan
+        val effectiveSpan = params.columnSpanOverride ?: legendSymbol.defaultColumnSpan
         val newSpan = OperationSpan(columnStart = params.columnStart, span = effectiveSpan)
 
         return when (val existing = patternRepository.getOperationSpansForRow(params.row.id)) {
@@ -149,7 +149,8 @@ class AddPatternOperationService @Inject constructor(
             symbol = params.symbol,
             backSymbol = params.backSymbol,
             colorHex = params.colorHex,
-            overrideSpan = params.overrideSpan,
+            columnSpanOverride = params.columnSpanOverride,
+            rowSpanOverride = params.rowSpanOverride,
             repeatCode = params.repeatCode
         )
         return when (val saveResult = patternRepository.addOperation(operation)) {

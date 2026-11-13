@@ -15,8 +15,8 @@ fun PatternOperation.toDto(): PatternOperationDto = PatternOperationDto(
     symbolCode = symbol.code,
     backSymbolCode = backSymbol?.code,
     colorHex = colorHex,
-    columnSpanOverride = overrideSpan?.value,
-    rowSpanOverride = null,
+    columnSpanOverride = columnSpanOverride?.value,
+    rowSpanOverride = rowSpanOverride?.value,
     repeatCode = repeatCode
 )
 
@@ -30,7 +30,8 @@ fun PatternOperationDto.toDomain(): PatternOperation = PatternOperation(
     symbol = symbolByCode(symbolCode),
     backSymbol = backSymbolCode?.let { symbolByCode(it) },
     colorHex = colorHex,
-    overrideSpan = columnSpanOverride?.let { Span.createOrNull(it) },
+    columnSpanOverride = columnSpanOverride?.let { Span.createOrNull(it) },
+    rowSpanOverride = rowSpanOverride?.let { Span.createOrNull(it) },
     repeatCode = repeatCode
 )
 

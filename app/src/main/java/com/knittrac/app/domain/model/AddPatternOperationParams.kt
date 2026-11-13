@@ -18,7 +18,8 @@ import com.knittrac.app.domain.entity.Symbol
  * @property symbol Символ операции (обязан быть в легенде схемы).
  * @property backSymbol Символ для изнаночной стороны (опционально).
  * @property colorHex Цвет в HEX (опционально).
- * @property overrideSpan Переопределение ширины (опционально).
+ * @property columnSpanOverride Переопределение ширины (опционально).
+ * @property rowSpanOverride Переопределение высоты (опционально).
  * @property repeatCode Код раппорта (опционально; если задан — должен
  *   присутствовать в [Pattern.repeats]).
  */
@@ -29,6 +30,7 @@ data class AddPatternOperationParams(
     val symbol: Symbol,
     val backSymbol: Symbol? = null,
     val colorHex: String? = null,
-    val overrideSpan: Span? = null,
+    val columnSpanOverride: Span? = null,
+    val rowSpanOverride: Span? = null,
     val repeatCode: String? = null
 )

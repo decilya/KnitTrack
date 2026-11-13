@@ -72,7 +72,8 @@ class AddPatternOperationServiceTest {
     private fun params(
         columnStart: Int = 0,
         repeatCode: String? = null,
-        overrideSpan: Span? = null,
+        columnSpanOverride: Span? = null,
+        rowSpanOverride: Span? = null,
         sym: Symbol = symbol()
     ): AddPatternOperationParams = AddPatternOperationParams(
         patternId = PatternId.create(1L),
@@ -80,7 +81,8 @@ class AddPatternOperationServiceTest {
         columnStart = ColumnStart.create(columnStart),
         symbol = sym,
         repeatCode = repeatCode,
-        overrideSpan = overrideSpan
+        columnSpanOverride = columnSpanOverride,
+        rowSpanOverride = rowSpanOverride
     )
 
     @Test
@@ -199,7 +201,7 @@ class AddPatternOperationServiceTest {
      * Сценарий:
      * - params.symbol.defaultColumnSpan = 1 (устаревший, слишком узкий)
      * - legendSymbol.defaultColumnSpan = 3 (истинный)
-     * - columnStart = 0, overrideSpan = null
+     * - columnStart = 0, columnSpanOverride = null
      * - существующая операция: [2, 3)
      *
      * stale-span: [0, 1) не пересекается с [2, 3) -> Success (баг до фикса)

@@ -18,6 +18,7 @@ data class UpdatePatternOperationParams(
     val symbol: Symbol,
     val backSymbol: Symbol? = null,
     val colorHex: String? = null,
-    val overrideSpan: Span? = null,
+    val columnSpanOverride: Span? = null,
+    val rowSpanOverride: Span? = null,
     val repeatCode: String? = null
 )

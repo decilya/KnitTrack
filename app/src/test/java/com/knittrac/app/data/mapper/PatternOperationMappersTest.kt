@@ -35,7 +35,7 @@ class PatternOperationMappersTest {
             symbol = symbol("K"),
             backSymbol = symbol("P"),
             colorHex = "#FF0000",
-            overrideSpan = Span.create(2),
+            columnSpanOverride = Span.create(2),
             repeatCode = "A"
         )
 

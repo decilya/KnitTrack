@@ -7,7 +7,7 @@ import androidx.annotation.Keep
  *
  * Защищает инвариант: значение >= 1. Span = 0 бессмыслен (операция
  * занимает 0 колонок/рядов). Используется в [Symbol] (defaultColumnSpan,
- * defaultRowSpan) и [PatternOperation] (overrideSpan).
+ * defaultRowSpan) и [PatternOperation] (columnSpanOverride, rowSpanOverride).
  */
 @Keep
 @JvmInline

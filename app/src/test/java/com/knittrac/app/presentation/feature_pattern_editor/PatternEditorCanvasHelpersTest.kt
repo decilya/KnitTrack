@@ -38,7 +38,7 @@ class PatternEditorCanvasHelpersTest {
             patternRowId = PatternRowId.create(1L),
             columnStart = ColumnStart.create(columnStart),
             symbol = symbol,
-            overrideSpan = Span.create(span)
+            columnSpanOverride = Span.create(span)
         )
 
     private fun pattern(rows: List<PatternRow>): Pattern = Pattern(

@@ -416,7 +416,8 @@ class PatternEditorViewModel @Inject constructor(
                 symbol = newSymbol,
                 backSymbol = intent.oldOperation.backSymbol,
                 colorHex = intent.newColorHex,
-                overrideSpan = intent.newOverrideSpan,
+                columnSpanOverride = intent.newOverrideSpan,
+                rowSpanOverride = null,
                 repeatCode = intent.oldOperation.repeatCode
             )
         )
