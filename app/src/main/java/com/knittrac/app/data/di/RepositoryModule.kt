@@ -9,6 +9,9 @@ import com.knittrac.app.domain.repository.DataExporter
 import com.knittrac.app.domain.repository.BackupRepository
 import com.knittrac.app.data.repository.BackupRepositoryImpl
 import com.knittrac.app.domain.repository.DataImporter
+import com.knittrac.app.domain.repository.PatternImageExporter
+import com.knittrac.app.data.renderer.SvgPatternRenderer
+
 import com.knittrac.app.domain.repository.PatternRepository
 import com.knittrac.app.domain.repository.ProjectRepository
 import com.knittrac.app.domain.repository.SessionRepository
@@ -65,4 +68,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDataImporter(impl: DataImporterImpl): DataImporter
+
+    /** Связывает [PatternImageExporter] с реализацией. */
+    @Binds
+    @Singleton
+    abstract fun bindPatternImageExporter(impl: SvgPatternRenderer): PatternImageExporter
+
 }
