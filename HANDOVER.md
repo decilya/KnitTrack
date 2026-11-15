@@ -482,11 +482,7 @@ ProjectRepositoryImpl.kt:32 и SessionRepositoryImpl.kt:31 были анноти
 
 ## 14. СОСТОЯНИЕ — P1
 
-9. AppErrorMapper — НЕ мёртвый. Используется в BaseUseCase.kt и BaseFlowUseCase.kt. Плюс конфликт: мапит IOException к NetworkError, а в 2b-1 добавлен IoError и применён в репозиториях. Два маппинга одного исключения.
-10. DataExporter и DataImporter без тестов.
-11. LanguageOption в core/localization вместо domain/entity. LocaleManager переименован в LocaleService (refactor(locale), День 4).
-12. Session.updatedAt default в конструкторе.
-13. SaveSessionService:53 — русский текст в логе.
+**Все P1-блокеры из этого раздела закрыты.** Актуальный статус — см. `TECHDEBT.md`.
 
 ---
 
@@ -882,7 +878,7 @@ FGS type: dataSync — specialUse.
 Firebase не начинать (Фаза 3, 4-6 недель).
 Gateway не вводить (даже тонкий).
 Provider в код не вводить — источников пока один.
-Backtick-тесты не переписывать (спорное правило).
+Backtick-тесты — переписаны в ноябре 2026 (правило стало стандартом, пункт удален).
 Feature flags, Security, Performance — после релиза.
 
 ---
@@ -976,6 +972,7 @@ Workflow:
 README.md — описание (UTF-8).
 ROADMAP.md — план v1.0.
 HANDOVER.md — этот документ.
+AGENTS.md — правила для ИИ-агента.
 .gitattributes — LF/CRLF (День 1).
 .gitignore — дополнен (День 1).
 .githooks/pre-commit — (День 1).
@@ -983,6 +980,7 @@ HANDOVER.md — этот документ.
 docs/architecture:
 
 PHILOSOPHY.md, STANDARDS.md, TECHDEBT.md, CONTRIBUTING.md — справочник, enforcement, долг, процесс.
+PROJECT_MAP.md — карта слоев и архитектурных фактов.
 vo-pattern.md — паттерн VO.
 rows-and-patterns.md — семантика рядов и схем, инварианты trg_progress_check.
 pattern-editor-design.md — дизайн Pattern Editor (7f-B).
@@ -1006,7 +1004,7 @@ domain — entity, repository, service.
 platform — timer (SystemTimeProvider), service (TimerForegroundService), notification, di.
 presentation — feature_projects, feature_settings, feature_stats, feature_timer, common.
 
-app/src/test — 146 тестов (292 прогона: debug + release).
+app/src/test — 486 тестов (972 прогона: debug + release).
 
 app/proguard-rules.pro — Gson, Coroutines, attributes (не пуст).
 
