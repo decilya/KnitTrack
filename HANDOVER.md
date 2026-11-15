@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 487 уникальных (974 прогона: debug + release), 0 failures.
+**Тесты:** 489 уникальных (978 прогонов: debug + release), 0 failures.
 
 ---
 
@@ -272,7 +272,7 @@ Types: feat, fix, refactor, test, chore, docs.
 
 XML-отчёт: app/build/test-results/testDebugUnitTest/*.xml.
 
-### 12.6.2. До релиза / важного коммита (10 пунктов)
+### 12.6.2. До релиза / важного коммита (11 пунктов)
 
 1. Нет бизнес-логики в Presentation.
 2. Нет DAO в Presentation/Service.
@@ -284,6 +284,7 @@ XML-отчёт: app/build/test-results/testDebugUnitTest/*.xml.
 8. DELETE идемпотентен для UI, для auditable приводит к Result с Int, 0 равно NotFoundError.
 9. Имена тестов — английский camelCase без backtick-кириллицы.
 10. KDoc парный, русский, без markdown.
+11. PDF-экспорт открывается в Chrome/Adobe Reader (не только `%PDF-` сигнатура).
 
 ### 12.6.3. Код-ревью фичи (структурное)
 
@@ -752,6 +753,9 @@ Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup
 Сессия 15.11.2026 (D&D reorder):
 - **P1 D&D-reorder (UI):** `LazyRow` с `FilterChip` заменён на `ReorderableLazyListState` + `ReorderableItem`. Long-press + drag за иконку `DragHandle`. При drop вызывается `Intent.UpdateRowNumber` (существующий `UpdatePatternRowNumberService`). Haptic feedback на drag start/stop. Зависимость: `sh.calvin.reorderable:reorderable:3.1.0`. Коммит `6555ade`.
 
+
+Сессия 15.11.2026 (PDF-экспорт):
+- **P1 PDF-экспорт:** Domain (`PdfPatternExporter`), Data (`PdfPatternRenderer` на `android.graphics.pdf.PdfDocument`), UseCase (`ExportPatternPdfUseCase`). DI: второй `@Binds` (`bindPdfPatternExporter`), без `@Named` — два узких интерфейса (ISP). UI: `DropdownMenu` SVG/PDF на кнопке Share, второй SAF-launcher `application/pdf`. Тесты: `PdfPatternRendererTest` (smoke `SCHEMA_EMPTY`, без Robolectric) + `ExportPatternPdfUseCaseTest` (Success/Error/поток не закрыт). `PdfPatternRenderer` — integration, см. `TECHDEBT.md` P3.
 ---
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
@@ -1465,3 +1469,63 @@ ViewModel с >4 зависимостями — кандидат на деком�
 **Пример (07.11.2026):** добавили `@RunWith(RobolectricTestRunner::class)` — зелёный.
 
 **Правило:** если тест создаёт исключение из `android.database.sqlite.*` или другого Android SDK-класса — `@RunWith(RobolectricTestRunner::class)`.
+
+
+### Урок 46. Вставка поля в data class / список параметров — проверять запятую у предыдущего
+
+**Симптом:** после патча — `Expecting comma or ')'` на `kspDebugKotlin` / `compileDebugKotlin`.
+
+**Причина:** line-based `strip() == "..."` вставляет новое поле после предыдущего, но не знает, что тот последний — запятой в конце нет.
+
+**Пример (15.11.2026):** `PatternEditorPatternUseCases` — вставили `exportPdf` после `exportSvg`, но у `exportSvg` не было запятой (последнее поле). KSP упал на `23:43`.
+
+**Правило:** при вставке элемента после «последнего» — либо явно проверять `line.rstrip().endswith(",")` и добавлять запятую, либо брать anchor из двух строк (`prev + line`).
+
+### Урок 47. Новое поле в `@Inject` data class — обновить все тестовые фикстуры
+
+**Симптом:** `No value passed for parameter '<newField>'` в `compileDebugUnitTestKotlin`, хотя main-код компилируется.
+
+**Причина:** `PatternEditorViewModelTestBase` собирает `PatternEditorPatternUseCases(...)` вручную — новый параметр обязателен.
+
+**Пример (15.11.2026):** добавили `val exportPdf` — упал `compileDebugUnitTestKotlin` до тех пор, пока в TestBase не добавили mockk.
+
+**Правило:** при добавлении параметра в `@Inject` data class (`*UseCases`, `*Params`, `*Deps`) — сразу `grep -rn "<ClassName>(" app/src/test/`. Делать в том же патче, что и main-код.
+
+### Урок 48. Тест на entity — только после `cat -n` её файла в этом же чате
+
+**Симптом:** 3 ошибки компиляции в новом тесте: `Unresolved reference: Direction`, `Map<...> vs Set<Symbol>`, `Unresolved reference: create`.
+
+**Причина:** сигнатуры entity эволюционируют. Помнил по прошлой сессии: `Direction`, `legend: Map`, `Symbol.create` — а в проекте: `PatternDirection`, `legend: Set<Symbol>`, конструктор `Symbol(...)` без `create`.
+
+**Пример (15.11.2026):** `PdfPatternRendererTest` — три фейла из-за устаревших представлений.
+
+**Правило:** перед `write_text` теста на entity — `cat -n` файла этой entity в **этом же чате**. Один `cat` (1 сек) дешевле одного BUILD FAILED (1 мин) и регрессии в угадывание.
+
+### Урок 49. Robolectric не реализует `PdfDocument.writeTo`
+
+**Симптом:** тесты на `PdfPatternRenderer` (Robolectric) падают на `assertTrue(result is Result.Success)` — `PdfDocument`/`Canvas` shadow бросает исключение, `Result.Error` уходит в тест.
+
+**Причина:** `android.graphics.pdf.PdfDocument` рисует через нативный Skia, которого в Robolectric нет. Shadow реализует только метаданные (`pageCount`, `pageInfo`), **не** рендер. Даже если `Result.Success` пройдёт — байты будут мусор, `%PDF-` не совпадёт.
+
+**Пример (15.11.2026):** `exportToPdf_singleOperation_writesPdfSignature` и `exportToPdf_invalidColorHex_fallsBackToWhite` — 2 фейла из 488.
+
+**Правило:** `PdfPatternRenderer` (Data) — integration-код. JVM-тест покрывает **только** ветку валидации (пустая схема → `Result.Error` **до** `PdfDocument()`). Рендер — instrumented-test или ручная проверка в APK (TECHDEBT P3).
+
+### Урок 50. Консилиум-эвристика: Android SDK-фейл в unit-тесте — менять слой, не изобретать shadow
+
+**Симптом:** JVM-тест падает на Android SDK-классе (`PdfDocument`, `SQLiteDatabase`, `Canvas`, `Bitmap`).
+
+**Антипаттерн:** пытаться подкрутить `@Config(sdk=...)`, вводить shadow-адаптер, заворачивать в `ReflectiveOperationException`, «поиграть версией Robolectric». Это трата времени — shadow-API неполный по определению.
+
+**Правильный ход (консилиум из 5 ролей, 15.11.2026):**
+- **Тимлид:** тест не на то — Data-адаптер к SDK не юнит-тестируется.
+- **Android-тестировщик:** shadow неполный, единственный честный вариант — instrumented.
+- **DDD:** границы слоёв — UseCase (Domain) тестируется через мок, Renderer (Data) — integration.
+- **Прагматик:** 80 строк кода / ~45 минут тестов — ROI минимальный.
+- **Контр-голос:** smoke-only — самообман, лучше честная дыра в TECHDEBT.
+
+**Решение:**
+1. Smoke на ветку валидации (до SDK-вызова).
+2. Unit на UseCase через mockk (проверяет оркестрацию и `Result`-контракт).
+3. Integration (Data) — `TECHDEBT P3`, ручная проверка в APK перед релизом.
+4. Не имитировать покрытие ради зелёного CI.

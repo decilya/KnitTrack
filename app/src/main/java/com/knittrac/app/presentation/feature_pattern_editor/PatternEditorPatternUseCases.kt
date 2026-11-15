@@ -2,6 +2,7 @@ package com.knittrac.app.presentation.feature_pattern_editor
 
 import com.knittrac.app.domain.service.CreatePatternUseCase
 import com.knittrac.app.domain.service.ExportPatternSvgUseCase
+import com.knittrac.app.domain.service.ExportPatternPdfUseCase
 import com.knittrac.app.domain.service.GetAllPatternSummariesService
 import com.knittrac.app.domain.service.GetPatternByIdService
 import javax.inject.Inject
@@ -19,5 +20,6 @@ data class PatternEditorPatternUseCases @Inject constructor(
     val getPatternById: GetPatternByIdService,
     val getAllPatternSummaries: GetAllPatternSummariesService,
     val createPattern: CreatePatternUseCase,
-    val exportSvg: ExportPatternSvgUseCase
+    val exportSvg: ExportPatternSvgUseCase,
+    val exportPdf: ExportPatternPdfUseCase
 )

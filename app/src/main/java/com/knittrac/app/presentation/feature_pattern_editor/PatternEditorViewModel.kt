@@ -117,6 +117,7 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.DismissEditTutorial -> dismissEditTutorial()
             is PatternEditorContract.Intent.Retry -> retry()
             is PatternEditorContract.Intent.ExportSvg -> exportSvg(intent.outputStream)
+            is PatternEditorContract.Intent.ExportPdf -> exportPdf(intent.outputStream)
             is PatternEditorContract.Intent.OpenLegendEditor -> _state.update { it.copy(isLegendEditorOpen = true) }
             is PatternEditorContract.Intent.CloseLegendEditor -> _state.update { it.copy(isLegendEditorOpen = false) }
             is PatternEditorContract.Intent.AddSymbol -> addSymbol(intent)
@@ -188,6 +189,22 @@ class PatternEditorViewModel @Inject constructor(
         viewModelScope.launch {
             val params = ExportPatternSvgParams(currentPattern, outputStream)
             when (patternUseCases.exportSvg(params)) {
+                is com.knittrac.app.core.common.Result.Success -> _effect.send(PatternEditorContract.Effect.ExportSuccess)
+                is com.knittrac.app.core.common.Result.Error -> _effect.send(PatternEditorContract.Effect.ExportError)
+            }
+        }
+    }
+
+    /**
+     * Экспорт текущей схемы в PDF.
+     *
+     * @param outputStream Поток для записи PDF. Не закрывается здесь.
+     */
+    private fun exportPdf(outputStream: java.io.OutputStream) {
+        val currentPattern = _state.value.pattern ?: return
+        viewModelScope.launch {
+            val params = com.knittrac.app.domain.service.ExportPatternPdfParams(currentPattern, outputStream)
+            when (patternUseCases.exportPdf(params)) {
                 is com.knittrac.app.core.common.Result.Success -> _effect.send(PatternEditorContract.Effect.ExportSuccess)
                 is com.knittrac.app.core.common.Result.Error -> _effect.send(PatternEditorContract.Effect.ExportError)
             }

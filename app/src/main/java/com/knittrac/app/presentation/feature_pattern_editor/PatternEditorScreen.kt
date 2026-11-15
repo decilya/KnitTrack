@@ -74,8 +74,9 @@ fun PatternEditorScreen(
         )
     }
 
+    var exportMenuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val exportLauncher = rememberLauncherForActivityResult(
+    val svgLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("image/svg+xml")
     ) { uri ->
         if (uri != null) {
@@ -89,11 +90,26 @@ fun PatternEditorScreen(
         }
     }
 
+
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                    viewModel.onIntent(PatternEditorContract.Intent.ExportPdf(stream))
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is PatternEditorContract.Effect.ExportSuccess -> Toast.makeText(context, "SVG saved", Toast.LENGTH_SHORT).show()
-                is PatternEditorContract.Effect.ExportError -> Toast.makeText(context, "SVG export failed", Toast.LENGTH_SHORT).show()
+                is PatternEditorContract.Effect.ExportSuccess -> Toast.makeText(context, "File saved", Toast.LENGTH_SHORT).show()
+                is PatternEditorContract.Effect.ExportError -> Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
                 else -> Unit
             }
         }
@@ -134,10 +150,29 @@ fun PatternEditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        pattern?.let { p -> exportLauncher.launch("pattern_${p.id.value}.svg") }
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Export SVG")
+                    Box {
+                        IconButton(onClick = { exportMenuExpanded = true }) {
+                            Icon(Icons.Default.Share, contentDescription = "Export")
+                        }
+                        DropdownMenu(
+                            expanded = exportMenuExpanded,
+                            onDismissRequest = { exportMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Export SVG") },
+                                onClick = {
+                                    exportMenuExpanded = false
+                                    pattern?.let { p -> svgLauncher.launch("pattern_${p.id.value}.svg") }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Export PDF") },
+                                onClick = {
+                                    exportMenuExpanded = false
+                                    pattern?.let { p -> pdfLauncher.launch("pattern_${p.id.value}.pdf") }
+                                }
+                            )
+                        }
                     }
 
                     IconButton(onClick = { viewModel.onIntent(Intent.ShowEditTutorial) }) {

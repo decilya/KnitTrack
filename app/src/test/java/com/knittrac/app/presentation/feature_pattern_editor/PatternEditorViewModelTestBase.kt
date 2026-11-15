@@ -27,6 +27,7 @@ import com.knittrac.app.domain.service.AddSymbolUseCase
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.domain.service.CreatePatternUseCase
 import com.knittrac.app.domain.service.ExportPatternSvgUseCase
+import com.knittrac.app.domain.service.ExportPatternPdfUseCase
 import com.knittrac.app.domain.service.DeleteOperationUseCase
 import com.knittrac.app.domain.service.DeletePatternRowUseCase
 import com.knittrac.app.domain.service.DeleteSymbolUseCase
@@ -57,12 +58,14 @@ abstract class PatternEditorViewModelTestBase : BaseTest() {
     protected val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
     protected val createPatternUseCase: CreatePatternUseCase = mockk()
     protected val exportPatternSvgUseCase: ExportPatternSvgUseCase = mockk()
+    protected val exportPatternPdfUseCase: ExportPatternPdfUseCase = mockk()
 
     private val patternUseCases = PatternEditorPatternUseCases(
         getPatternById = getPatternByIdService,
         getAllPatternSummaries = getAllPatternSummariesService,
         createPattern = createPatternUseCase,
-        exportSvg = exportPatternSvgUseCase
+        exportSvg = exportPatternSvgUseCase,
+        exportPdf = exportPatternPdfUseCase
     )
 
     protected val deleteOperationUseCase: DeleteOperationUseCase = mockk()

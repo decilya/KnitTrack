@@ -175,6 +175,12 @@ object PatternEditorContract {
          * Presentation — UseCase пишет строку, но не закрывает поток.
          */
         data class ExportSvg(val outputStream: OutputStream) : Intent()
+
+        /**
+         * Экспорт PDF.
+         * Presentation — UseCase пишет байты, но не закрывает поток.
+         */
+        data class ExportPdf(val outputStream: OutputStream) : Intent()
     }
 
     /**
