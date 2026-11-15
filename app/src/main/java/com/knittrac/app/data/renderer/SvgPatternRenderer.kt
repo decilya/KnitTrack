@@ -20,8 +20,8 @@ class SvgPatternRenderer @Inject constructor() : PatternImageExporter {
         }
 
         val sb = StringBuilder()
-        val cellSize = 32
-        val padding = 50
+        val cellSize = CELL_SIZE
+        val padding = PADDING
         
         appendHeader(sb, pattern, cellSize, padding)
         appendOperations(sb, pattern, cellSize, padding)
@@ -57,5 +57,16 @@ class SvgPatternRenderer @Inject constructor() : PatternImageExporter {
                 sb.append("  <text x=\"$textX\" y=\"$textY\" font-family=\"Arial\" font-size=\"16\" fill=\"#000000\" text-anchor=\"middle\" dominant-baseline=\"central\">${op.symbol.textGlyph}</text>\n")
             }
         }
+    }
+
+    /**
+     * Константы для рендеринга SVG.
+     */
+    companion object {
+        /** Размер одной ячейки в пикселях. */
+        private const val CELL_SIZE = 32
+
+        /** Отступ от левого и верхнего края (для номеров рядов/колонок). */
+        private const val PADDING = 50
     }
 }

@@ -15,12 +15,10 @@ import com.knittrac.app.domain.entity.ProjectId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -164,7 +162,7 @@ class ProjectRepositoryImplRoomTest {
      * двигает. `delay(100)` — время на подписку коллектора.
      */
     @Test
-    fun getAllProjectsFlow_reemitsOnPatternRowUpdate() = runBlocking {
+    fun getAllProjectsFlow_reemitsOnPatternRowUpdate(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val db = openDb(context)
         try {
@@ -172,20 +170,28 @@ class ProjectRepositoryImplRoomTest {
             val id = db.projectDao().insertProject(projectEntity(currentPatternRowId = 10L))
             val repository = ProjectRepositoryImpl(db.projectDao(), FakeTimeProvider())
 
-            val emissions = async {
+            // Детерминированно: Channel вместо async+delay. Гарантированно получаем
+            // initial emission (5) через receive, затем после update — второй (9).
+            val received = Channel<Int>(Channel.UNLIMITED)
+
+            val collector = launch {
                 repository.getAllProjectsFlow()
                     .map { list -> list.firstOrNull { it.id.value == id }?.currentRowNumber?.value }
                     .filterNotNull()
-                    .take(2)
-                    .toList()
+                    .collect { received.send(it) }
             }
 
-            delay(100L) // дать коллектору подписаться и получить initial emission (5)
+            val first = withTimeoutOrNull(5_000L) { received.receive() }
+            assertEquals(5, first)
 
             db.patternDao().updateRowNumber(10L, 9)
 
-            val received = withTimeoutOrNull(5_000L) { emissions.await() }
-            assertEquals(listOf(5, 9), received)
+            val second = withTimeoutOrNull(5_000L) { received.receive() }
+            assertEquals(9, second)
+
+            collector.cancel()
+            received.close()
+            Unit
         } finally {
             db.close()
         }

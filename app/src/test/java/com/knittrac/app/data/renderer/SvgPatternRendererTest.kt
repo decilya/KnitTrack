@@ -92,8 +92,10 @@ class SvgPatternRendererTest {
         
         assertTrue(svg.contains("<svg"))
         assertTrue(svg.contains("</svg>"))
-        assertTrue(svg.contains("<rect")) 
-        assertTrue(svg.contains("<text")) 
+        // Операция на row=0, col=0, span=2x2. cellSize=32, padding=50.
+        // Ожидаемый x=50, y=50, width=64, height=64.
+        assertTrue(svg.contains("""<rect x="50" y="50" width="64" height="64"""))
+        assertTrue(svg.contains("<text"))
         assertTrue(svg.contains("V"))     
     }
 }

@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 486 уникальных (972 прогона: debug + release), 0 failures.
+**Тесты:** 487 уникальных (974 прогона: debug + release), 0 failures.
 
 ---
 

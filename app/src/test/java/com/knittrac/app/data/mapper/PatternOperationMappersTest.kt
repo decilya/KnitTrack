@@ -121,4 +121,29 @@ class PatternOperationMappersTest {
         assertEquals(2, restored.effectiveColumnSpan.value)
         assertEquals(3, restored.effectiveRowSpan.value)
     }
+
+    /**
+     * Round-trip Domain -> Entity -> Domain для операции с двойным оверрайдом спана.
+     * Проверяет, что [PatternOperationMappers.toEntity] и [PatternOperationMappers.toDomain]
+     * корректно сохраняют и восстанавливают оба поля (columnSpanOverride, rowSpanOverride).
+     */
+    @Test
+    fun patternOperation_toEntity_toDomain_roundTrip_preservesSpanOverrides() {
+        val symbol = symbol("B")
+        val operation = PatternOperation(
+            patternRowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(3),
+            symbol = symbol,
+            columnSpanOverride = Span.create(2),
+            rowSpanOverride = Span.create(3)
+        )
+
+        val entity = operation.toEntity()
+        assertEquals(2, entity.columnSpanOverride)
+        assertEquals(3, entity.rowSpanOverride)
+
+        val restored = entity.toDomain(symbol)
+        assertEquals(2, restored.effectiveColumnSpan.value)
+        assertEquals(3, restored.effectiveRowSpan.value)
+    }
 }
