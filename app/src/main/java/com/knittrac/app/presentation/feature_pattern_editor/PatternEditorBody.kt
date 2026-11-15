@@ -1,6 +1,7 @@
 package com.knittrac.app.presentation.feature_pattern_editor
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -10,15 +11,26 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.knittrac.app.R
 import com.knittrac.app.domain.entity.Pattern
+import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.RowNumber
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContract.Intent
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 /**
  * Тело экрана Pattern Editor.
@@ -27,6 +39,8 @@ import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContrac
  * 1. Горизонтальный список рядов (LazyRow с FilterChip для выбора ряда).
  * 2. Canvas с паттерном (PatternCanvas).
  * 3. Сетка символов (LazyVerticalGrid) в режиме sticky (если легенда не пуста).
+ *
+ * D&D reorder (15.11.2026): ряды можно перетаскивать за иконку-ручку.
  *
  * @param pattern Схема для отображения.
  * @param state Состояние экрана (выбранный ряд, символ, режим sticky).
@@ -40,17 +54,47 @@ internal fun PatternEditorBody(
     callbacks: PatternEditorCallbacks,
     modifier: Modifier = Modifier
 ) {
+    val lazyListState = rememberLazyListState()
+    val hapticFeedback = LocalHapticFeedback.current
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val rowIdValue = from.key as? Long ?: return@rememberReorderableLazyListState
+        val newRowNumber = RowNumber.createOrNull(to.index + 1) ?: return@rememberReorderableLazyListState
+        callbacks.onIntent(Intent.UpdateRowNumber(PatternRowId.createOrDefault(rowIdValue), newRowNumber))
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+
     Column(modifier.fillMaxSize()) {
-        LazyRow(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        LazyRow(
+            state = lazyListState,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+        ) {
             items(pattern.rows, key = { it.id.value }) { row ->
-                FilterChip(
-                    selected = row.id == state.selectedRowId,
-                    onClick = { callbacks.onIntent(Intent.SelectRow(row.id)) },
-                    label = {
-                        Text(stringResource(R.string.pattern_editor_row_prefix, row.rowNumber.value))
-                    },
-                    modifier = Modifier.padding(end = 8.dp)
-                )
+                ReorderableItem(reorderableLazyListState, key = row.id.value) { isDragging ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilterChip(
+                            selected = row.id == state.selectedRowId,
+                            onClick = { callbacks.onIntent(Intent.SelectRow(row.id)) },
+                            label = {
+                                Text(stringResource(R.string.pattern_editor_row_prefix, row.rowNumber.value))
+                            },
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.DragHandle,
+                            contentDescription = "Reorder",
+                            modifier = Modifier
+                                .draggableHandle(
+                                    onDragStarted = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    },
+                                    onDragStopped = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                )
+                                .padding(end = 4.dp)
+                        )
+                    }
+                }
             }
         }
         PatternCanvas(

@@ -82,6 +82,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("co.yml:ycharts:2.1.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("sh.calvin.reorderable:reorderable:3.1.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("androidx.test:core-ktx:1.5.0")

@@ -748,6 +748,10 @@ Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup
 - **P1 SVG-экспорт:** Domain (`PatternImageExporter`), Data (`SvgPatternRenderer`), UseCase (`ExportPatternSvgUseCase`), UI (SAF `CreateDocument` + кнопка Share). Коммиты `98b941f`, `24c4099`.
 - **Docs:** Созданы `AGENTS.md` (правила для ИИ) и `PROJECT_MAP.md` (карта слоев). Обновлен `TECHDEBT.md`.
 
+
+Сессия 15.11.2026 (D&D reorder):
+- **P1 D&D-reorder (UI):** `LazyRow` с `FilterChip` заменён на `ReorderableLazyListState` + `ReorderableItem`. Long-press + drag за иконку `DragHandle`. При drop вызывается `Intent.UpdateRowNumber` (существующий `UpdatePatternRowNumberService`). Haptic feedback на drag start/stop. Зависимость: `sh.calvin.reorderable:reorderable:3.1.0`. Коммит `6555ade`.
+
 ---
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
