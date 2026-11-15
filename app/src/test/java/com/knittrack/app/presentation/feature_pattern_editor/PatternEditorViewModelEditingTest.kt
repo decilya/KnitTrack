@@ -414,4 +414,34 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
         coVerify(exactly = 2) { getPatternByIdService(any()) }
     }
+
+    /**
+     * Проверяет, что при UpdateRowNumber (D&D reorder) вызывается UseCase
+     * с правильными параметрами (patternId, rowId, newRowNumber).
+     */
+    @Test
+    fun updateRowNumberCallsUseCaseWithExpectedParams() = runTest {
+        coEvery { getPatternByIdService(any()) } returns Result.Success(pattern())
+        coEvery { updatePatternRowNumberUseCase(any()) } returns Result.Success(Unit)
+
+        val vm = createViewModel()
+        vm.onIntent(PatternEditorContract.Intent.LoadPattern(PatternId.create(1L)))
+        advanceUntilIdle()
+
+        vm.onIntent(
+            PatternEditorContract.Intent.UpdateRowNumber(
+                rowId = PatternRowId.create(10L),
+                newRowNumber = RowNumber.create(3)
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            updatePatternRowNumberUseCase(match {
+                it.patternId == PatternId.create(1L) &&
+                it.rowId == PatternRowId.create(10L) &&
+                it.newRowNumber.value == 3
+            })
+        }
+    }
 }
