@@ -27,3 +27,5 @@ README.old.txt
 # Logs
 logs/
 
+# Android Studio local plans
+.idea/planningMode.xml
