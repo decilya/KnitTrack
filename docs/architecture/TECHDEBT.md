@@ -415,7 +415,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 ### Стратегия / CTO / PM / SMM
 - [ ] **P1 (Strategy):** Scope Creep. Pattern Editor (v1.1) вытеснил Sync (v1.0). Нужен пересмотр приоритетов.
 - [ ] **P1 (SMM):** Package name `com.knittrackk.app` ≠ бренд `KnitTrack`. Блокер для Google Play (переименование до релиза).
-- [ ] **P2 (CTO):** Нет Crashlytics / remote-сбора крэшей.
+- [x] **P2 (CTO):** Нет Crashlytics / remote-сбора крэшей. **(Закрыто 15.11.2026: подключен Firebase Crashlytics, BoM 33.7.0)**
 - [ ] **P2 (CTO):** Нет benchmark-тестов (производительность JOIN на Canvas не измерена).
 - [ ] **P2 (SMM):** Нет скриншотов и описания для Google Play.
 - [ ] **P2 (PM):** Нет Acceptance Criteria для D&D-reorder рядов.
@@ -572,3 +572,6 @@ overlap detection, iteration order), затем для каждой реализ
 - Pattern Keeper / Stitchmate: .PAT / .OXS / .XSD.
 - Схемы-источники (11.11.2026): японский аран, шарф с косами, кардиган соты — 
   требуют `rowSpan` (шишечки) и/или `colorHex` (colorwork).
+
+- [ ] **P3 (infra):** Обновление стека до Kotlin 2.1.0 (K2 Compiler). Требует синхронного обновления Compose Compiler, KSP, Hilt и Firebase BoM (до 34+). Несет риски регрессии.
+- [ ] **P3 (ci):** Настроить передачу `google-services.json` в CI (через secrets) или сборку без Crashlytics в PR (сейчас используется `missingGoogleServicesStrategy = WARN`).

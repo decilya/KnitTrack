@@ -29,3 +29,6 @@ logs/
 
 # Android Studio local plans
 .idea/planningMode.xml
+
+# Firebase secrets
+google-services.json

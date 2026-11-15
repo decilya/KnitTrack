@@ -1,6 +1,8 @@
 package com.knittrack.app
 
 import android.app.Application
+import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.knittrack.app.core.localization.LocaleService
 import com.knittrack.app.core.logging.FileLoggingTree
 import dagger.hilt.android.HiltAndroidApp
@@ -55,6 +57,7 @@ class KnitTracApplication : Application() {
             // В release DebugTree недоступен — plant file-logger, иначе
             // все вызовы Timber.e превращаются в no-op.
             Timber.plant(FileLoggingTree(File(filesDir, "logs")))
+            Timber.plant(CrashlyticsTree())
         }
 
         applicationScope.launch {
@@ -62,6 +65,27 @@ class KnitTracApplication : Application() {
                 localeService.ensureLanguageInitialized()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize locale, using system default")
+            }
+        }
+    }
+}
+
+/**
+ * Дерево Timber, которое пересылает логи уровня ERROR и исключения в Firebase Crashlytics.
+ *
+ * Обычные логи не уходят (чтобы не засорять Crashlytics и не жечь квоту).
+ * Работает только в release-сборках.
+ */
+private class CrashlyticsTree : Timber.Tree() {
+    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+        if (priority >= Log.ERROR) {
+            try {
+                val crashlytics = FirebaseCrashlytics.getInstance()
+                crashlytics.log("$tag: $message")
+                t?.let { crashlytics.recordException(it) }
+            } catch (e: IllegalStateException) {
+                // Firebase не инициализирован (нет google-services.json или это unit-тест).
+                // Игнорируем, чтобы не уронить приложение/тесты.
             }
         }
     }

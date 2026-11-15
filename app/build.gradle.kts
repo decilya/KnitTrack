@@ -5,6 +5,8 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.50"
     id("kotlin-parcelize")
     id("io.gitlab.arturbosch.detekt")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 android {
     namespace = "com.knittrack.app"
@@ -33,6 +35,10 @@ android {
         compose = true
         buildConfig = true
     }
+    googleServices {
+        missingGoogleServicesStrategy = com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.WARN
+    }
+
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
@@ -55,6 +61,9 @@ detekt {
     baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 dependencies {
+    // Firebase (BoM)
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-crashlytics")
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
