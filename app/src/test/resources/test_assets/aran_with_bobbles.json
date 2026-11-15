@@ -1,0 +1,60 @@
+{
+  "version": "1.3",
+  "exportDate": 1794700800000,
+  "patterns": [
+    {
+      "id": 1,
+      "name": "Aran with bobbles",
+      "technique": "KNITTING",
+      "direction": "LTR",
+      "isReversible": false
+    }
+  ],
+  "patternRows": [
+    { "id": 1, "patternId": 1, "rowNumber": 1 },
+    { "id": 2, "patternId": 1, "rowNumber": 2 },
+    { "id": 3, "patternId": 1, "rowNumber": 3 }
+  ],
+  "symbols": [
+    {
+      "code": "K",
+      "ownerPatternId": null,
+      "displayName": "Лицевая",
+      "textGlyph": "V",
+      "category": "STANDARD",
+      "defaultColumnSpan": 1,
+      "defaultRowSpan": 1
+    },
+    {
+      "code": "B",
+      "ownerPatternId": null,
+      "displayName": "Шишечка",
+      "textGlyph": "B",
+      "category": "STANDARD",
+      "defaultColumnSpan": 1,
+      "defaultRowSpan": 1
+    }
+  ],
+  "patternOperations": [
+    {
+      "patternRowId": 2,
+      "columnStart": 0,
+      "symbolCode": "K",
+      "backSymbolCode": null,
+      "colorHex": null,
+      "columnSpanOverride": null,
+      "rowSpanOverride": null,
+      "repeatCode": null
+    },
+    {
+      "patternRowId": 2,
+      "columnStart": 3,
+      "symbolCode": "B",
+      "backSymbolCode": null,
+      "colorHex": "#FF8C00",
+      "columnSpanOverride": 2,
+      "rowSpanOverride": 3,
+      "repeatCode": null
+    }
+  ]
+}

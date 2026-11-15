@@ -291,7 +291,7 @@
 | SessionDao / DailyStat | `getDailyStats` возвращает `com.knittrac.app.domain.entity.DailyStat` — утечка Domain-модели в Data | Projection-класс в `data/local/`, маппинг в репозитории |
 | TimerViewModelTest | `mockk<Project>` bypasses `init { require(...) }` — ложно-зелёные тесты при будущих правках | Реальный `data class` конструктор в тестах |
 
-- [ ] **P1 (Pattern Editor, эскалировано из P2 #7, 11.11.2026):** `Symbol.defaultRowSpan` не используется, `rowSpanOverride` теряется в маппере. Блокирует символы с вертикальной протяжённостью (шишечки, листья, жаккардовые фигуры). Косы и араны (сетка клеток) от этого не зависят — работают как есть. Полная таксономия, архитектурный задел (ChartLayout) и план тестов — в секции «Ревью 11.11.2026 — Полная таксономия схем» ниже.
+- [x] **P1 (Pattern Editor, rowSpan):** Поддержка вертикальных спанов — **Закрыто 15.11.2026.** `PatternOperation` разделен на `columnSpanOverride` и `rowSpanOverride`. Обновлены мапперы, SQL (`PatternDao.updateOperation`), UI (`EditOperationDialog`). Canvas использует двухпроходный рендер (Z-index). Тест: `PatternOperationMappersTest` (round-trip DTO) + фикстура `aran_with_bobbles.json`.
 - [ ] **P3**: Перемещение ряда использует временный номер `999999` (`TEMP_ROW_NUMBER`) для обхода `UNIQUE(pattern_id, row_number)` при сдвиге. Альтернатива: `MAX(row_number) + 1` или удаление+вставка. Текущий вариант быстрый и работает, но магическое число.
 
 - [ ] **P3**: `ownerPatternId` в `Symbol` — это `Long?`, а не `PatternId?`. Символы нельзя проверить на принадлежность схеме через VO. Нужно будет отрефакторить при внедрении `PatternId` во все места.
