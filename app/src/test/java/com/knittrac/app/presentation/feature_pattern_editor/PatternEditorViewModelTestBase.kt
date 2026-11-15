@@ -26,6 +26,7 @@ import com.knittrac.app.domain.service.AddPatternOperationUseCase
 import com.knittrac.app.domain.service.AddSymbolUseCase
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.domain.service.CreatePatternUseCase
+import com.knittrac.app.domain.service.ExportPatternSvgUseCase
 import com.knittrac.app.domain.service.DeleteOperationUseCase
 import com.knittrac.app.domain.service.DeletePatternRowUseCase
 import com.knittrac.app.domain.service.DeleteSymbolUseCase
@@ -55,6 +56,15 @@ abstract class PatternEditorViewModelTestBase : BaseTest() {
     protected val getAllPatternSummariesService: GetAllPatternSummariesService = mockk()
     protected val addPatternOperationUseCase: AddPatternOperationUseCase = mockk()
     protected val createPatternUseCase: CreatePatternUseCase = mockk()
+    protected val exportPatternSvgUseCase: ExportPatternSvgUseCase = mockk()
+
+    private val patternUseCases = PatternEditorPatternUseCases(
+        getPatternById = getPatternByIdService,
+        getAllPatternSummaries = getAllPatternSummariesService,
+        createPattern = createPatternUseCase,
+        exportSvg = exportPatternSvgUseCase
+    )
+
     protected val deleteOperationUseCase: DeleteOperationUseCase = mockk()
     protected val updatePatternOperationUseCase: UpdatePatternOperationUseCase = mockk()
     protected val updatePatternRowNumberUseCase: UpdatePatternRowNumberUseCase = mockk()
@@ -154,11 +164,7 @@ abstract class PatternEditorViewModelTestBase : BaseTest() {
         every { settingsRepository.legendAddButtonVisibleFlow } returns flowOf(true)
         every { settingsRepository.editTutorialShownFlow } returns flowOf(tutorialShown)
         return PatternEditorViewModel(
-            patternUseCases = PatternEditorPatternUseCases(
-                getPatternById = getPatternByIdService,
-                getAllPatternSummaries = getAllPatternSummariesService,
-                createPattern = createPatternUseCase
-            ),
+            patternUseCases = patternUseCases,
             operationUseCases = PatternEditorOperationUseCases(
                 addPatternOperation = addPatternOperationUseCase,
                 updatePatternOperation = updatePatternOperationUseCase,

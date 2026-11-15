@@ -14,6 +14,7 @@ import com.knittrac.app.domain.entity.findSymbolByCode
 import com.knittrac.app.domain.model.AddPatternOperationParams
 import com.knittrac.app.domain.service.CreatePatternParams
 import com.knittrac.app.domain.service.DeleteOperationParams
+import com.knittrac.app.domain.service.ExportPatternSvgParams
 import com.knittrac.app.domain.model.UpdatePatternOperationParams
 import com.knittrac.app.domain.service.DeletePatternRowParams
 import com.knittrac.app.domain.service.UpdatePatternRowNumberParams
@@ -115,6 +116,7 @@ class PatternEditorViewModel @Inject constructor(
             is PatternEditorContract.Intent.ShowEditTutorial -> showEditTutorialManually()
             is PatternEditorContract.Intent.DismissEditTutorial -> dismissEditTutorial()
             is PatternEditorContract.Intent.Retry -> retry()
+            is PatternEditorContract.Intent.ExportSvg -> exportSvg(intent.outputStream)
             is PatternEditorContract.Intent.OpenLegendEditor -> _state.update { it.copy(isLegendEditorOpen = true) }
             is PatternEditorContract.Intent.CloseLegendEditor -> _state.update { it.copy(isLegendEditorOpen = false) }
             is PatternEditorContract.Intent.AddSymbol -> addSymbol(intent)
@@ -179,6 +181,17 @@ class PatternEditorViewModel @Inject constructor(
     private fun selectPattern(patternId: PatternId) {
         _state.update { it.copy(lastOperations = emptyList()) }
         loadPattern(patternId)
+    }
+
+    private fun exportSvg(outputStream: java.io.OutputStream) {
+        val currentPattern = _state.value.pattern ?: return
+        viewModelScope.launch {
+            val params = ExportPatternSvgParams(currentPattern, outputStream)
+            when (patternUseCases.exportSvg(params)) {
+                is com.knittrac.app.core.common.Result.Success -> _effect.send(PatternEditorContract.Effect.ExportSuccess)
+                is com.knittrac.app.core.common.Result.Error -> _effect.send(PatternEditorContract.Effect.ExportError)
+            }
+        }
     }
 
     private fun loadPattern(id: PatternId) {

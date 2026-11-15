@@ -24,6 +24,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +74,31 @@ fun PatternEditorScreen(
         )
     }
 
+    val context = LocalContext.current
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("image/svg+xml")
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                    viewModel.onIntent(PatternEditorContract.Intent.ExportSvg(stream))
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is PatternEditorContract.Effect.ExportSuccess -> Toast.makeText(context, "SVG saved", Toast.LENGTH_SHORT).show()
+                is PatternEditorContract.Effect.ExportError -> Toast.makeText(context, "SVG export failed", Toast.LENGTH_SHORT).show()
+                else -> Unit
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -102,6 +134,12 @@ fun PatternEditorScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        pattern?.let { p -> exportLauncher.launch("pattern_${p.id.value}.svg") }
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Export SVG")
+                    }
+
                     IconButton(onClick = { viewModel.onIntent(Intent.ShowEditTutorial) }) {
                         Icon(
                             imageVector = Icons.Default.Help,

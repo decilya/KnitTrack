@@ -9,6 +9,7 @@ import com.knittrac.app.domain.entity.PatternRowId
 import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.domain.service.CreatePatternParams
+import java.io.OutputStream
 
 /**
  * MVI-контракт экрана Pattern Editor (7f-B).
@@ -164,6 +165,16 @@ object PatternEditorContract {
 
         /** Повторить загрузку после ошибки. */
         object Retry : Intent()
+
+        /**
+         * Экспортировать текущую схему в SVG-файл (7f-B-5).
+         *
+         * Поток открывается Screen'ом через SAF
+         * (`ActivityResultContracts.CreateDocument("image/svg+xml")`) и
+         * передаётся в UseCase. Владение потоком (закрытие) остаётся за
+         * Presentation — UseCase пишет строку, но не закрывает поток.
+         */
+        data class ExportSvg(val outputStream: OutputStream) : Intent()
     }
 
     /**
@@ -173,5 +184,9 @@ object PatternEditorContract {
         data class ShowError(@StringRes val messageResId: Int) : Effect()
         /** Operation несёт созданную операцию (toast / undo — P3). */
         data class OperationAdded(val operation: PatternOperation) : Effect()
+        /** SVG-схема успешно сохранена в файл (7f-B-5). */
+        object ExportSuccess : Effect()
+        /** Ошибка экспорта SVG-схемы (7f-B-5). */
+        object ExportError : Effect()
     }
 }
