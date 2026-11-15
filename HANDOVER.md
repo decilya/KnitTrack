@@ -913,6 +913,7 @@ Feature flags, Security, Performance — после релиза.
    (Ctrl+Z, crash) — `.git/index.lock` остаётся. Git блокирует операции.
    Удалить `rm -f .git/index.lock`. Впредь — `git commit -m "..."` (без редактора).
 
+8. **Кириллица в терминале WSL.** Если `git commit -m "русский текст"` превращается в mojibake (крякозябры) — выполнить `export LANG=C.UTF-8` **перед** коммитом. Или писать сообщение в файл через `python3` и использовать `git commit -F <file>`.
 Правила для ИИ:
 
 Строгий review, без комплиментов.
