@@ -1,0 +1,101 @@
+package com.knittrack.app.domain.service
+
+import com.knittrack.app.core.common.ErrorCode
+import com.knittrack.app.core.base.BaseTest
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.domain.entity.ColumnStart
+import com.knittrack.app.domain.entity.PatternId
+import com.knittrack.app.domain.entity.PatternOperation
+import com.knittrack.app.domain.entity.PatternRow
+import com.knittrack.app.domain.entity.PatternRowId
+import com.knittrack.app.domain.entity.RowNumber
+import com.knittrack.app.domain.entity.Span
+import com.knittrack.app.domain.entity.Symbol
+import com.knittrack.app.domain.entity.SymbolCategory
+import com.knittrack.app.domain.model.AddPatternOperationParams
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Юнит-тесты для [AddPatternOperationUseCase].
+ *
+ * Проверяют тонкий делегирующий слой: проброс [AddPatternOperationParams]
+ * в [AddPatternOperationService], возврат созданной [PatternOperation]
+ * или ошибки без дополнительной логики.
+ */
+class AddPatternOperationUseCaseTest : BaseTest() {
+
+    private val service: AddPatternOperationService = mockk()
+    private val useCase = AddPatternOperationUseCase(service, coroutineRule.testDispatcher)
+
+    private fun symbol(): Symbol = Symbol(
+        code = "K",
+        displayName = "Лицевая",
+        textGlyph = "V",
+        category = SymbolCategory.STANDARD,
+        defaultColumnSpan = Span.ONE
+    )
+
+    private fun params(): AddPatternOperationParams = AddPatternOperationParams(
+        patternId = PatternId.create(1L),
+        row = PatternRow(
+            id = PatternRowId.create(10L),
+            rowNumber = RowNumber.create(1)
+        ),
+        columnStart = ColumnStart.create(0),
+        symbol = symbol()
+    )
+
+    /**
+     * Успешный путь: сервис вернул созданную операцию — пробрасываем как Success.
+     */
+    @Test
+    fun executeDelegatesToServiceAndReturnsOperation() = runTest {
+        val op = PatternOperation(
+            patternRowId = PatternRowId.create(10L),
+            columnStart = ColumnStart.create(0),
+            symbol = symbol()
+        )
+        coEvery { service.add(any()) } returns Result.Success(op)
+
+        val result = useCase(params())
+
+        assertTrue(result is Result.Success)
+        assertEquals(op, (result as Result.Success).data)
+        coVerify { service.add(any()) }
+    }
+
+    /**
+     * Валидационная ошибка сервиса (символ не в легенде) — пробрасываем.
+     */
+    @Test
+    fun executeReturnsValidationErrorFromService() = runTest {
+        coEvery { service.add(any()) } returns
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет в легенде"))
+
+        val result = useCase(params())
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * Ошибка БД сервиса — пробрасываем.
+     */
+    @Test
+    fun executeReturnsDatabaseErrorFromService() = runTest {
+        coEvery { service.add(any()) } returns
+            Result.Error(AppError.DatabaseError(RuntimeException("db")))
+
+        val result = useCase(params())
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.DatabaseError)
+    }
+}

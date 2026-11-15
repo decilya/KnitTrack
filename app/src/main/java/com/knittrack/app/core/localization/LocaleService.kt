@@ -1,0 +1,199 @@
+package com.knittrack.app.core.localization
+
+import android.content.Context
+import android.content.res.Configuration
+import androidx.annotation.VisibleForTesting
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.knittrack.app.R
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.ErrorCode
+import com.knittrack.app.core.common.Result
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import timber.log.Timber
+import java.io.IOException
+import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Модель поддерживаемого языка.
+ *
+ * @property code ISO 639-1 код языка (например, "ru", "en").
+ * @property displayName Название языка на самом языке ("Русский", "English").
+ */
+data class LanguageOption(val code: String, val displayName: String)
+
+/**
+ * Сервис локализации приложения.
+ *
+ * Особенности:
+ * - Список поддерживаемых языков читается из res/values/arrays.xml,
+ *   что позволяет добавлять новые языки БЕЗ правок Kotlin-кода.
+ * - Первый запуск: берёт язык системы, если он поддерживается; иначе fallback "en".
+ * - Смена языка: сохраняет в DataStore + применяет к Configuration + требует recreate().
+ *
+ * DataStore<Preferences> инжектится через Hilt из core/di/DataStoreModule —
+ * единственный источник истины для файла settings.preferences_pb. Это исключает
+ * дубликат DataStore и рантайм-краш "multiple DataStores active for the same file".
+ *
+ * @param context Контекст приложения — для доступа к Configuration и ресурсам.
+ * @param dataStore Общий DataStore, предоставляемый DataStoreModule.
+ */
+@Singleton
+class LocaleService @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val dataStore: DataStore<Preferences>
+) {
+    private val languageKey = stringPreferencesKey("app_language")
+
+    /**
+     * Флаг завершения инициализации языка.
+     *
+     * true — [ensureLanguageInitialized] отработала (успех или ошибка),
+     * можно скрывать splash-экран. false — splash ещё держится.
+     */
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+
+    /**
+     * Список поддерживаемых языков, читается из ресурсов.
+     * Кэшируется через lazy — ресурсы не меняются в рантайме.
+     *
+     * ВАЖНО: включает защиту от рассогласования размеров массивов codes и names,
+     * что критично при ручном добавлении новых языков в arrays.xml.
+     */
+    val supportedLanguages: List<LanguageOption> by lazy {
+        val codes = context.resources.getStringArray(R.array.supported_language_codes)
+        val names = context.resources.getStringArray(R.array.supported_language_names)
+
+        if (codes.size != names.size) {
+            Timber.e(
+                "Language arrays mismatch: codes=%d, names=%d. " +
+                "Check res/values/arrays.xml — количество элементов должно совпадать!",
+                codes.size, names.size
+            )
+            emptyList()
+        } else {
+            codes.zip(names) { code, name -> LanguageOption(code, name) }
+        }
+    }
+
+    /**
+     * Язык по умолчанию.
+     * Если системный язык поддерживается — используется он, иначе fallback (en).
+     */
+    private val defaultLanguage: String
+        get() {
+            val systemLang = Locale.getDefault().language
+            return if (supportedLanguages.any { it.code == systemLang }) systemLang
+            else FALLBACK_LANGUAGE
+        }
+
+    /**
+     * Инициализирует язык при первом запуске и применяет сохранённый язык при каждом старте.
+     *
+     * Вызывается синхронно из Application.onCreate — до первого рендера UI,
+     * чтобы первый кадр показывался на нужном языке.
+     */
+    suspend fun ensureLanguageInitialized() {
+        try {
+            val prefs = dataStore.data.first()
+            val storedLanguage = prefs[languageKey]
+            val initial = storedLanguage ?: defaultLanguage
+
+            // Если язык ранее не сохранялся — сохраняем его для консистентности.
+            if (storedLanguage == null) {
+                dataStore.edit { it[languageKey] = initial }
+            }
+
+            // Всегда применяем к Configuration — на первом и последующих запусках.
+            updateLocale(initial)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            // DataStore недоступен — работаем на системной локали.
+            // UI-поток getCurrentLanguageFlow() вернёт defaultLanguage.
+            Timber.e(e, "ensureLanguageInitialized: DataStore I/O failed, using system locale")
+        } catch (e: Exception) {
+            Timber.e(e, "ensureLanguageInitialized: unexpected error, using system locale")
+        } finally {
+            // Сбрасываем splash даже при ошибке: лучше показать UI на системном
+            // языке, чем застрять на splash-экране навсегда.
+            _isInitialized.value = true
+        }
+    }
+
+    /**
+     * Поток текущей локали (для чтения, если нужно в UI).
+     */
+    fun getCurrentLocaleFlow(): Flow<Locale> =
+        dataStore.data.map { prefs -> Locale(prefs[languageKey] ?: defaultLanguage) }
+
+    /**
+     * Поток текущего кода языка (для UI-селектора в настройках).
+     */
+    fun getCurrentLanguageFlow(): Flow<String> =
+        dataStore.data.map { prefs -> prefs[languageKey] ?: defaultLanguage }
+
+    /**
+     * Устанавливает язык пользователя.
+     *
+     * @param langCode ISO 639-1 код языка.
+     * @return [Result.Success] или [Result.Error] с [AppError.ValidationError]
+     *   при неподдерживаемом коде, либо [AppError.IoError] при сбое DataStore.
+     */
+    suspend fun setLanguage(langCode: String): Result<Unit> {
+        if (supportedLanguages.none { it.code == langCode }) {
+            return Result.Error(
+                AppError.ValidationError(
+                    ErrorCode.UNSUPPORTED_LANGUAGE,
+                    "Unsupported: $langCode. Supported: ${supportedLanguages.map { it.code }}"
+                )
+            )
+        }
+        return try {
+            dataStore.edit { it[languageKey] = langCode }
+            updateLocale(langCode)
+            Result.Success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            Timber.e(e, "setLanguage(%s) failed", langCode)
+            Result.Error(AppError.IoError(e))
+        } catch (e: Exception) {
+            Timber.e(e, "setLanguage(%s) unexpected error", langCode)
+            Result.Error(AppError.UnknownError(e))
+        }
+    }
+
+    /**
+     * Применяет локаль к ресурсам приложения.
+     * Использует deprecated API updateConfiguration — актуально до Android 13 (T).
+     *
+     * VisibleForTesting: метод вызывается напрямую только из LocaleServiceTest.
+     * В продукте всегда идёт через ensureLanguageInitialized или setLanguage.
+     */
+    @VisibleForTesting
+    internal fun updateLocale(langCode: String) {
+        val locale = Locale(langCode)
+        Locale.setDefault(locale)
+        val config = Configuration(context.resources.configuration).apply { setLocale(locale) }
+        @Suppress("DEPRECATION")
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+    }
+
+    companion object {
+        /** Fallback-язык, если системный не поддерживается. */
+        const val FALLBACK_LANGUAGE = "en"
+    }
+}

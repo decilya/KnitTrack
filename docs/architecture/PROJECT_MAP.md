@@ -1,6 +1,6 @@
 # Карта проекта KnitTrac
 
-Фактическое состояние кода. Составлено по `app/src/main/java/com/knittrac/app`,
+Фактическое состояние кода. Составлено по `app/src/main/java/com/knittrack/app`,
 проверено по файлам, не по HANDOVER.
 
 ---
@@ -116,4 +116,4 @@ Enum-типы домена (не VO, но там же): `Category`, `Technique`,
 | Маппинг слоёв | `data/mapper` (единственная точка конверсии) |
 | MVI State/Intent/Effect | `presentation/feature_*/[Feature]Contract.kt` |
 | DI-модули | `core/di`, `data/di`, `platform/di`, `di/*Module.kt` |
-| Архитектурный тест слоёв | `app/src/test/java/com/knittrac/app/architecture/DomainLayerTest.kt` |
+| Архитектурный тест слоёв | `app/src/test/java/com/knittrack/app/architecture/DomainLayerTest.kt` |

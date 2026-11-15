@@ -5,7 +5,7 @@
 **База:** HEAD `7f2bbb5`, Room v4, 147 тестов (294 прогона).
 
 ## 1. Общая информация
-**KnitTrack** — Android-приложение для учёта времени, рядов и прогресса вязания. Пакет `com.knittrac.app`.
+**KnitTrack** — Android-приложение для учёта времени, рядов и прогресса вязания. Пакет `com.knittrackk.app`.
 
 **Стек:** Kotlin, Compose (Material3), Room, Hilt, Coroutines/Flow, KSP. JDK 17. Gradle 8.7. AGP 8.6.0. MinSDK 26.
 

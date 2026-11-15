@@ -1,0 +1,148 @@
+package com.knittrack.app.presentation.feature_projects
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.core.localization.CategoryLocalizer
+import com.knittrack.app.domain.entity.canOpenPatternEditor
+import com.knittrack.app.domain.service.GetAllProjectsService
+import com.knittrack.app.R
+import dagger.hilt.android.lifecycle.HiltViewModel
+import timber.log.Timber
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * MVI-контракт экрана списка проектов.
+ */
+object ProjectsContract {
+
+    enum class AddMode { PROJECT, PATTERN }
+
+    /**
+     * UI-модель проекта для отображения в списке.
+     *
+     * Содержит только те данные, которые нужны экрану, включая
+     * локализованное название категории. Domain-сущность [com.knittrack.app.domain.entity.Project]
+     * не покидает Data/Domain слои.
+     */
+    data class ProjectUiModel(
+        val id: Long,
+        val name: String,
+        val isUntitled: Boolean,
+        val localizedCategoryName: String,
+        val totalRows: Int = 0,
+        val targetRowCount: Int? = null,
+        val patternId: Long? = null,
+        val canOpenPatternEditor: Boolean = false
+    )
+
+    data class State(
+        val projects: List<ProjectUiModel> = emptyList(),
+        val isLoading: Boolean = true,
+        /** @StringRes id сообщения об ошибке. null — ошибки нет. */
+        val errorRes: Int? = null
+    )
+
+    sealed class Action {
+        /** Повторная попытка загрузки после ошибки. */
+        object Retry : Action()
+    }
+
+    sealed class Effect {
+        data class OpenTimer(val projectId: Long) : Effect()
+    }
+}
+
+/**
+ * ViewModel экрана списка проектов.
+ *
+ * Загружает проекты через [GetAllProjectsService], локализует категории через
+ * [CategoryLocalizer] и обновляет State. После первого эмита (успех или ошибка)
+ * выставляет `isLoading = false`.
+ */
+@HiltViewModel
+class ProjectsListViewModel @Inject constructor(
+    private val getAllProjectsService: GetAllProjectsService,
+    private val categoryLocalizer: CategoryLocalizer
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(ProjectsContract.State())
+    val state: StateFlow<ProjectsContract.State> = _state.asStateFlow()
+
+    private val _effect = Channel<ProjectsContract.Effect>(Channel.BUFFERED)
+    val effect = _effect.receiveAsFlow()
+
+    private var loadJob: Job? = null
+
+    init {
+        loadProjects()
+    }
+
+    /**
+     * Подписывается на поток проектов. Первый эмит (успех или ошибка) снимает
+     * `isLoading`, чтобы UI показал список или EmptyState.
+     */
+    private fun loadProjects() {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            getAllProjectsService(Unit).collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val uiProjects = result.data.map { it.toUiModel() }
+                        _state.update { it.copy(projects = uiProjects, isLoading = false) }
+                    }
+                    is Result.Error -> {
+                        Timber.e(result.error.cause, "Failed to load projects")
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                errorRes = R.string.error_load_projects
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Единая точка входа для действий UI (MVI).
+     */
+    fun onAction(action: ProjectsContract.Action) {
+        when (action) {
+            is ProjectsContract.Action.Retry -> retry()
+        }
+    }
+
+    /**
+     * Повторная попытка загрузки — вызывается через [onAction].
+     * Сбрасывает errorRes и перезапускает подписку.
+     */
+    private fun retry() {
+        _state.update { it.copy(isLoading = true, errorRes = null) }
+        loadProjects()
+    }
+
+    /**
+     * Маппит Domain-сущность [com.knittrack.app.domain.entity.Project] в UI-модель.
+     */
+    private fun com.knittrack.app.domain.entity.Project.toUiModel(): ProjectsContract.ProjectUiModel =
+        ProjectsContract.ProjectUiModel(
+            id = id.value,
+            name = name.value,
+            isUntitled = name == com.knittrack.app.domain.entity.ProjectName.DEFAULT,
+            localizedCategoryName = categoryLocalizer.localize(category),
+            totalRows = totalRows.value,
+            targetRowCount = targetRowCount?.value,
+            patternId = patternId?.value,
+            canOpenPatternEditor = canOpenPatternEditor()
+        )
+}

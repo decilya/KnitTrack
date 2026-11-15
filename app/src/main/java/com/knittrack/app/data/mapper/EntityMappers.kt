@@ -1,0 +1,102 @@
+package com.knittrack.app.data.mapper
+
+import com.knittrack.app.domain.entity.ProjectId
+
+import com.knittrack.app.domain.entity.SessionId
+
+import com.knittrack.app.core.common.SyncStatus
+import com.knittrack.app.data.local.entity.ProjectEntity
+import com.knittrack.app.data.local.entity.ProjectWithCurrentRowNumber
+import com.knittrack.app.data.local.entity.SessionEntity
+import com.knittrack.app.domain.entity.Category
+import com.knittrack.app.domain.entity.Duration
+import com.knittrack.app.domain.entity.Project
+import com.knittrack.app.domain.entity.ProjectName
+import com.knittrack.app.domain.entity.PatternId
+import com.knittrack.app.domain.entity.PatternRowId
+import com.knittrack.app.domain.entity.RowCount
+import com.knittrack.app.domain.entity.StitchCount
+import com.knittrack.app.domain.entity.Session
+
+/**
+ * Маппер [ProjectEntity] (Data слой) в [Project] (Domain слой).
+ *
+ * Категория, имя и длительность восстанавливаются безопасно с fallback:
+ * неизвестная категория → [Category.OTHER], пустое имя → [ProjectName.DEFAULT],
+ * отрицательное время → [Duration.ZERO], неизвестный syncStatus → [SyncStatus.PENDING].
+ */
+private fun ProjectEntity.toDomainBase(): Project = Project(
+    id = ProjectId.createOrNull(id) ?: ProjectId.ZERO,
+    name = ProjectName.createOrDefault(name),
+    category = Category.fromNameOrDefault(category),
+    createdAt = createdAt,
+    totalTimeSeconds = Duration.createOrNull(totalTimeSeconds) ?: Duration.ZERO,
+    totalRows = RowCount.createOrDefault(totalRows),
+    targetRowCount = targetRowCount?.let { RowCount.createOrDefault(it) },
+    patternId = patternId?.let { PatternId.createOrNull(it) },
+    currentPatternRowId = currentPatternRowId?.let { PatternRowId.createOrNull(it) },
+    currentStitch = StitchCount.createOrDefault(currentStitch),
+    updatedAt = updatedAt,
+    syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
+)
+
+/**
+ * Маппер [Project] (Domain слой) в [ProjectEntity] (Data слой).
+ * Value Objects и enum разворачиваются в примитивы для SQLite.
+ */
+fun Project.toEntity(): ProjectEntity = ProjectEntity(
+    id = id.value,
+    name = name.value,
+    category = category.name,
+    createdAt = createdAt,
+    totalTimeSeconds = totalTimeSeconds.seconds,
+    totalRows = totalRows.value,
+    targetRowCount = targetRowCount?.value,
+    patternId = patternId?.value,
+    currentPatternRowId = currentPatternRowId?.value,
+    currentStitch = currentStitch.value,
+    updatedAt = updatedAt,
+    syncStatus = syncStatus.name
+)
+
+
+/**
+ * Маппер [ProjectWithCurrentRowNumber] (Data projection) в [Project] (Domain).
+ *
+ * currentRowNumber — derived из `pattern_rows.row_number` через LEFT JOIN.
+ * null (нет current_pattern_row_id) → [RowCount.ZERO].
+ */
+fun ProjectWithCurrentRowNumber.toDomain(): Project =
+    project.toDomainBase().copy(
+        currentRowNumber = RowCount.createOrDefault(derivedCurrentRowNumber ?: 0)
+    )
+
+/**
+ * Маппер [SessionEntity] (Data слой) в [Session] (Domain слой).
+ * ВАЖНО: имена полей (startTimestamp, endTimestamp) строго совпадают
+ * в обеих моделях. Длительность и статус — через безопасный fallback.
+ */
+fun SessionEntity.toDomain(): Session = Session(
+    id = SessionId.createOrNull(id) ?: SessionId.ZERO,
+    projectId = ProjectId.createOrNull(projectId) ?: ProjectId.ZERO,
+    startTimestamp = startTimestamp,
+    endTimestamp = endTimestamp,
+    durationSeconds = Duration.createOrNull(durationSeconds) ?: Duration.ZERO,
+    rowCount = RowCount.createOrNull(rowCount) ?: RowCount.ZERO,
+    updatedAt = updatedAt,
+    syncStatus = SyncStatus.fromNameOrDefault(syncStatus)
+)
+
+/**
+ * Маппер [Session] (Domain слой) в [SessionEntity] (Data слой).
+ */
+fun Session.toEntity(): SessionEntity = SessionEntity(
+    id = id.value,
+    projectId = projectId.value,
+    startTimestamp = startTimestamp,
+    endTimestamp = endTimestamp,
+    durationSeconds = durationSeconds.seconds,
+    rowCount = rowCount.value,
+    updatedAt = updatedAt,
+    syncStatus = syncStatus.name
+)

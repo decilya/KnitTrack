@@ -1,0 +1,167 @@
+package com.knittrack.app.domain.service
+
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.core.common.SyncStatus
+import com.knittrack.app.domain.entity.Category
+import com.knittrack.app.domain.entity.Pattern
+import com.knittrack.app.domain.entity.PatternDirection
+import com.knittrack.app.domain.entity.PatternId
+import com.knittrack.app.domain.entity.PatternName
+import com.knittrack.app.domain.entity.PatternRow
+import com.knittrack.app.domain.entity.PatternRowId
+import com.knittrack.app.domain.entity.ProjectId
+import com.knittrack.app.domain.entity.Project
+import com.knittrack.app.domain.entity.ProjectName
+import com.knittrack.app.domain.entity.RowCount
+import com.knittrack.app.domain.entity.RowNumber
+import com.knittrack.app.domain.entity.Technique
+import com.knittrack.app.domain.model.MarkResult
+import com.knittrack.app.domain.repository.PatternRepository
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Тесты [NextRowService] (P1-B, 02.11.2026).
+ *
+ * Покрывают 6 сценариев markNextRow: первый ряд, следующий ряд, последний ряд,
+ * пустые rows, нет patternId, currentPatternRowId не найден.
+ *
+ * [RowMarkService] мокается: композиция проверяется в RowMarkServiceTest.
+ */
+class NextRowServiceTest {
+
+    private val patternRepository: PatternRepository = mockk()
+    private val rowMarkService: RowMarkService = mockk()
+    private val service = NextRowService(patternRepository, rowMarkService)
+
+    private fun project(
+        patternId: PatternId? = PatternId.create(1L),
+        currentPatternRowId: PatternRowId? = PatternRowId.create(2L)
+    ): Project = Project(
+        id = ProjectId.create(1L),
+        name = ProjectName.create("Тест"),
+        category = Category.KNITTING,
+        createdAt = 0L,
+        updatedAt = 0L,
+        patternId = patternId,
+        currentPatternRowId = currentPatternRowId,
+        currentRowNumber = RowCount.ZERO,
+        syncStatus = SyncStatus.PENDING
+    )
+
+    private fun row(id: Long = 1L, number: Int = 1): PatternRow = PatternRow(
+        id = PatternRowId.create(id),
+        rowNumber = RowNumber.create(number)
+    )
+
+    private fun pattern(rows: List<PatternRow>): Pattern = Pattern(
+        id = PatternId.create(1L),
+        name = PatternName.create("Схема"),
+        technique = Technique.KNITTING,
+        direction = PatternDirection.LTR,
+        isReversible = false,
+        rows = rows
+    )
+
+    /**
+     * У проекта нет currentPatternRowId — берётся первый ряд схемы.
+     */
+    @Test
+    fun markNextRow_firstRow_whenNoCurrent() = runTest {
+        val firstRow = row(id = 10L, number = 1)
+        val p = project(currentPatternRowId = null)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(firstRow)))
+        coEvery { rowMarkService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Success)
+        assertEquals(1, (result as Result.Success).data.value)
+    }
+
+    /**
+     * Есть currentPatternRowId → выбирается ряд rowNumber + 1.
+     */
+    @Test
+    fun markNextRow_advancesToNext() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val r2 = row(id = 11L, number = 2)
+        val r3 = row(id = 12L, number = 3)
+        val p = project(currentPatternRowId = r2.id)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1, r2, r3)))
+        coEvery { rowMarkService.markRow(any(), any()) } returns Result.Success(MarkResult.Added)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Success)
+        assertEquals(3, (result as Result.Success).data.value)
+    }
+
+    /**
+     * Текущий ряд — последний: ValidationError, без записи в БД.
+     */
+    @Test
+    fun markNextRow_lastRow_returnsValidationError() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val r2 = row(id = 11L, number = 2)
+        val p = project(currentPatternRowId = r2.id)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1, r2)))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * Пустые rows — ValidationError.
+     */
+    @Test
+    fun markNextRow_emptyRows_returnsValidationError() = runTest {
+        val p = project(currentPatternRowId = null)
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(emptyList()))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * patternId == null — ValidationError (нет привязанной схемы).
+     */
+    @Test
+    fun markNextRow_patternIdNull_returnsValidationError() = runTest {
+        val p = project(patternId = null, currentPatternRowId = null)
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+
+    /**
+     * currentPatternRowId не найден в rows — ValidationError (рассинхронизация).
+     */
+    @Test
+    fun markNextRow_currentRowMissing_returnsValidationError() = runTest {
+        val r1 = row(id = 10L, number = 1)
+        val p = project(currentPatternRowId = PatternRowId.create(999L))
+        coEvery { patternRepository.getPatternById(any()) } returns
+            Result.Success(pattern(listOf(r1)))
+
+        val result = service.markNextRow(p)
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).error is AppError.ValidationError)
+    }
+}

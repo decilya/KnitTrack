@@ -7,10 +7,10 @@ plugins {
     id("io.gitlab.arturbosch.detekt")
 }
 android {
-    namespace = "com.knittrac.app"
+    namespace = "com.knittrack.app"
     compileSdk = 35
     defaultConfig {
-        applicationId = "com.knittrac.app"
+        applicationId = "com.knittrack.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

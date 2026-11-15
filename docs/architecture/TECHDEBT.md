@@ -7,7 +7,7 @@
 | SettingsScreen.kt (327 строк) | Слишком длинный файл | Много UI-состояний | Разбить на подкомпоненты |
 | TimerForegroundService.kt (330 строк) | Слишком длинный файл | Много логики сервиса | Вынести логику в хелперы |
 | TimerService / TimerForegroundService | Коллизия имен (Service) | Не различаются доменный и Android-сервис | В стандарты добавить *AndroidService для платформенных |
-| Package name | `com.knittrac.app` (через «c») не совпадает с брендом KnitTrack (через «k») | Историческое имя | Переименовать через Android Studio перед публикацией в Google Play (Фаза 9) |
+| Package name | `com.knittrackk.app` (через «c») не совпадает с брендом KnitTrack (через «k») | Историческое имя | Переименовать через Android Studio перед публикацией в Google Play (Фаза 9) |
 | ProjectDto | Добавлены поля totalRows/targetRowCount | Обратная совместимость | Версионирование DTO при синхронизации с бэкендом |
 
 
@@ -289,7 +289,7 @@
 |---|---|---|
 | TimerScreen.kt | «Нет проектов» — только текст ошибки, нет действия «Создать проект» / «К списку» | Добавить кнопку навигации |
 | TimerScreen.kt | `formatTime` использует `Locale.US` — неочевидно для RU-локали | `Locale.ROOT` или комментарий, почему US |
-| SessionDao / DailyStat | `getDailyStats` возвращает `com.knittrac.app.domain.entity.DailyStat` — утечка Domain-модели в Data | Projection-класс в `data/local/`, маппинг в репозитории |
+| SessionDao / DailyStat | `getDailyStats` возвращает `com.knittrackk.app.domain.entity.DailyStat` — утечка Domain-модели в Data | Projection-класс в `data/local/`, маппинг в репозитории |
 | TimerViewModelTest | `mockk<Project>` bypasses `init { require(...) }` — ложно-зелёные тесты при будущих правках | Реальный `data class` конструктор в тестах |
 
 - [x] **P1 (Pattern Editor, rowSpan):** Поддержка вертикальных спанов — **Закрыто 15.11.2026.** `PatternOperation` разделен на `columnSpanOverride` и `rowSpanOverride`. Обновлены мапперы, SQL (`PatternDao.updateOperation`), UI (`EditOperationDialog`). Canvas использует двухпроходный рендер (Z-index). Тест: `PatternOperationMappersTest` (round-trip DTO) + фикстура `aran_with_bobbles.json`.
@@ -413,7 +413,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 ### Стратегия / CTO / PM / SMM
 - [ ] **P1 (Strategy):** Scope Creep. Pattern Editor (v1.1) вытеснил Sync (v1.0). Нужен пересмотр приоритетов.
-- [ ] **P1 (SMM):** Package name `com.knittrac.app` ≠ бренд `KnitTrack`. Блокер для Google Play (переименование до релиза).
+- [ ] **P1 (SMM):** Package name `com.knittrackk.app` ≠ бренд `KnitTrack`. Блокер для Google Play (переименование до релиза).
 - [ ] **P2 (CTO):** Нет Crashlytics / remote-сбора крэшей.
 - [ ] **P2 (CTO):** Нет benchmark-тестов (производительность JOIN на Canvas не измерена).
 - [ ] **P2 (SMM):** Нет скриншотов и описания для Google Play.

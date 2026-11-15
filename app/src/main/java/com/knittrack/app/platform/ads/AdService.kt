@@ -1,0 +1,11 @@
+package com.knittrack.app.platform.ads
+interface AdService {
+    fun initialize()
+    fun showBanner()
+    fun hideBanner()
+    fun showInterstitial()
+    fun showRewarded()
+    val isInterstitialLoaded: Boolean
+    val isRewardedLoaded: Boolean
+    var isAdsEnabled: Boolean
+}

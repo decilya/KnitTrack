@@ -1,0 +1,42 @@
+package com.knittrack.app.domain.service
+
+import com.knittrack.app.core.base.BaseUseCase
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.core.di.IoDispatcher
+import com.knittrack.app.domain.entity.RowNumber
+import com.knittrack.app.domain.repository.ProjectRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import javax.inject.Inject
+
+/**
+ * UseCase отметки следующего ряда схемы как связанного.
+ *
+ * Application-слой, тонкая обёртка над [NextRowService.markNextRow]:
+ * загружает [Project], делегирует выбор «следующего» ряда и его сохранение.
+ * Логика «next = rowNumber + 1» — в Domain Service, не здесь (DDD).
+ *
+ * @see NextRowService.markNextRow
+ * @see MarkNextRowParams
+ */
+class MarkNextRowUseCase @Inject constructor(
+    private val projectRepository: ProjectRepository,
+    private val nextRowService: NextRowService,
+    @param:IoDispatcher private val dispatcher: CoroutineDispatcher
+) : BaseUseCase<MarkNextRowParams, RowNumber>(dispatcher) {
+
+    /**
+     * Отмечает следующий ряд схемы.
+     *
+     * @param params Идентификатор проекта.
+     * @return [Result.Success] с номером отмеченного ряда;
+     *   [Result.Error] с [com.knittrack.app.core.common.AppError.ValidationError]
+     *   при нарушении инварианта (нет схемы / последний ряд / пустые rows)
+     *   или [com.knittrack.app.core.common.AppError.NotFoundError] / DatabaseError.
+     */
+    override suspend fun execute(params: MarkNextRowParams): Result<RowNumber> {
+        return when (val projectResult = projectRepository.getProjectById(params.projectId)) {
+            is Result.Error -> projectResult
+            is Result.Success -> nextRowService.markNextRow(projectResult.data)
+        }
+    }
+}

@@ -2,7 +2,7 @@
 # KnitTrack — ProGuard/R8 правила для release-сборки.
 # ============================================================
 # Минификация включена: isMinifyEnabled = true.
-# Файл подключён в app/build.gradle.kts (строка 22).
+# Файл подключён в com.knittrack.app/build.gradle.kts (строка 22).
 #
 # Что защищаем:
 # 1. Gson — сериализация DTO в JSON
@@ -42,23 +42,23 @@
 # их переименовывать или удалять, иначе старые бэкапы перестанут
 # читаться. Правило покрывает всё подпакеты data.dto на случай
 # будущих сущностей (Pattern, Note).
--keep class com.knittrac.app.data.dto.** { *; }
+-keep class com.knittrack.app.data.dto.** { *; }
 
 # ------------------------------------------------------------
 # Room — entity-классы
 # ------------------------------------------------------------
 # Consumer-rules Room подтягиваются автоматически, но keep — страховка
 # при обфускации схемы. Структура таблиц не должна переименовываться.
--keep class com.knittrac.app.data.local.entity.** { *; }
+-keep class com.knittrack.app.data.local.entity.** { *; }
 
 # ------------------------------------------------------------
 # Gson — доменные модели (страховка для debug-сериализации)
 # ------------------------------------------------------------
 # На случай отладки и отладочного Gson.toJson(project) без DTO.
--keep class com.knittrac.app.domain.entity.Project { *; }
--keep class com.knittrac.app.domain.entity.Session { *; }
--keep class com.knittrac.app.domain.entity.Category { *; }
--keep class com.knittrac.app.core.common.SyncStatus { *; }
+-keep class com.knittrack.app.domain.entity.Project { *; }
+-keep class com.knittrack.app.domain.entity.Session { *; }
+-keep class com.knittrack.app.domain.entity.Category { *; }
+-keep class com.knittrack.app.core.common.SyncStatus { *; }
 
 # ------------------------------------------------------------
 # Kotlin coroutines

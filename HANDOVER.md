@@ -469,7 +469,7 @@ Fix: specialUse с обоснованием в Play Console.
 
 app/proguard-rules.pro содержит правила для Gson (DTO плюс domain), Coroutines, attributes. isMinifyEnabled = true стоит.
 
-**Статус:** ЗАКРЫТ (chore(build) 5aadf5e). isShrinkResources = true, -keep class com.knittrac.app.data.local.entity.** { *; } добавлены. assembleRelease успешен (5m 21s, R8 + resource shrink без ошибок).
+**Статус:** ЗАКРЫТ (chore(build) 5aadf5e). isShrinkResources = true, -keep class com.knittrackk.app.data.local.entity.** { *; } добавлены. assembleRelease успешен (5m 21s, R8 + resource shrink без ошибок).
 
 ### P0-6. @Singleton на impl-классах
 
@@ -1003,7 +1003,7 @@ scripts:
 
 _archive/check_standards_legacy.py — архив regex-валидатора (заменён на detekt).
 
-app/src/main/java/com/knittrac/app:
+app/src/main/java/com/knittrack/app:
 
 KnitTracApplication.kt.
 MainActivity.kt.
@@ -1330,7 +1330,7 @@ ViewModel с >4 зависимостями — кандидат на деком�
 
 **Причина:** `add_import`-helper вставлял импорт по anchor без завершающего `\n`, склеивая строку с предыдущим импортом.
 
-**Пример (P1-D, 02.11.2026):** anchor = `"import com.knittrac.app.core.common.Result"` (без `\n`) → при вставке `SessionId` получилось `...Resultimport com.knittrac.app.domain.entity.SessionId`. Фикс: anchor = `"...Result\n"`, insert после него с `imp + "\n"`.
+**Пример (P1-D, 02.11.2026):** anchor = `"import com.knittrackk.app.core.common.Result"` (без `\n`) → при вставке `SessionId` получилось `...Resultimport com.knittrackk.app.domain.entity.SessionId`. Фикс: anchor = `"...Result\n"`, insert после него с `imp + "\n"`.
 
 **Правило:**
 - Anchor всегда с `\n` в конце: `"import X\n"`, не `"import X"`.
@@ -1529,3 +1529,11 @@ ViewModel с >4 зависимостями — кандидат на деком�
 2. Unit на UseCase через mockk (проверяет оркестрацию и `Result`-контракт).
 3. Integration (Data) — `TECHDEBT P3`, ручная проверка в APK перед релизом.
 4. Не имитировать покрытие ради зелёного CI.
+
+
+### Урок 51. Глобальная замена пакета (regex/sed) ломает `include(":app")` и пути в тестах
+
+**Симптом:** `Cannot locate tasks that match ':app:clean' as project 'app' not found` или `Domain directory not found` в архитектурных тестах.
+**Причина:** скрипт `text.replace("com.knittrac", "com.knittrack")` заменяет подстроки в неожиданных местах. В `settings.gradle.kts` `include(":app")` не содержал `com.knittrac`, но из-за неверного regex или повторной замены он превратился в `include(":com.knittrack.app")`. В тестах `Paths.get("...", "com", "knittrack", "app")` стал `Paths.get("...", "com", "knittrack", "com.knittrack.app")`.
+**Пример (15.11.2026):** Переименование `com.knittrac.app` -> `com.knittrack.app`.
+**Правило:** при глобальной замене пакета **никогда** не используй просто `text.replace(...)`. Используй регулярные выражения с границами: `re.sub(r'\bcom\.knittrac\b', 'com.knittrack', text)`. После замены **обязательно** проверь `settings.gradle.kts` (там должен быть `include(":app")`), `build.gradle.kts` (`namespace`, `applicationId`) и архитектурные тесты (пути `Paths.get`).

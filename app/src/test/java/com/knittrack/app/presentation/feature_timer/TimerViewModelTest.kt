@@ -1,0 +1,374 @@
+package com.knittrack.app.presentation.feature_timer
+
+import com.knittrack.app.core.common.ErrorStringProvider
+import com.knittrack.app.core.common.ErrorCode
+import com.knittrack.app.core.common.ErrorMapper
+import androidx.lifecycle.SavedStateHandle
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.domain.entity.ProjectId
+import com.knittrack.app.domain.entity.Project
+import com.knittrack.app.core.common.SyncStatus
+import com.knittrack.app.domain.entity.SessionId
+import com.knittrack.app.domain.entity.Category
+import com.knittrack.app.domain.entity.ProjectName
+import com.knittrack.app.domain.entity.RowCount
+import com.knittrack.app.domain.entity.RowNumber
+import com.knittrack.app.domain.service.TimerState
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * Юнит-тесты для [TimerViewModel].
+ *
+ * Покрывают:
+ * - проверку разрешения POST_NOTIFICATIONS перед стартом таймера;
+ * - защиту от запуска без выбранного проекта;
+ * - идемпотентность сохранения сессии (double-tap guard).
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class TimerViewModelTest {
+
+    private val testDispatcher = UnconfinedTestDispatcher()
+    private val errorStringProvider = mockk<ErrorStringProvider>(relaxed = true)
+
+    private lateinit var sessionCoordinator: TimerSessionCoordinator
+    private lateinit var progressCoordinator: ProjectProgressCoordinator
+
+    @Before
+    /** Настраивает мок-провайдер строковых ресурсов для тестов. */
+    fun setupProvider() {
+        every { errorStringProvider.getStringRes(any()) } answers { ErrorMapper.map(firstArg()) }
+    }
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+
+        sessionCoordinator = mockk(relaxed = true)
+        progressCoordinator = mockk()
+
+        // combine в init ViewModel подписывается на StateFlow координатора.
+        // relaxed mock без этих every упал бы на cast.
+        every { sessionCoordinator.elapsedTime } returns MutableStateFlow(0L)
+        every { sessionCoordinator.state } returns MutableStateFlow(TimerState.IDLE)
+        every { sessionCoordinator.sessionStartTime } returns 0L
+
+        every { progressCoordinator.projects() } returns flowOf(Result.Success(emptyList()))
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    /**
+     * Permission granted: таймер стартует, RequestNotificationPermission
+     * не эмитится.
+     */
+    /**
+     * Permission denied: таймер всё равно стартует (permission не блокирует),
+     * но эмитится RequestNotificationPermission, чтобы Screen показал диалог.
+     */
+    /**
+     * Без выбранного проекта Start эмитит NavigateToProjects
+     * и НЕ вызывает timerManager.start().
+     */
+    @Test
+    fun startWithoutProjectId_navigatesToProjects() = runTest {
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(),
+            errorStringProvider
+        )
+
+        val effectDeferred = async { viewModel.effect.first() }
+        viewModel.onIntent(TimerContract.Intent.Start)
+
+        val effect = effectDeferred.await()
+
+        assertEquals(TimerContract.Effect.NavigateToProjects, effect)
+        verify(exactly = 0) { sessionCoordinator.start() }
+    }
+
+    /**
+     * Double-tap SaveSession: второй вызов игнорируется, пока первый
+     * не завершён. saveSessionService вызывается ровно один раз.
+     */
+    @Test
+    fun doubleTapSaveSession_secondCallIgnored() = runTest {
+        every { sessionCoordinator.elapsedTime } returns MutableStateFlow(120L)
+        every { sessionCoordinator.sessionStartTime } returns 1_000L
+
+        // Заставляем сохранение "висеть" — иначе на Unconfined оно завершится
+        // мгновенно, и второй вызов пройдёт guard.
+        coEvery { sessionCoordinator.saveSession(any()) } coAnswers {
+            delay(100)
+            Result.Success(SessionId.create(1L))
+        }
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(),
+            errorStringProvider
+        )
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+
+        viewModel.onIntent(TimerContract.Intent.SaveSession)
+        viewModel.onIntent(TimerContract.Intent.SaveSession)
+
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { sessionCoordinator.saveSession(any()) }
+        assertEquals(false, viewModel.state.value.isSaving)
+    }
+
+    /**
+     * IncrementRow увеличивает rowCount на 1. Reset сбрасывает в 0.
+     */
+    @Test
+    fun incrementRow_increasesCount() = runTest {
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
+
+        assertEquals(0, viewModel.state.value.rowCount)
+        viewModel.onIntent(TimerContract.Intent.IncrementRow)
+        assertEquals(1, viewModel.state.value.rowCount)
+
+        viewModel.onIntent(TimerContract.Intent.Reset)
+        assertEquals(0, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * DecrementRow уменьшает rowCount на 1, если он больше нуля.
+     */
+    @Test
+    fun decrementRow_decreasesCount() = runTest {
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
+
+        repeat(5) { viewModel.onIntent(TimerContract.Intent.IncrementRow) }
+        assertEquals(5, viewModel.state.value.rowCount)
+
+        viewModel.onIntent(TimerContract.Intent.DecrementRow)
+        assertEquals(4, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * DecrementRow на нуле оставляет rowCount = 0 (coerceAtLeast).
+     */
+    @Test
+    fun decrementRow_atZero_staysZero() = runTest {
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
+
+        assertEquals(0, viewModel.state.value.rowCount)
+        viewModel.onIntent(TimerContract.Intent.DecrementRow)
+        assertEquals(0, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * SelectProject переносит targetRowCount из выбранного проекта в State.
+     */
+    @Test
+    fun selectProject_setsTargetRowCount() = runTest {
+        val project = Project(
+            id = ProjectId.create(1L),
+            name = ProjectName.create("Test"),
+            category = Category.KNITTING,
+            createdAt = 0L,
+            updatedAt = 0L,
+            syncStatus = SyncStatus.PENDING,
+            targetRowCount = RowCount.create(120)
+        )
+        every { progressCoordinator.projects() } returns flowOf(Result.Success(listOf(project)))
+
+        val viewModel = TimerViewModel(sessionCoordinator, progressCoordinator, SavedStateHandle(), errorStringProvider)
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+
+        assertEquals(120, viewModel.state.value.targetRowCount)
+    }
+
+    @Test
+    fun init_restoresRowCountAndProjectIdFromSavedStateHandle() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf<String, Any>("projectId" to 5L, "rowCount" to 42))
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            savedStateHandle,
+            errorStringProvider
+        )
+
+        assertEquals(5L, viewModel.state.value.projectId)
+        assertEquals(42, viewModel.state.value.rowCount)
+    }
+
+    /**
+     * MarkNextPatternRow success: вызывает MarkNextRowUseCase, обновляет
+     * currentPatternRowNumber из ответа, снимает флаг isMarkingRow.
+     */
+    @Test
+    fun markNextPatternRow_success_updatesStateAndResetsFlag() = runTest {
+        coEvery { progressCoordinator.markNext(any()) } returns Result.Success(RowNumber.create(5))
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
+        ),
+            errorStringProvider
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        assertEquals(5, viewModel.state.value.currentPatternRowNumber)
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+        coVerify(exactly = 1) { progressCoordinator.markNext(any()) }
+    }
+
+    /**
+     * MarkNextPatternRow error: эмитит ShowError с ErrorMapper-ресурсом для INVALID_ARGUMENT,
+     * currentPatternRowNumber не меняется, isMarkingRow снят в finally.
+     */
+    @Test
+    fun markNextPatternRow_error_emitsShowErrorAndResetsFlag() = runTest {
+        coEvery { progressCoordinator.markNext(any()) } returns
+            Result.Error(AppError.ValidationError(ErrorCode.INVALID_ARGUMENT, "нет привязанной схемы"))
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
+        ),
+            errorStringProvider
+        )
+
+        val effectDeferred = async { viewModel.effect.first() }
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        val effect = effectDeferred.await()
+        advanceUntilIdle()
+
+        assertTrue(
+            "Ожидался ShowError, получен: " + effect,
+            effect is TimerContract.Effect.ShowError
+        )
+        val showError = effect as TimerContract.Effect.ShowError
+        assertEquals(
+            ErrorMapper.map(ErrorCode.INVALID_ARGUMENT),
+            showError.messageResId
+        )
+        assertNull(viewModel.state.value.currentPatternRowNumber)
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Guard: пока первый вызов висит, второй onIntent отбрасывается флагом
+     * isMarkingRow — MarkNextRowUseCase вызывается ровно один раз.
+     */
+    @Test
+    fun markNextPatternRow_doubleTap_secondCallIgnored() = runTest {
+        coEvery { progressCoordinator.markNext(any()) } coAnswers {
+            delay(100)
+            Result.Success(RowNumber.create(5))
+        }
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(mapOf<String, Any>("projectId" to 1L)
+        ),
+            errorStringProvider
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { progressCoordinator.markNext(any()) }
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Нет projectId: resolveProjectIdForMarking возвращает null,
+     * MarkNextRowUseCase не вызывается, isMarkingRow остаётся false.
+     */
+    @Test
+    fun markNextPatternRow_noProject_doesNotCallUseCase() = runTest {
+
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(),
+            errorStringProvider
+        )
+
+        viewModel.onIntent(TimerContract.Intent.MarkNextPatternRow)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { progressCoordinator.markNext(any()) }
+        assertEquals(false, viewModel.state.value.isMarkingRow)
+    }
+
+    /**
+     * Start with selected project: вызывает timerManager.start().
+     */
+    @Test
+    fun start_callsTimerManagerStart() = runTest {
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(),
+            errorStringProvider
+        )
+        viewModel.onIntent(TimerContract.Intent.SelectProject(1L))
+        viewModel.onIntent(TimerContract.Intent.Start)
+
+        verify { sessionCoordinator.start() }
+    }
+
+    /**
+     * Ошибка потока проектов уходит в ShowError, а не проглатывается.
+     */
+    @Test
+    fun getAllProjects_error_emitsShowError() = runTest {
+        every { progressCoordinator.projects() } returns flowOf(
+            Result.Error(AppError.UnknownError(RuntimeException("boom")))
+        )
+        val viewModel = TimerViewModel(
+            sessionCoordinator,
+            progressCoordinator,
+            SavedStateHandle(),
+            errorStringProvider
+        )
+
+        val effect = viewModel.effect.first()
+
+        assertTrue(effect is TimerContract.Effect.ShowError)
+        assertEquals(
+            ErrorMapper.map(ErrorCode.UNKNOWN_ERROR),
+            (effect as TimerContract.Effect.ShowError).messageResId
+        )
+    }
+}

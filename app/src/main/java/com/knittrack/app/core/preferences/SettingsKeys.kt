@@ -1,0 +1,15 @@
+package com.knittrack.app.core.preferences
+
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+
+object SettingsKeys {
+    val THEME_MODE = stringPreferencesKey("theme_mode")
+    val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+    
+    /** Видимость кнопки «Добавить» в LegendEditorSheet (default = true, 7f-D-7). */
+    val LEGEND_ADD_BUTTON_VISIBLE = booleanPreferencesKey("legend_add_button_visible")
+
+    /** Показан ли одноразовый туториал Pattern Editor (P2-баг, 05.11.2026). */
+    val EDIT_TUTORIAL_SHOWN = booleanPreferencesKey("edit_tutorial_shown")
+}

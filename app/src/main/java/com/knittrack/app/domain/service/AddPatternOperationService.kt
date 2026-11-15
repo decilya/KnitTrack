@@ -1,0 +1,161 @@
+package com.knittrack.app.domain.service
+
+import com.knittrack.app.core.common.ErrorCode
+
+import com.knittrack.app.domain.entity.Symbol
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.domain.entity.Pattern
+import com.knittrack.app.domain.entity.PatternOperation
+import com.knittrack.app.domain.model.AddPatternOperationParams
+import com.knittrack.app.domain.model.OperationSpan
+import com.knittrack.app.domain.repository.PatternRepository
+import javax.inject.Inject
+
+/**
+ * UseCase добавления операции (петли) в ряд схемы.
+ *
+ * Проверяет инварианты уровня агрегата [Pattern] до записи:
+ * - символ принадлежит легенде схемы (`symbol.code in legend codes`);
+ * - раппорт (если задан) присутствует в [Pattern.repeats];
+ * - новая операция не пересекается по колонкам с существующими в ряду.
+ *
+ * Без Timber и без диспетчера — эталон [AddProjectService] / [RowMarkService] / [NextRowService]
+ * (правило HANDOVER §4.5.1: Domain не знает про Timber).
+ *
+ * @see PatternOperation
+ * @see AddPatternOperationParams
+ */
+class AddPatternOperationService @Inject constructor(
+    private val patternRepository: PatternRepository
+) {
+
+    /**
+     * Добавляет операцию в ряд.
+     *
+     * @param params Параметры: схема, ряд, колонка, символ, опциональные
+     *   backSymbol / colorHex / columnSpanOverride / rowSpanOverride / repeatCode.
+     * @return [Result.Success] с созданной [PatternOperation];
+     *   [Result.Error] с [AppError.ValidationError] при нарушении инварианта
+     *   (символ не в легенде, раппорт не найден, overlap по колонкам)
+     *   или [AppError.NotFoundError] / [AppError.DatabaseError] при сбое БД.
+     */
+    suspend fun add(params: AddPatternOperationParams): Result<PatternOperation> {
+        return when (val patternResult = patternRepository.getPatternById(params.patternId)) {
+            is Result.Error -> patternResult
+            is Result.Success -> continueAfterLoad(patternResult.data, params)
+        }
+    }
+
+    /**
+     * Продолжает после загрузки [Pattern]: валидация + сохранение.
+     */
+    private suspend fun continueAfterLoad(
+        pattern: Pattern,
+        params: AddPatternOperationParams
+    ): Result<PatternOperation> {
+        return when (val validation = validateAll(pattern, params)) {
+            is Result.Error -> validation
+            is Result.Success -> persist(params)
+        }
+    }
+
+    /**
+     * Запускает все проверки по очереди (fail-fast на первой ошибке).
+     *
+     * Порядок: легенда → раппорт → overlap. Легенда читается один раз:
+     * символ передаётся в `validateOverlap` параметром — это устраняет
+     * повторный lookup и делает валидацию легенды единственной точкой.
+     */
+    private suspend fun validateAll(
+        pattern: Pattern,
+        params: AddPatternOperationParams
+    ): Result<Unit> {
+        val legendSymbol = pattern.legend.firstOrNull { it.code == params.symbol.code }
+            ?: return Result.Error(
+                AppError.ValidationError(
+                    ErrorCode.SYMBOL_NOT_IN_LEGEND,
+                    "code=${params.symbol.code}"
+                )
+            )
+        return when (val repeatCheck = validateRepeat(pattern, params)) {
+            is Result.Error -> repeatCheck
+            is Result.Success -> validateOverlap(params, legendSymbol)
+        }
+    }
+
+    /**
+     * Проверяет, что `repeatCode` (если задан) присутствует в раппортах схемы.
+     */
+    private fun validateRepeat(
+        pattern: Pattern,
+        params: AddPatternOperationParams
+    ): Result<Unit> {
+        val repeatCode = params.repeatCode ?: return Result.Success(Unit)
+        return if (pattern.repeats.none { it.code == repeatCode }) {
+            Result.Error(
+                AppError.ValidationError(ErrorCode.REPEAT_NOT_FOUND_IN_SCHEMA, "code=$repeatCode")
+            )
+        } else {
+            Result.Success(Unit)
+        }
+    }
+
+    /**
+     * Проверяет, что новая операция не пересекается с существующими в ряду.
+     *
+     * Ширина берётся из символа в legend схемы, а не из params.symbol:
+     * params.symbol может прийти из UI-кеша с устаревшим defaultColumnSpan (D8).
+     * validateLegend уже гарантировал наличие символа в legend, но firstOrNull
+     * оставлен как defensive-проверка целостности.
+     */
+    private suspend fun validateOverlap(
+        params: AddPatternOperationParams,
+        legendSymbol: Symbol
+    ): Result<Unit> {
+        val effectiveSpan = params.columnSpanOverride ?: legendSymbol.defaultColumnSpan
+        val newSpan = OperationSpan(columnStart = params.columnStart, span = effectiveSpan)
+
+        return when (val existing = patternRepository.getOperationSpansForRow(params.row.id)) {
+            is Result.Error -> existing
+            is Result.Success -> checkOverlap(newSpan, existing.data)
+        }
+    }
+
+    /**
+     * Проверяет, что [newSpan] не пересекается ни с одним интервалом из [existing].
+     */
+    private fun checkOverlap(newSpan: OperationSpan, existing: List<OperationSpan>): Result<Unit> {
+        val conflict = existing.firstOrNull { it.overlapsWith(newSpan) }
+        return if (conflict != null) {
+            Result.Error(
+                AppError.ValidationError(
+                    ErrorCode.PATTERN_OVERLAP,
+                    "col=${conflict.columnStart.value}"
+                )
+            )
+        } else {
+            Result.Success(Unit)
+        }
+    }
+
+    /**
+     * Создаёт [PatternOperation] и сохраняет через репозиторий.
+     */
+    private suspend fun persist(params: AddPatternOperationParams): Result<PatternOperation> {
+        val operation = PatternOperation(
+            patternRowId = params.row.id,
+            columnStart = params.columnStart,
+            symbol = params.symbol,
+            backSymbol = params.backSymbol,
+            colorHex = params.colorHex,
+            columnSpanOverride = params.columnSpanOverride,
+            rowSpanOverride = params.rowSpanOverride,
+            repeatCode = params.repeatCode
+        )
+        return when (val saveResult = patternRepository.addOperation(operation)) {
+            is Result.Error -> saveResult
+            is Result.Success -> Result.Success(operation)
+        }
+    }
+}

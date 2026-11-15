@@ -14,11 +14,11 @@
 ## 1. АБСОЛЮТНЫЕ ЗАПРЕТЫ
 
 1. ЗАПРЕТНЫЕ ЗОНЫ (СТОП, спроси разрешение; при явном «да» владельца — можно):
-   - app/src/main/java/com/knittrac/app/core/common/Result.kt
-   - app/src/main/java/com/knittrac/app/core/common/AppError.kt
-   - app/src/main/java/com/knittrac/app/core/common/AppErrorMapper.kt
-   - app/src/main/java/com/knittrac/app/data/mapper/DtoMappers.kt
-   - app/src/main/java/com/knittrac/app/data/local/AppDatabase.kt + файлы миграций
+   - app/src/main/java/com/knittrack/app/core/common/Result.kt
+   - app/src/main/java/com/knittrack/app/core/common/AppError.kt
+   - app/src/main/java/com/knittrack/app/core/common/AppErrorMapper.kt
+   - app/src/main/java/com/knittrack/app/data/mapper/DtoMappers.kt
+   - app/src/main/java/com/knittrack/app/data/local/AppDatabase.kt + файлы миграций
    - di/*Module.kt
    - Pattern.getDirectionForRow (контракт 7b-fix)
    Найден баг — сообщи, не меняй.

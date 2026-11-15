@@ -72,7 +72,7 @@
 
 ## 5. Структура проекта
 ```
-com.example.knittrac
+com.example.knittrack
 ├── core/
 │ ├── common/
 │ ├── di/

@@ -276,7 +276,7 @@ END;
 3. Санитизация C: `UPDATE projects SET current_row_number = 0 WHERE
    current_pattern_row_id IS NULL AND current_row_number != 0`.
 4. `CREATE TRIGGER trg_progress_check_insert` + `trg_progress_check_update`.
-5. Room при сборке генерирует `schemas/com.knittrac.app.data.local.AppDatabase/6.json`.
+5. Room при сборке генерирует `schemas/com.knittrackk.app.data.local.AppDatabase/6.json`.
 
 **Порядок обязателен:** триггер после всех UPDATE. Иначе санитизация упадёт
 на RAISE.

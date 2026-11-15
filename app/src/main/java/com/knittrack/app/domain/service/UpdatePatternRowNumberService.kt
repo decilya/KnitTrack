@@ -1,0 +1,60 @@
+package com.knittrack.app.domain.service
+
+import com.knittrack.app.core.common.ErrorCode
+
+import com.knittrack.app.core.common.AppError
+import com.knittrack.app.core.common.Result
+import com.knittrack.app.domain.repository.PatternRepository
+import javax.inject.Inject
+
+/**
+ * Сервис перемещения ряда (сдвиг) (7f-D-3).
+ *
+ * Меняет rowNumber ряда, сдвигая соседние ряды вверх или вниз.
+ * Использует легковесные запросы к БД для валидации.
+ */
+class UpdatePatternRowNumberService @Inject constructor(
+    private val patternRepository: PatternRepository
+) {
+    /**
+     * Перемещает ряд на новый номер.
+     *
+     * @param params Параметры перемещения.
+     * @return [Result.Success] или [Result.Error] с причиной отказа.
+     */
+    suspend fun update(params: UpdatePatternRowNumberParams): Result<Unit> =
+        when (val existsResult = patternRepository.existsRow(params.patternId, params.rowId)) {
+            is Result.Error -> existsResult
+            is Result.Success -> {
+                if (!existsResult.data) {
+                    Result.Error(AppError.NotFoundError(ErrorCode.ROW_NOT_FOUND, "id=${params.rowId.value}"))
+                } else {
+                    validateBoundsAndMove(params)
+                }
+            }
+        }
+
+    /**
+     * Проверяет границы и выполняет перемещение.
+     */
+    private suspend fun validateBoundsAndMove(params: UpdatePatternRowNumberParams): Result<Unit> =
+        when (val oldNumberResult = patternRepository.getRowNumber(params.rowId)) {
+            is Result.Error -> oldNumberResult
+            is Result.Success -> {
+                when (val countResult = patternRepository.getRowCount(params.patternId)) {
+                    is Result.Error -> countResult
+                    is Result.Success -> {
+                        val oldNumber = oldNumberResult.data
+                        val rowCount = countResult.data
+                        when {
+                            params.newRowNumber.value > rowCount -> Result.Error(
+                                AppError.ValidationError(ErrorCode.ROW_NUMBER_OUT_OF_BOUNDS, "new=${params.newRowNumber.value}, total=$rowCount")
+                            )
+                            oldNumber == params.newRowNumber.value -> Result.Success(Unit)
+                            else -> patternRepository.updateRowNumber(params.patternId, params.rowId, params.newRowNumber)
+                        }
+                    }
+                }
+            }
+        }
+}
