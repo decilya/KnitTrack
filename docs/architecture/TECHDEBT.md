@@ -426,7 +426,7 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 ## Архитектурные рекомендации (08.11.2026)
 
 - [ ] **P2 (SOLID/OCP):** Нарушение OCP в `Pattern.getDirectionForRow`. `when` по enum `PatternDirection`. При добавлении нового направления (например, по спирали) придется менять код агрегата. Заменить на sealed class с полиморфным методом (паттерн Стратегия).
-- [ ] **P2 (Clean Arch):** `Result<T>` без комбинаторов (`map`, `fold`, `onError`). Приводит к дублированию `when (result) { is Success -> ... }`. Добавить комбинаторы и отрефакторить UseCase/ViewModel.
+- [x] **P2 (Clean Arch):** `Result<T>` без комбинаторов (`map`, `fold`, `onError`). — **Закрыто 10.11.2026 (`1bd767f`):** добавлены комбинаторы, применены в сервисах.
 - [ ] **P3 (QA):** Отсутствие инфраструктуры Compose-тестов (`createComposeRule`). UI-компоненты (ColorPicker, диалоги, Long-press) не покрыты тестами. Настроить `androidx.compose.ui:ui-test-junit4` + Robolectric.
 
 ## Открытые P3 после сессии 07.11.2026
@@ -448,6 +448,8 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 - [ ] **P2 (Kotlin/ISP):** `BackupImportVisitor` и `BackupExportSource` — интерфейсы с 8 методами. Это не совсем Kotlin-way и нарушает ISP. Переделать в `data class` с лямбдами (по аналогии с `PatternEditorCallbacks`) или разбить на более мелкие интерфейсы.
 - [x] **P2 (Clean Arch):** Extension `ProjectDto.withoutPatternLink()` — **закрыт 11.11.2026**. Перенесен из `DataImporterImpl` в `DtoMappers.kt` (Data-слой) с добавлением KDoc.
 - [ ] **P3 (Code Quality):** Detekt Baseline (`baseline.xml`, 64 KB) скрывает старый долг по KDoc. Постепенно вычищать baseline: удалять игнорируемые файлы из XML и дописывать KDoc при касании этих файлов.
+
+- [x] **P2 (Clean Arch):** `BaseFlowUseCase` — `e as? Exception ?: Exception(e)`. — **Закрыто 15.11.2026:** `AppErrorMapper` принимает `Throwable`, каст убран.
 
 ## Ревью 11.11.2026 — Полная таксономия схем (Консилиум)
 
