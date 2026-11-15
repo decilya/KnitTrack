@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 142 уникальных (284 прогона: debug + release), 0 failures.
+**Тесты:** 486 уникальных (972 прогона: debug + release), 0 failures.
 
 ---
 
@@ -745,6 +745,14 @@ Pre-v7, шаг 1-2 — DTO 1.1 и подготовка сборки (feat(backup
 - ProjectsListScreen (ProjectCard): если target > 0 -> Text(project_rows_progress) + LinearProgressIndicator; иначе если totalRows > 0 -> Text(project_rows_count).
 - ProjectsListViewModelTest: backticks -> camelCase, expectedUiModel += totalRows/targetRowCount, mockProject += те же поля, новый тест init_mapsNullTargetRowCountForProjectsWithoutTarget.
 
+
+Сессия 13-15.11.2026 (rowSpan + SVG + BaseFlowUseCase):
+- **P1 rowSpan (Фазы 1-3 + QA):** Domain (columnSpanOverride, rowSpanOverride), Data (SQL fix в `PatternDao.updateOperation`, mappers), UI (поле "Height" в `EditOperationDialog`), Canvas (двухпроходный рендер Z-index). QA: фикстура `aran_with_bobbles.json`, round-trip тест. Коммиты `dd2a083`, `9f47a8b`, `f59a605`, `61f76b6`.
+- **P2 BaseFlowUseCase:** `AppErrorMapper.map` теперь принимает `Throwable`, костыль `as? Exception ?: Exception(e)` убран. Коммит `6df7a12`.
+- **P1 SVG-экспорт:** Domain (`PatternImageExporter`), Data (`SvgPatternRenderer`), UseCase (`ExportPatternSvgUseCase`), UI (SAF `CreateDocument` + кнопка Share). Коммиты `98b941f`, `24c4099`.
+- **Docs:** Созданы `AGENTS.md` (правила для ИИ) и `PROJECT_MAP.md` (карта слоев). Обновлен `TECHDEBT.md`.
+
+---
 ## 16. КОНТЕКСТ ОБСУЖДЕНИЯ (15-16.10.2026)
 
 Попытка ввести стандарты в другом чате: docs/architecture/coding-standards.md v4.0 (535 строк) и scripts/check_standards.py (regex-валидатор).
@@ -1120,16 +1128,16 @@ gradle/libs.versions.toml — НЕ существует.
 
 - **P2 (LIN/KOT) (05.11.2026):** `PatternEditorViewModel`. Убран блокирующий `first()` из `retry()`. Автозагрузка первой схемы перенесена в реактивный `observePatternSummaries` (VM не управляет потоками, SRP соблюден). Коммит `refactor(presentation): observePatternSummaries auto-loads first pattern, remove first() from retry()`.
 
-- **P2-баг (05.11.2026):** Архитектурный рефакторинг импорта бэкапа. 
-  Убрана бизнес-логика (санитизация) из `BackupRepositoryImpl`. Теперь репозиторий просто пишет данные. 
-  В `DataImporterImpl` добавлен маппинг `SQLiteConstraintException` (триггер БД) в `AppError.ValidationError` с понятным текстом. 
+- **P2-баг (05.11.2026):** Архитектурный рефакторинг импорта бэкапа.
+  Убрана бизнес-логика (санитизация) из `BackupRepositoryImpl`. Теперь репозиторий просто пишет данные.
+  В `DataImporterImpl` добавлен маппинг `SQLiteConstraintException` (триггер БД) в `AppError.ValidationError` с понятным текстом.
   Импорт битого бэкапа прерывается, данные не теряются молча. Коммит `fix(data): map orphan repeat_code to ValidationError on import`.
 
 - **P2-баг (05.11.2026):** `PatternEditorViewModel.retry()` — перезапускает `observePatternSummaries`, сбрасывает `errorRes`, fallback на первую схему. Коммит `fix(presentation): PatternEditorViewModel retry restart summaries`.
 
-- **P2-баг (05.11.2026):** Санитизация `repeatCode` при импорте бэкапа. 
-  Ранее битый бэкап падал с `SQLiteConstraintException` (DatabaseError). 
-  Теперь в `BackupRepositoryImpl.savePatternOperationsBatch` orphan-коды 
+- **P2-баг (05.11.2026):** Санитизация `repeatCode` при импорте бэкапа.
+  Ранее битый бэкап падал с `SQLiteConstraintException` (DatabaseError).
+  Теперь в `BackupRepositoryImpl.savePatternOperationsBatch` orphan-коды
   зануляются с логом `Timber.w` перед вставкой. Коммит `fix(data): sanitize orphan repeat_code on import`.
 
 - **P2 #19 (05.11.2026):** `repeat_code` defense-in-depth — 2 триггера (`trg_repeat_code_check_insert`/`_update`) в `MIGRATION_8_9` + `DATABASE_CALLBACK.onCreate`. FK невозможен (composite PK `pattern_repeats`). 3-way JOIN через `pattern_rows.pattern_id`. DELETE — вне scope (нет `deleteRepeat`). Коммит `feat(data): repeat_code defense-in-depth — MIGRATION_8_9 (P2 #19)`.
@@ -1144,7 +1152,8 @@ gradle/libs.versions.toml — НЕ существует.
 **Domain не меняется:** `UpdatePatternOperationService` (7f-D-1), `UpdatePatternRowNumberService` (7f-D-3), `DeletePatternRowService` (7f-D-2) — готовы. UI только вызывает UseCase через `PatternEditorUseCases` → **10 полей** (7f-D-7). God Bag, разбить на 4 группы — см. P1-A в `TECHDEBT.md`.
 
 ### Открытые задачи
-- **P2:** D-инвариант в Domain, `rowSpanOverride` (P2 #7), VO в `Session`, VO в `Project`.
+- **P2:** Colorwork UI (палитра цветов), D&D-reorder рядов, God State в `PatternEditorViewModel` (15+ полей), Crashlytics.
+- **P3:** ~13 в `TECHDEBT.md` (accessibility, lazy-load, i18n enum, и т.д.).
 - **P3:** ~15 в `TECHDEBT.md`.
 
 ### Roadmap (стратегическое видение)
