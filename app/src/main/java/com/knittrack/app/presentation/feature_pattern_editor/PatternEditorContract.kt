@@ -36,47 +36,44 @@ object PatternEditorContract {
      * @property errorRes Ошибка для snackbar. null — ошибки нет.
      */
     data class State(
+        val data: DataState = DataState(),
+        val ui: UiState = UiState(),
+        val selection: SelectionState = SelectionState()
+    )
+
+    /**
+     * Данные схемы и стейт загрузки/сохранения.
+     */
+    data class DataState(
         val availablePatterns: List<PatternSummary> = emptyList(),
         val currentPatternId: PatternId? = null,
         val pattern: Pattern? = null,
-        val selectedRowId: PatternRowId? = null,
-        val selectedColumn: ColumnStart? = null,
-        val selectedSymbolCode: String? = null,
-        val isStickyMode: Boolean = true,
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
         @StringRes val errorRes: Int? = null,
-        val lastOperations: List<PatternOperation> = emptyList(),
+        val lastOperations: List<PatternOperation> = emptyList()
+    )
+
+    /**
+     * UI-состояние (диалоги, туториал).
+     */
+    data class UiState(
         val editingOperation: PatternOperation? = null,
         val editingRow: com.knittrack.app.domain.entity.PatternRow? = null,
-
-        /**
-         * Открыт ли [LegendEditorSheet] (7f-D-7).
-         * Управляется Intent.OpenLegendEditor / CloseLegendEditor.
-         */
         val isLegendEditorOpen: Boolean = false,
-
-        /**
-         * Видимость кнопки «Добавить» в [LegendEditorSheet] (7f-D-7).
-         * Читается из SettingsRepository.legendAddButtonVisibleFlow
-         * (настройка в SettingsScreen). Default = true.
-         */
         val showLegendAddButton: Boolean = true,
-
-        /**
-         * Показан ли одноразовый туториал Pattern Editor.
-         * Источник — SettingsRepository.editTutorialShownFlow (DataStore).
-         * Default true — показываем до чтения из DataStore.
-         */
         val showEditTutorial: Boolean = true,
-
-        /**
-         * Открыт ли туториал вручную (иконка `?` в TopAppBar).
-         * Пока true — collect из editTutorialShownFlow НЕ сбрасывает
-         * showEditTutorial в false (иначе ручной показ затрётся следующим
-         * эмитом DataStore).
-         */
         val tutorialManuallyRequested: Boolean = false
+    )
+
+    /**
+     * Выделение на Canvas и режим добавления.
+     */
+    data class SelectionState(
+        val selectedRowId: PatternRowId? = null,
+        val selectedColumn: ColumnStart? = null,
+        val selectedSymbolCode: String? = null,
+        val isStickyMode: Boolean = true
     )
 
     /**

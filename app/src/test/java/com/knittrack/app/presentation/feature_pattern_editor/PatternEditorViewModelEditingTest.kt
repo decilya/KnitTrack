@@ -59,7 +59,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         advanceUntilIdle()
 
         val effect = effectDeferred.await()
-        assertEquals(false, vm.state.value.isSaving)
+        assertEquals(false, vm.state.value.data.isSaving)
         assertTrue(effect is PatternEditorContract.Effect.OperationAdded)
     }
 
@@ -109,7 +109,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         ))
         advanceUntilIdle()
 
-        assertEquals(listOf(operation(0)), vm.state.value.lastOperations)
+        assertEquals(listOf(operation(0)), vm.state.value.data.lastOperations)
     }
 
     /**
@@ -134,7 +134,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
             advanceUntilIdle()
         }
 
-        val stack = vm.state.value.lastOperations
+        val stack = vm.state.value.data.lastOperations
         assertEquals(25, stack.size)
         assertEquals(1, stack.first().columnStart.value)
         assertEquals(25, stack.last().columnStart.value)
@@ -161,7 +161,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.UndoLastOperation)
         advanceUntilIdle()
 
-        assertTrue(vm.state.value.lastOperations.isEmpty())
+        assertTrue(vm.state.value.data.lastOperations.isEmpty())
         coVerify(exactly = 3) { getPatternByIdService(any()) }
     }
 
@@ -189,7 +189,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         advanceUntilIdle()
 
         val effect = effectDeferred.await()
-        assertEquals(listOf(operation(0)), vm.state.value.lastOperations)
+        assertEquals(listOf(operation(0)), vm.state.value.data.lastOperations)
         assertTrue(effect is PatternEditorContract.Effect.ShowError)
         assertEquals(
             ErrorMapper.map(ErrorCode.PROJECT_NOT_FOUND),
@@ -210,7 +210,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { deleteOperationUseCase(any()) }
-        assertTrue(vm.state.value.lastOperations.isEmpty())
+        assertTrue(vm.state.value.data.lastOperations.isEmpty())
     }
 
     /**
@@ -224,7 +224,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
         vm.onIntent(PatternEditorContract.Intent.EditOperation(op))
 
-        assertEquals(op, vm.state.value.editingOperation)
+        assertEquals(op, vm.state.value.ui.editingOperation)
     }
 
     /**
@@ -239,8 +239,8 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
         vm.onIntent(PatternEditorContract.Intent.DismissEditor)
 
-        assertNull(vm.state.value.editingOperation)
-        assertNull(vm.state.value.editingRow)
+        assertNull(vm.state.value.ui.editingOperation)
+        assertNull(vm.state.value.ui.editingRow)
     }
 
     /**
@@ -263,7 +263,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         ))
         advanceUntilIdle()
 
-        assertNull(vm.state.value.editingOperation)
+        assertNull(vm.state.value.ui.editingOperation)
         coVerify(exactly = 2) { getPatternByIdService(any()) }
     }
 
@@ -302,7 +302,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.DeleteRow(PatternRowId.create(10L)))
         advanceUntilIdle()
 
-        assertNull(vm.state.value.editingRow)
+        assertNull(vm.state.value.ui.editingRow)
     }
 
     /**
@@ -320,7 +320,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         ))
         advanceUntilIdle()
 
-        assertNull(vm.state.value.editingRow)
+        assertNull(vm.state.value.ui.editingRow)
     }
 
     /**
@@ -333,7 +333,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
         vm.onIntent(PatternEditorContract.Intent.OpenLegendEditor)
 
-        assertTrue(vm.state.value.isLegendEditorOpen)
+        assertTrue(vm.state.value.ui.isLegendEditorOpen)
     }
 
     /**
@@ -347,7 +347,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
 
         vm.onIntent(PatternEditorContract.Intent.CloseLegendEditor)
 
-        assertTrue(!vm.state.value.isLegendEditorOpen)
+        assertTrue(!vm.state.value.ui.isLegendEditorOpen)
     }
 
     /**

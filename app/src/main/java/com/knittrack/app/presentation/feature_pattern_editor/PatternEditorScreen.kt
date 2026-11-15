@@ -57,11 +57,11 @@ fun PatternEditorScreen(
     var menuExpanded by remember { mutableStateOf(false) }
     var showCreateDialog by remember { mutableStateOf(false) }
     var pendingCell by remember { mutableStateOf<PendingCell?>(null) }
-    val pattern = state.pattern
+    val pattern = state.data.pattern
 
     // 05.11.2026: источник — SettingsRepository.editTutorialShownFlow (DataStore),
     // не SharedPreferences (§25 Урок 27, §11.3).
-    if (state.showEditTutorial) {
+    if (state.ui.showEditTutorial) {
         AlertDialog(
             onDismissRequest = { viewModel.onIntent(PatternEditorContract.Intent.DismissEditTutorial) },
             title = { Text(stringResource(R.string.pattern_editor_tutorial_title)) },
@@ -137,7 +137,7 @@ fun PatternEditorScreen(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false }
                         ) {
-                            state.availablePatterns.forEach { summary ->
+                            state.data.availablePatterns.forEach { summary ->
                                 DropdownMenuItem(
                                     text = { Text(summary.name.value) },
                                     onClick = {
@@ -183,7 +183,7 @@ fun PatternEditorScreen(
                     }
                     IconButton(
                         onClick = { viewModel.onIntent(Intent.UndoLastOperation) },
-                        enabled = state.lastOperations.isNotEmpty() && !state.isSaving
+                        enabled = state.data.lastOperations.isNotEmpty() && !state.data.isSaving
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Undo,
@@ -192,13 +192,13 @@ fun PatternEditorScreen(
                     }
                     IconButton(onClick = { viewModel.onIntent(Intent.ToggleMode) }) {
                         Icon(
-                            imageVector = if (state.isStickyMode) {
+                            imageVector = if (state.selection.isStickyMode) {
                                 Icons.Default.TouchApp
                             } else {
                                 Icons.Default.AdsClick
                             },
                             contentDescription = stringResource(
-                                if (state.isStickyMode) {
+                                if (state.selection.isStickyMode) {
                                     R.string.pattern_editor_mode_sticky
                                 } else {
                                     R.string.pattern_editor_mode_sheet
@@ -219,7 +219,7 @@ fun PatternEditorScreen(
         }
     ) { padding ->
         when {
-            state.isLoading -> CircularProgressIndicator(Modifier.padding(padding))
+            state.data.isLoading -> CircularProgressIndicator(Modifier.padding(padding))
             pattern == null -> Column(Modifier.padding(padding).padding(16.dp)) {
                 Text(stringResource(R.string.pattern_editor_select_pattern))
                 Button(onClick = { showCreateDialog = true }) {
@@ -258,7 +258,7 @@ fun PatternEditorScreen(
             }
         )
     }
-    val opToEdit = state.editingOperation
+    val opToEdit = state.ui.editingOperation
     if (opToEdit != null && pattern != null) {
         EditOperationDialog(
             operation = opToEdit,
@@ -271,7 +271,7 @@ fun PatternEditorScreen(
         )
     }
 
-    val rowToEdit = state.editingRow
+    val rowToEdit = state.ui.editingRow
     if (rowToEdit != null) {
         RowEditorSheet(
             row = rowToEdit,
@@ -283,10 +283,10 @@ fun PatternEditorScreen(
 
     // 7f-D-7: LegendEditorSheet — управление легендой.
     // Открывается по IconButton Palette в TopAppBar. Partial detent по умолчанию.
-    if (state.isLegendEditorOpen && pattern != null) {
+    if (state.ui.isLegendEditorOpen && pattern != null) {
         LegendEditorSheet(
             pattern = pattern,
-            showAddButton = state.showLegendAddButton,
+            showAddButton = state.ui.showLegendAddButton,
             callbacks = LegendEditorCallbacks(
                 onAddSymbol = { code, name, glyph, span ->
                     viewModel.onIntent(Intent.AddSymbol(code, name, glyph, span))

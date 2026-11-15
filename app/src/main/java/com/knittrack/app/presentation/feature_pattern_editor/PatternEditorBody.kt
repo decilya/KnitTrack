@@ -72,7 +72,7 @@ internal fun PatternEditorBody(
                 ReorderableItem(reorderableLazyListState, key = row.id.value) { isDragging ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         FilterChip(
-                            selected = row.id == state.selectedRowId,
+                            selected = row.id == state.selection.selectedRowId,
                             onClick = { callbacks.onIntent(Intent.SelectRow(row.id)) },
                             label = {
                                 Text(stringResource(R.string.pattern_editor_row_prefix, row.rowNumber.value))
@@ -103,14 +103,14 @@ internal fun PatternEditorBody(
             callbacks = callbacks,
             modifier = Modifier.weight(1f).fillMaxWidth()
         )
-        if (state.isStickyMode && pattern.legend.isNotEmpty()) {
+        if (state.selection.isStickyMode && pattern.legend.isNotEmpty()) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(6),
                 modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(8.dp)
             ) {
                 items(pattern.legend.toList(), key = { it.code }) { symbol ->
                     FilterChip(
-                        selected = symbol.code == state.selectedSymbolCode,
+                        selected = symbol.code == state.selection.selectedSymbolCode,
                         onClick = { callbacks.onIntent(Intent.SelectSymbol(symbol.code)) },
                         label = { Text(symbol.textGlyph) }
                     )

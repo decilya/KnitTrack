@@ -44,8 +44,8 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
     fun initLoadsAvailablePatterns() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
-        assertEquals(1, vm.state.value.availablePatterns.size)
-        assertEquals("Схема", vm.state.value.availablePatterns[0].name.value)
+        assertEquals(1, vm.state.value.data.availablePatterns.size)
+        assertEquals("Схема", vm.state.value.data.availablePatterns[0].name.value)
     }
 
     /**
@@ -59,9 +59,9 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.LoadPattern(PatternId.create(1L)))
         advanceUntilIdle()
 
-        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
-        assertNotNull(vm.state.value.pattern)
-        assertFalse(vm.state.value.isLoading)
+        assertEquals(PatternId.create(1L), vm.state.value.data.currentPatternId)
+        assertNotNull(vm.state.value.data.pattern)
+        assertFalse(vm.state.value.data.isLoading)
     }
 
     /**
@@ -77,7 +77,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { getPatternByIdService(PatternId.create(2L)) }
-        assertEquals(PatternId.create(2L), vm.state.value.currentPatternId)
+        assertEquals(PatternId.create(2L), vm.state.value.data.currentPatternId)
     }
 
     /**
@@ -87,11 +87,11 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
     fun toggleModePersistsInSavedStateHandle() = runTest {
         val savedState = SavedStateHandle()
         val vm = createViewModel(savedState)
-        assertTrue(vm.state.value.isStickyMode)
+        assertTrue(vm.state.value.selection.isStickyMode)
 
         vm.onIntent(PatternEditorContract.Intent.ToggleMode)
 
-        assertFalse(vm.state.value.isStickyMode)
+        assertFalse(vm.state.value.selection.isStickyMode)
         assertEquals(false, savedState.get<Boolean>("isStickyMode"))
     }
 
@@ -108,8 +108,8 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { getPatternByIdService(PatternId.create(1L)) }
-        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
-        assertNull(vm.state.value.selectedSymbolCode)
+        assertEquals(PatternId.create(1L), vm.state.value.data.currentPatternId)
+        assertNull(vm.state.value.selection.selectedSymbolCode)
     }
 
     /**
@@ -125,7 +125,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.CreatePattern(createParams()))
         advanceUntilIdle()
 
-        assertEquals(PatternId.create(3L), vm.state.value.currentPatternId)
+        assertEquals(PatternId.create(3L), vm.state.value.data.currentPatternId)
     }
 
     /**
@@ -158,12 +158,12 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         coEvery { settingsRepository.setEditTutorialShown(any()) } returns Result.Success(Unit)
         val vm = loadedVm()
         advanceUntilIdle()
-        assertTrue(vm.state.value.showEditTutorial)
+        assertTrue(vm.state.value.ui.showEditTutorial)
 
         vm.onIntent(PatternEditorContract.Intent.DismissEditTutorial)
         advanceUntilIdle()
 
-        assertFalse(vm.state.value.showEditTutorial)
+        assertFalse(vm.state.value.ui.showEditTutorial)
         coVerify(exactly = 1) { settingsRepository.setEditTutorialShown(true) }
     }
 
@@ -175,7 +175,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
     fun initReadsTutorialShownFromDataStore() = runTest {
         val vm = createViewModel(tutorialShown = true)
         advanceUntilIdle()
-        assertFalse(vm.state.value.showEditTutorial)
+        assertFalse(vm.state.value.ui.showEditTutorial)
     }
 
     /**
@@ -189,7 +189,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         )
         val vm = createViewModel()
         advanceUntilIdle()
-        assertNotNull(vm.state.value.errorRes)
+        assertNotNull(vm.state.value.data.errorRes)
 
         every { getAllPatternSummariesService(Unit) } returns flowOf(
             Result.Success(listOf(PatternSummary(PatternId.create(1L), PatternName.create("P1"))))
@@ -207,9 +207,9 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.Retry)
         advanceUntilIdle()
 
-        assertNull(vm.state.value.errorRes)
-        assertEquals(1, vm.state.value.availablePatterns.size)
-        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
+        assertNull(vm.state.value.data.errorRes)
+        assertEquals(1, vm.state.value.data.availablePatterns.size)
+        assertEquals(PatternId.create(1L), vm.state.value.data.currentPatternId)
     }
 
     /**
@@ -223,7 +223,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         )
         val vm = createViewModel()
         advanceUntilIdle()
-        assertNull(vm.state.value.currentPatternId)
+        assertNull(vm.state.value.data.currentPatternId)
 
         every { getAllPatternSummariesService(Unit) } returns flowOf(
             Result.Success(listOf(PatternSummary(PatternId.create(1L), PatternName.create("P1"))))
@@ -241,7 +241,7 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.Retry)
         advanceUntilIdle()
 
-        assertEquals(PatternId.create(1L), vm.state.value.currentPatternId)
+        assertEquals(PatternId.create(1L), vm.state.value.data.currentPatternId)
     }
 
     /**
@@ -253,13 +253,13 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
     fun showEditTutorialManually_overridesStoredFlag() = runTest {
         val vm = createViewModel(tutorialShown = true)
         advanceUntilIdle()
-        assertFalse(vm.state.value.showEditTutorial)
+        assertFalse(vm.state.value.ui.showEditTutorial)
 
         vm.onIntent(PatternEditorContract.Intent.ShowEditTutorial)
         advanceUntilIdle()
 
-        assertTrue(vm.state.value.showEditTutorial)
-        assertTrue(vm.state.value.tutorialManuallyRequested)
+        assertTrue(vm.state.value.ui.showEditTutorial)
+        assertTrue(vm.state.value.ui.tutorialManuallyRequested)
     }
 
     /**
@@ -274,13 +274,13 @@ class PatternEditorViewModelTest : PatternEditorViewModelTestBase() {
 
         vm.onIntent(PatternEditorContract.Intent.ShowEditTutorial)
         advanceUntilIdle()
-        assertTrue(vm.state.value.tutorialManuallyRequested)
+        assertTrue(vm.state.value.ui.tutorialManuallyRequested)
 
         vm.onIntent(PatternEditorContract.Intent.DismissEditTutorial)
         advanceUntilIdle()
 
-        assertFalse(vm.state.value.showEditTutorial)
-        assertFalse(vm.state.value.tutorialManuallyRequested)
+        assertFalse(vm.state.value.ui.showEditTutorial)
+        assertFalse(vm.state.value.ui.tutorialManuallyRequested)
         coVerify(exactly = 1) { settingsRepository.setEditTutorialShown(true) }
     }
 }

@@ -1537,3 +1537,11 @@ ViewModel с >4 зависимостями — кандидат на деком�
 **Причина:** скрипт `text.replace("com.knittrac", "com.knittrack")` заменяет подстроки в неожиданных местах. В `settings.gradle.kts` `include(":app")` не содержал `com.knittrac`, но из-за неверного regex или повторной замены он превратился в `include(":com.knittrack.app")`. В тестах `Paths.get("...", "com", "knittrack", "app")` стал `Paths.get("...", "com", "knittrack", "com.knittrack.app")`.
 **Пример (15.11.2026):** Переименование `com.knittrac.app` -> `com.knittrack.app`.
 **Правило:** при глобальной замене пакета **никогда** не используй просто `text.replace(...)`. Используй регулярные выражения с границами: `re.sub(r'\bcom\.knittrac\b', 'com.knittrack', text)`. После замены **обязательно** проверь `settings.gradle.kts` (там должен быть `include(":app")`), `build.gradle.kts` (`namespace`, `applicationId`) и архитектурные тесты (пути `Paths.get`).
+
+
+### Урок 52. Декомпозиция God-класса: State — это данные, ViewModel — это поведение
+
+**Симптом:** Detekt ругается на `LargeClass` (302/300), после того как мы «разбили» State на подсостояния. Методы всё ещё весят много.
+**Причина:** Разбиение `State` — это только первый шаг (данные). Второй шаг — вынести *поведение* (логику резолва контекста, экспорт, общую обертку с `try/finally`) в отдельные классы-хелперы.
+**Пример (15.11.2026):** В `PatternEditorViewModel` вынесли `resolveAddContext`/`resolveUpdateContext` в `PatternEditorContextResolver.kt`, а методы `exportSvg/exportPdf` — в `PatternEditorExporter.kt`. Также заменили дублирование `try/finally` на обобщенный метод `executeWithSaving`.
+**Правило:** Если ViewModel > 300 строк, не пытайся спасти её удалением пустых строк. Выноси *логику* в отдельные файлы (top-level функции или делегаты). Данные (State) и Поведение (ViewModel) — это разные причины изменения (SRP).

@@ -67,8 +67,8 @@ internal fun PatternCanvas(
                 pattern,
                 cellPx,
                 headerPx,
-                state.isStickyMode,
-                state.selectedSymbolCode
+                state.selection.isStickyMode,
+                state.selection.selectedSymbolCode
             ) {
                 detectTapGestures(
                     onLongPress = { tap ->
@@ -95,8 +95,8 @@ internal fun PatternCanvas(
                         val column = ColumnStart.create(col)
                         callbacks.onIntent(Intent.SelectRow(row.id))
                         callbacks.onIntent(Intent.SelectColumn(column))
-                        if (state.isStickyMode) {
-                            if (state.selectedSymbolCode != null) {
+                        if (state.selection.isStickyMode) {
+                            if (state.selection.selectedSymbolCode != null) {
                                 callbacks.onIntent(Intent.AddOperation(row.id, column))
                             }
                         } else {
@@ -165,8 +165,8 @@ internal fun PatternCanvas(
                         )
                     }
                 }
-                val selectedRow = state.selectedRowId
-                val selectedColumn = state.selectedColumn
+                val selectedRow = state.selection.selectedRowId
+                val selectedColumn = state.selection.selectedColumn
                 val selectedIndex = pattern.rows.indexOfFirst { it.id == selectedRow }
                 if (selectedRow != null && selectedColumn != null && selectedIndex >= 0) {
                     drawRect(
