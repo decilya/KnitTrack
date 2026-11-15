@@ -191,8 +191,8 @@ fun PatternEditorScreen(
             operation = opToEdit,
             legend = pattern.legend,
             onDismiss = { viewModel.onIntent(Intent.DismissEditor) },
-            onUpdate = { code, span, color ->
-                viewModel.onIntent(Intent.UpdateOperation(opToEdit, code, span, color))
+            onUpdate = { code, columnSpan, rowSpan, color ->
+                viewModel.onIntent(Intent.UpdateOperation(opToEdit, code, columnSpan, color, rowSpan))
             },
             onDelete = { viewModel.onIntent(Intent.DeleteOperationFromDialog(opToEdit)) }
         )

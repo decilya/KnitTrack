@@ -48,11 +48,12 @@ fun EditOperationDialog(
     operation: PatternOperation,
     legend: Set<Symbol>,
     onDismiss: () -> Unit,
-    onUpdate: (symbolCode: String, newSpan: Span?, newColorHex: String?) -> Unit,
+    onUpdate: (symbolCode: String, newColumnSpan: Span?, newRowSpan: Span?, newColorHex: String?) -> Unit,
     onDelete: () -> Unit
 ) {
     var selectedSymbolCode by remember { mutableStateOf(operation.symbol.code) }
-    var spanText by remember { mutableStateOf(operation.columnSpanOverride?.value?.toString() ?: "") }
+    var columnSpanText by remember { mutableStateOf(operation.columnSpanOverride?.value?.toString() ?: "") }
+    var rowSpanText by remember { mutableStateOf(operation.rowSpanOverride?.value?.toString() ?: "") }
     var colorHex by remember { mutableStateOf(operation.colorHex ?: "") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -95,9 +96,17 @@ fun EditOperationDialog(
                 }
 
                 OutlinedTextField(
-                    value = spanText,
-                    onValueChange = { spanText = it },
+                    value = columnSpanText,
+                    onValueChange = { columnSpanText = it },
                     label = { Text(stringResource(R.string.pattern_editor_edit_operation_span)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = rowSpanText,
+                    onValueChange = { rowSpanText = it },
+                    label = { Text(stringResource(R.string.pattern_editor_edit_operation_row_span)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
@@ -144,8 +153,9 @@ fun EditOperationDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val span = spanText.toIntOrNull()?.let { Span.createOrNull(it) }
-                    onUpdate(selectedSymbolCode, span, colorHex.ifBlank { null })
+                    val columnSpan = columnSpanText.toIntOrNull()?.let { Span.createOrNull(it) }
+                    val rowSpan = rowSpanText.toIntOrNull()?.let { Span.createOrNull(it) }
+                    onUpdate(selectedSymbolCode, columnSpan, rowSpan, colorHex.ifBlank { null })
                 },
                 enabled = isHexValid
             ) {

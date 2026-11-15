@@ -6,6 +6,7 @@ import com.knittrac.app.domain.entity.Pattern
 import com.knittrac.app.domain.entity.PatternId
 import com.knittrac.app.domain.entity.PatternOperation
 import com.knittrac.app.domain.entity.PatternRowId
+import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.domain.model.PatternSummary
 import com.knittrac.app.domain.service.CreatePatternParams
 
@@ -108,8 +109,11 @@ object PatternEditorContract {
         data class UpdateOperation(
             val oldOperation: PatternOperation,
             val newSymbolCode: String,
-            val newOverrideSpan: com.knittrac.app.domain.entity.Span?,
-            val newColorHex: String?
+            val newColumnSpan: Span?,
+            val newColorHex: String?,
+            /** Оверрайд высоты операции в рядах (rowSpan). null — без оверрайда.
+             * @see com.knittrac.app.domain.entity.Span */
+            val newRowSpan: Span? = null
         ) : Intent()
         /** Удалить операцию (из диалога). */
         data class DeleteOperationFromDialog(val operation: PatternOperation) : Intent()

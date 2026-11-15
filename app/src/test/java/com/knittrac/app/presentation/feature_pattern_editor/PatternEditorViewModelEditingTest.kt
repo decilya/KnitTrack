@@ -258,7 +258,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.UpdateOperation(
             oldOperation = operation(0),
             newSymbolCode = "K",
-            newOverrideSpan = null,
+            newColumnSpan = null,
             newColorHex = null
         ))
         advanceUntilIdle()
@@ -281,7 +281,7 @@ class PatternEditorViewModelEditingTest : PatternEditorViewModelTestBase() {
         vm.onIntent(PatternEditorContract.Intent.UpdateOperation(
             oldOperation = operation(0),
             newSymbolCode = "K",
-            newOverrideSpan = null,
+            newColumnSpan = null,
             newColorHex = null
         ))
         advanceUntilIdle()

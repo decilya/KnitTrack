@@ -98,7 +98,10 @@
     <string name="pattern_editor_edit_operation_title">Редактировать операцию</string>
     <string name="pattern_editor_edit_operation_symbol">Символ</string>
     <string name="pattern_editor_edit_operation_span">Ширина (override)</string>
+    <string name="pattern_editor_edit_operation_row_span">Высота (ряды)</string>
     <string name="pattern_editor_edit_operation_color">Цвет (HEX)</string>
+    <string name="pattern_editor_edit_operation_color_hex">HEX-код (например, #FF0000)</string>
+    <string name="pattern_editor_edit_operation_color_invalid">Формат: #RRGGBB</string>
     <string name="pattern_editor_edit_operation_delete">Удалить</string>
     <string name="pattern_editor_edit_operation_delete_confirm">Удалить операцию?</string>
     <string name="pattern_editor_row_editor_title">Редактировать ряд</string>
