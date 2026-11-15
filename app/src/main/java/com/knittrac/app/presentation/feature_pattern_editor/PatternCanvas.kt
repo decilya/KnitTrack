@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.knittrac.app.domain.entity.ColumnStart
 import com.knittrac.app.domain.entity.Pattern
+import com.knittrac.app.domain.entity.Span
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContract.Intent
 import com.knittrac.app.presentation.feature_pattern_editor.PatternEditorContract.State
 
@@ -130,8 +131,9 @@ internal fun PatternCanvas(
                         )
                     )
                 }
+                // Первый проход: однорядовые операции (effectiveRowSpan == Span.ONE).
                 pattern.rows.forEachIndexed { rowIndex, row ->
-                    row.operations.forEach { operation ->
+                    row.operations.filter { it.effectiveRowSpan == Span.ONE }.forEach { operation ->
                         drawRect(
                             color = colorOrDefault(operation.colorHex, stitchColor),
                             topLeft = Offset(
@@ -139,6 +141,27 @@ internal fun PatternCanvas(
                                 rowIndex * cellPx
                             ),
                             size = Size(operation.effectiveColumnSpan.value * cellPx, cellPx)
+                        )
+                    }
+                }
+                /**
+                 * Второй проход — Z-index фикс вертикальных операций
+                 * (effectiveRowSpan > 1). Без него нижний ряд рисовался позже
+                 * и затирал верхнюю часть многорядовой операции (rowSpan > 1).
+                 * Высота прямоугольника учитывает effectiveRowSpan.
+                 */
+                pattern.rows.forEachIndexed { rowIndex, row ->
+                    row.operations.filter { it.effectiveRowSpan.value > 1 }.forEach { operation ->
+                        drawRect(
+                            color = colorOrDefault(operation.colorHex, stitchColor),
+                            topLeft = Offset(
+                                headerPx + operation.columnStart.value * cellPx,
+                                rowIndex * cellPx
+                            ),
+                            size = Size(
+                                operation.effectiveColumnSpan.value * cellPx,
+                                operation.effectiveRowSpan.value * cellPx
+                            )
                         )
                     }
                 }
