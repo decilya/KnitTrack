@@ -22,10 +22,14 @@ internal fun exportPatternSvg(
     scope: CoroutineScope
 ) {
     scope.launch {
-        val params = ExportPatternSvgParams(pattern, outputStream)
-        when (useCases.exportSvg(params)) {
-            is Result.Success -> effectChannel.send(PatternEditorContract.Effect.ExportSuccess)
-            is Result.Error -> effectChannel.send(PatternEditorContract.Effect.ExportError)
+        try {
+            val params = ExportPatternSvgParams(pattern, outputStream)
+            when (useCases.exportSvg(params)) {
+                is Result.Success -> effectChannel.send(PatternEditorContract.Effect.ExportSuccess)
+                is Result.Error -> effectChannel.send(PatternEditorContract.Effect.ExportError)
+            }
+        } finally {
+            try { outputStream.close() } catch (e: Exception) { /* ignore */ }
         }
     }
 }
@@ -38,10 +42,14 @@ internal fun exportPatternPdf(
     scope: CoroutineScope
 ) {
     scope.launch {
-        val params = ExportPatternPdfParams(pattern, outputStream)
-        when (useCases.exportPdf(params)) {
-            is Result.Success -> effectChannel.send(PatternEditorContract.Effect.ExportSuccess)
-            is Result.Error -> effectChannel.send(PatternEditorContract.Effect.ExportError)
+        try {
+            val params = ExportPatternPdfParams(pattern, outputStream)
+            when (useCases.exportPdf(params)) {
+                is Result.Success -> effectChannel.send(PatternEditorContract.Effect.ExportSuccess)
+                is Result.Error -> effectChannel.send(PatternEditorContract.Effect.ExportError)
+            }
+        } finally {
+            try { outputStream.close() } catch (e: Exception) { /* ignore */ }
         }
     }
 }

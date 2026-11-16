@@ -81,8 +81,11 @@ fun PatternEditorScreen(
     ) { uri ->
         if (uri != null) {
             try {
-                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                val stream = context.contentResolver.openOutputStream(uri)
+                if (stream != null) {
                     viewModel.onIntent(PatternEditorContract.Intent.ExportSvg(stream))
+                } else {
+                    Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
@@ -96,8 +99,11 @@ fun PatternEditorScreen(
     ) { uri ->
         if (uri != null) {
             try {
-                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                val stream = context.contentResolver.openOutputStream(uri)
+                if (stream != null) {
                     viewModel.onIntent(PatternEditorContract.Intent.ExportPdf(stream))
+                } else {
+                    Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()

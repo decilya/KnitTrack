@@ -49,7 +49,9 @@ class ExportPatternSvgUseCase @Inject constructor(
      */
     private fun writeToStream(svg: String, outputStream: OutputStream): Result<Unit> {
         return try {
-            outputStream.bufferedWriter().use { it.write(svg) }
+            val writer = outputStream.bufferedWriter()
+            writer.write(svg)
+            writer.flush()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(AppError.IoError(e))

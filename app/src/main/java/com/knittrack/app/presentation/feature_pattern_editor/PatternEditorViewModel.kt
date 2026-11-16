@@ -163,8 +163,9 @@ class PatternEditorViewModel @Inject constructor(
             platformDeps.settingsRepository.legendAddButtonVisibleFlow.collect { visible ->
                 _state.update { it.copy(ui = it.ui.copy(showLegendAddButton = visible)) }
             }
+        }
 
-            // 05.11.2026: туториал перенесён с SharedPreferences на DataStore (P2-баг).
+        viewModelScope.launch {
             platformDeps.settingsRepository.editTutorialShownFlow.collect { shown ->
                 _state.update { it.copy(ui = it.ui.copy(showEditTutorial = !shown || it.ui.tutorialManuallyRequested)) }
             }

@@ -40,6 +40,8 @@
 
 ### Открыто после code review 31.10.2026
 
+- [x] **P1 (bug):** Экспорт SVG/PDF (поток закрывался через use до записи). **[Закрыто 16.11.2026]**
+- [x] **P1 (bug):** Туториал редактора показывался каждый раз (два collect в одном launch). **[Закрыто 16.11.2026]**
 - [ ] **P1-5**: `TimerScreen` permission flow (`if (!permissionViewModel.isGranted()) launcher.launch(...)`) не покрыт тестом. Регресс невидим. Robolectric compose test (`createComposeRule`).
 - [x] **P2-4**: `PatternEditorViewModel.retry()` — **закрыт 05.11.2026**. Добавлен `summariesJob`, `retry()` перезапускает подписку на summaries и сбрасывает `errorRes`. Fallback: savedStateHandle → firstAvailable.
 - [ ] **P2-5**: `Migration5To6Test` использует симуляцию v5 через `DROP TRIGGER + PRAGMA user_version=5`, не реальную v5. Заменить на raw SQL `CREATE TABLE` v5 (эталон `Migration4To5Test`).
@@ -394,6 +396,8 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 
 - [x] **P1 (Clean Arch):** Парсинг текста исключения в `DataImporterImpl`. **Закрыто 10.11.2026.** Заменено на типизированное `InvalidBackupOperationsException` в Data-слое (`BackupRepositoryImpl`). `DataImporterImpl` ловит его без парсинга строк.
 - [x] **P1 (i18n):** Хардкод русского текста в `AppError` — **закрыт 11.11.2026**. Введён `ErrorCode` (enum) в `AppError`. Domain/Data возвращают только код, технические детали — в `details`. В Presentation добавлен `ErrorMapper` (`ErrorCode` → `@StringRes`). Русские тексты удалены из Domain/Data, все строки для UI — в `strings.xml`. Тесты обновлены на проверку `error.code`.
+- [x] **P1 (bug):** Экспорт SVG/PDF (поток закрывался через use до записи). **[Закрыто 16.11.2026]**
+- [x] **P1 (bug):** Туториал редактора показывался каждый раз (два collect в одном launch). **[Закрыто 16.11.2026]**
 - [ ] **P1 (SRP):** `AppDatabase` — God Class (644 строки). Содержит `@Database`, все 10 миграций, `DATABASE_CALLBACK`, DDL-триггеры и сидеры. Вынести миграции в `AppDatabaseMigrations`, callback в `DatabaseCallback`, триггеры в `DatabaseTriggers` (закрывается в P1-7).
 - [x] **P2 (DDD/VO):** `BackupRepository` использует `Pair<Long, T>` — **закрыт 11.11.2026**. Созданы `PatternRowWithId(patternId: PatternId, row: PatternRow)` и `PatternRepeatWithId(patternId: PatternId, repeat: PatternRepeat)`. `BackupRepository` (и `ExportContext`) переведены на эти типы. Обновлены `BackupRepositoryImpl`, `DataExporterImpl`, `DataImporterImpl`.
 - [x] **P2 (DIP):** Gson внутри `DataImporterImpl`/`DataExporterImpl` — **закрыт 11.11.2026**. Создан интерфейс `BackupJsonParser` (Data). Реализация `GsonBackupParser` инкапсулирует Gson. `DataImporterImpl` и `DataExporterImpl` зависят только от интерфейса, Application-слой больше не знает про Gson.
@@ -413,7 +417,11 @@ VM: 4 группы + PlatformDeps = **5 параметров** (порог 6, `@
 - [ ] **P2 (QA):** Нет Compose-тестов (`createComposeRule`). UI не покрыт.
 
 ### Стратегия / CTO / PM / SMM
+- [x] **P1 (bug):** Экспорт SVG/PDF (поток закрывался через use до записи). **[Закрыто 16.11.2026]**
+- [x] **P1 (bug):** Туториал редактора показывался каждый раз (два collect в одном launch). **[Закрыто 16.11.2026]**
 - [ ] **P1 (Strategy):** Scope Creep. Pattern Editor (v1.1) вытеснил Sync (v1.0). Нужен пересмотр приоритетов.
+- [x] **P1 (bug):** Экспорт SVG/PDF (поток закрывался через use до записи). **[Закрыто 16.11.2026]**
+- [x] **P1 (bug):** Туториал редактора показывался каждый раз (два collect в одном launch). **[Закрыто 16.11.2026]**
 - [ ] **P1 (SMM):** Package name `com.knittrackk.app` ≠ бренд `KnitTrack`. Блокер для Google Play (переименование до релиза).
 - [x] **P2 (CTO):** Нет Crashlytics / remote-сбора крэшей. **(Закрыто 15.11.2026: подключен Firebase Crashlytics, BoM 33.7.0)**
 - [ ] **P2 (CTO):** Нет benchmark-тестов (производительность JOIN на Canvas не измерена).
