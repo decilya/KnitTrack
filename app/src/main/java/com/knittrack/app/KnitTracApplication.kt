@@ -83,7 +83,7 @@ private class CrashlyticsTree : Timber.Tree() {
                 val crashlytics = FirebaseCrashlytics.getInstance()
                 crashlytics.log("$tag: $message")
                 t?.let { crashlytics.recordException(it) }
-            } catch (e: IllegalStateException) {
+            } catch (e: Exception) {
                 // Firebase не инициализирован (нет google-services.json или это unit-тест).
                 // Игнорируем, чтобы не уронить приложение/тесты.
             }

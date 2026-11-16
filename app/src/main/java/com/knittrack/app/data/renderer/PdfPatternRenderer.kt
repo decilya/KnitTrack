@@ -42,8 +42,8 @@ class PdfPatternRenderer @Inject constructor() : PdfPatternExporter {
         val maxColumns = pattern.rows.maxOfOrNull { row ->
             row.operations.maxOfOrNull { it.columnStart.value + it.effectiveColumnSpan.value } ?: 0
         } ?: 0
-        val width = PADDING + maxColumns * CELL_SIZE
-        val height = PADDING + pattern.rows.size * CELL_SIZE
+        val width = RendererConfig.PADDING + maxColumns * RendererConfig.CELL_SIZE
+        val height = RendererConfig.PADDING + pattern.rows.size * RendererConfig.CELL_SIZE
         val pageInfo = PdfDocument.PageInfo.Builder(width, height, 1).create()
         return document.startPage(pageInfo)
     }
@@ -56,7 +56,7 @@ class PdfPatternRenderer @Inject constructor() : PdfPatternExporter {
         val paint = Paint()
 
         pattern.rows.forEachIndexed { rowIndex, row ->
-            val y = PADDING + rowIndex * CELL_SIZE
+            val y = RendererConfig.PADDING + rowIndex * RendererConfig.CELL_SIZE
             row.operations.forEach { op ->
                 drawOperation(canvas, paint, op, y)
             }
@@ -67,9 +67,9 @@ class PdfPatternRenderer @Inject constructor() : PdfPatternExporter {
      * Рисует одну операцию: фон, рамку и символ.
      */
     private fun drawOperation(canvas: Canvas, paint: Paint, op: com.knittrack.app.domain.entity.PatternOperation, rowY: Int) {
-        val x = PADDING + op.columnStart.value * CELL_SIZE
-        val w = op.effectiveColumnSpan.value * CELL_SIZE
-        val h = op.effectiveRowSpan.value * CELL_SIZE
+        val x = RendererConfig.PADDING + op.columnStart.value * RendererConfig.CELL_SIZE
+        val w = op.effectiveColumnSpan.value * RendererConfig.CELL_SIZE
+        val h = op.effectiveRowSpan.value * RendererConfig.CELL_SIZE
 
         // Фон операции (или белый, если цвет не задан/битый)
         paint.color = try {
@@ -100,9 +100,8 @@ class PdfPatternRenderer @Inject constructor() : PdfPatternExporter {
      */
     companion object {
         /** Размер одной ячейки в пикселях. */
-        private const val CELL_SIZE = 32
 
         /** Отступ для номеров рядов/колонок. */
-        private const val PADDING = 50
+
     }
 }
