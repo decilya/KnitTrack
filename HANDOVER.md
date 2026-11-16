@@ -1562,3 +1562,5 @@ ViewModel с >4 зависимостями — кандидат на деком�
 **Правило:** каждый независимый `collect` — в отдельный `launch`. Один `launch` = один бесконечный поток.
 
 - **P2 i18n:** Синхронизация EN/RU (152 строки), замена хардкода в UI (тосты, contentDescription). Коммит от 16.11.2026.
+
+- **P1 targetSdk 35:** Обновлен targetSdk с 34 на 35 (требование Google Play), добавлен `enableEdgeToEdge()` в MainActivity, `TimerScreen` обернут в `systemBarsPadding()`. Коммит от 16.11.2026.
