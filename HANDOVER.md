@@ -1564,3 +1564,5 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - **P2 i18n:** Синхронизация EN/RU (152 строки), замена хардкода в UI (тосты, contentDescription). Коммит от 16.11.2026.
 
 - **P1 targetSdk 35:** Обновлен targetSdk с 34 на 35 (требование Google Play), добавлен `enableEdgeToEdge()` в MainActivity, `TimerScreen` обернут в `systemBarsPadding()`. Коммит от 16.11.2026.
+
+- **P1 Canvas глифы:** На Canvas добавлена отрисовка `symbol.textGlyph` внутри прямоугольников операций (оба прохода: rowSpan=1 и rowSpan>1). Лицевая/изнаночная/накид теперь визуально различимы. Коммит от 16.11.2026.

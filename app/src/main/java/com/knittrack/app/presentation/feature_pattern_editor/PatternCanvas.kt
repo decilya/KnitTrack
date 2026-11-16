@@ -54,6 +54,10 @@ internal fun PatternCanvas(
         fontSize = 10.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
+    val operationGlyphStyle = TextStyle(
+        fontSize = 14.sp,
+        color = MaterialTheme.colorScheme.onSurface
+    )
 
     Canvas(
         modifier = modifier
@@ -142,6 +146,14 @@ internal fun PatternCanvas(
                             ),
                             size = Size(operation.effectiveColumnSpan.value * cellPx, cellPx)
                         )
+                        val glyph = textMeasurer.measure(operation.symbol.textGlyph, operationGlyphStyle)
+                        drawText(
+                            textLayoutResult = glyph,
+                            topLeft = Offset(
+                                headerPx + operation.columnStart.value * cellPx + (operation.effectiveColumnSpan.value * cellPx - glyph.size.width) / 2f,
+                                rowIndex * cellPx + (cellPx - glyph.size.height) / 2f
+                            )
+                        )
                     }
                 }
                 /**
@@ -161,6 +173,14 @@ internal fun PatternCanvas(
                             size = Size(
                                 operation.effectiveColumnSpan.value * cellPx,
                                 operation.effectiveRowSpan.value * cellPx
+                            )
+                        )
+                        val glyph = textMeasurer.measure(operation.symbol.textGlyph, operationGlyphStyle)
+                        drawText(
+                            textLayoutResult = glyph,
+                            topLeft = Offset(
+                                headerPx + operation.columnStart.value * cellPx + (operation.effectiveColumnSpan.value * cellPx - glyph.size.width) / 2f,
+                                rowIndex * cellPx + (operation.effectiveRowSpan.value * cellPx - glyph.size.height) / 2f
                             )
                         )
                     }

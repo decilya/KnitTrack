@@ -586,3 +586,4 @@ overlap detection, iteration order), затем для каждой реализ
 - [ ] **P3 (ci):** Настроить передачу `google-services.json` в CI (через secrets) или сборку без Crashlytics в PR (сейчас используется `missingGoogleServicesStrategy = WARN`).
 - [x] **P1 (CI):** Добавлен `assembleDebugAndroidTest` в workflow (чтобы androidTest не гнил). **(Закрыто 16.11.2026)**
 - [x] **P1 (targetSdk):** Обновлен до 35, включен `enableEdgeToEdge`, `TimerScreen` обернут в `systemBarsPadding`. **(Закрыто 16.11.2026)**
+- [x] **P1 (Canvas):** Добавлена отрисовка глифов символов на Canvas (было: только прямоугольники). **(Закрыто 16.11.2026)**
