@@ -85,10 +85,10 @@ fun PatternEditorScreen(
                 if (stream != null) {
                     viewModel.onIntent(PatternEditorContract.Intent.ExportSvg(stream))
                 } else {
-                    Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.export_open_failed), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.export_open_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -103,10 +103,10 @@ fun PatternEditorScreen(
                 if (stream != null) {
                     viewModel.onIntent(PatternEditorContract.Intent.ExportPdf(stream))
                 } else {
-                    Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.export_open_failed), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Failed to open file", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.export_open_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -114,8 +114,8 @@ fun PatternEditorScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is PatternEditorContract.Effect.ExportSuccess -> Toast.makeText(context, "File saved", Toast.LENGTH_SHORT).show()
-                is PatternEditorContract.Effect.ExportError -> Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                is PatternEditorContract.Effect.ExportSuccess -> Toast.makeText(context, context.getString(R.string.export_success), Toast.LENGTH_SHORT).show()
+                is PatternEditorContract.Effect.ExportError -> Toast.makeText(context, context.getString(R.string.export_failed), Toast.LENGTH_SHORT).show()
                 else -> Unit
             }
         }
@@ -158,7 +158,7 @@ fun PatternEditorScreen(
                 actions = {
                     Box {
                         IconButton(onClick = { exportMenuExpanded = true }) {
-                            Icon(Icons.Default.Share, contentDescription = "Export")
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.export_action))
                         }
                         DropdownMenu(
                             expanded = exportMenuExpanded,

@@ -1560,3 +1560,5 @@ ViewModel с >4 зависимостями — кандидат на деком�
 **Причина:** `viewModelScope.launch { flow1.collect { ... }; flow2.collect { ... } }`. `flow1` (DataStore) бесконечен, поэтому код после него (`flow2`) никогда не выполняется.
 **Пример (16.11.2026):** туториал в `PatternEditorViewModel` не читал флаг `editTutorialShownFlow`, потому что он был во втором `collect` после бесконечного `legendAddButtonVisibleFlow`.
 **Правило:** каждый независимый `collect` — в отдельный `launch`. Один `launch` = один бесконечный поток.
+
+- **P2 i18n:** Синхронизация EN/RU (152 строки), замена хардкода в UI (тосты, contentDescription). Коммит от 16.11.2026.

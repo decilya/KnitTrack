@@ -81,7 +81,7 @@ internal fun PatternEditorBody(
                         )
                         Icon(
                             imageVector = Icons.Default.DragHandle,
-                            contentDescription = "Reorder",
+                            contentDescription = stringResource(R.string.reorder_action),
                             modifier = Modifier
                                 .draggableHandle(
                                     onDragStarted = {

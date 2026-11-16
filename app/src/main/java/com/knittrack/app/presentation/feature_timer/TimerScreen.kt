@@ -212,7 +212,7 @@ fun TimerScreen(
                             viewModel.onIntent(TimerContract.Intent.DecrementStitch)
                         }
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = "Убавить петлю")
+                        Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.decrease_stitch))
                     }
                     Text(
                         text = state.currentStitch.toString(),
@@ -225,7 +225,7 @@ fun TimerScreen(
                             viewModel.onIntent(TimerContract.Intent.IncrementStitch)
                         }
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Добавить петлю")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.increase_stitch))
                     }
                 }
             }

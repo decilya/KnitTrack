@@ -131,4 +131,45 @@
     <string name="pattern_editor_delete_symbol_error">Не удалось удалить символ</string>
     <string name="settings_pattern_editor">Редактор схем</string>
     <string name="settings_legend_add_button">Всегда показывать кнопку «Добавить символ»</string>
+
+    <!-- Errors (перевод EN -> RU) -->
+    <string name="error_database">Ошибка базы данных</string>
+    <string name="error_empty_session">Пустая сессия</string>
+    <string name="error_invalid_argument">Некорректный аргумент</string>
+    <string name="error_invalid_backup">Некорректные данные бэкапа</string>
+    <string name="error_invalid_row_count">Количество рядов должно быть не меньше 1</string>
+    <string name="error_io">Ошибка ввода-вывода</string>
+    <string name="error_last_row_in_schema">Текущий ряд — последний</string>
+    <string name="error_network">Сетевая ошибка</string>
+    <string name="error_operation_not_found">Операция не найдена</string>
+    <string name="error_pattern_not_attached">К проекту не привязана схема</string>
+    <string name="error_pattern_not_found">Схема не найдена</string>
+    <string name="error_pattern_overlap">Операция пересекается с существующей</string>
+    <string name="error_project_not_found">Проект не найден</string>
+    <string name="error_repeat_not_in_schema">Раппорт не найден в схеме</string>
+    <string name="error_row_not_found">Ряд не найден</string>
+    <string name="error_row_not_in_schema">Ряд не найден в схеме</string>
+    <string name="error_row_number_out_of_bounds">Номер ряда выходит за границы</string>
+    <string name="error_save_stitch">Не удалось сохранить счетчик петель</string>
+    <string name="error_schema_empty">В схеме нет рядов</string>
+    <string name="error_session_not_found">Сессия не найдена</string>
+    <string name="error_stitch_without_row">Нельзя считать петли без ряда</string>
+    <string name="error_symbol_already_exists">Символ уже существует</string>
+    <string name="error_symbol_in_use">Символ используется в операциях</string>
+    <string name="error_symbol_not_found">Символ не найден</string>
+    <string name="error_symbol_not_in_legend">Символ отсутствует в легенде</string>
+    <string name="error_system_symbol_delete">Нельзя удалить системный символ</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_unsupported_language">Неподдерживаемый язык</string>
+    <string name="pattern_editor_tutorial_open">Показать обучение</string>
+    <string name="stitch_counter_label">Петель в ряду: %1$d</string>
+
+    <!-- Export / Reorder / Stitch actions -->
+    <string name="export_action">Экспорт</string>
+    <string name="export_success">Файл сохранён</string>
+    <string name="export_failed">Ошибка экспорта</string>
+    <string name="export_open_failed">Не удалось открыть файл</string>
+    <string name="reorder_action">Переместить</string>
+    <string name="decrease_stitch">Убавить петлю</string>
+    <string name="increase_stitch">Добавить петлю</string>
 </resources>

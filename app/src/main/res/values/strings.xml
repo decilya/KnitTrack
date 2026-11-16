@@ -132,8 +132,8 @@
     <string name="pattern_editor_delete_symbol_error">Failed to delete symbol</string>
     <string name="settings_pattern_editor">Pattern Editor</string>
     <string name="settings_legend_add_button">Always show Add button in legend</string>
-    <string name="error_save_stitch">Не удалось сохранить счетчик петель</string>
-    <string name="stitch_counter_label">Петли в ряду: %1$d</string>
+    <string name="error_save_stitch">Failed to save stitch counter</string>
+    <string name="stitch_counter_label">Stitches per row: %1$d</string>
 
     <string name="error_invalid_backup">Invalid backup data</string>
     <string name="error_stitch_without_row">Cannot count stitches without a row</string>
@@ -162,4 +162,13 @@
     <string name="error_io">Input/output error</string>
     <string name="error_network">Network error</string>
     <string name="error_unknown">Unknown error</string>
+
+    <!-- Export / Reorder / Stitch actions -->
+    <string name="export_action">Export</string>
+    <string name="export_success">File saved</string>
+    <string name="export_failed">Export failed</string>
+    <string name="export_open_failed">Failed to open file</string>
+    <string name="reorder_action">Reorder</string>
+    <string name="decrease_stitch">Decrease stitch</string>
+    <string name="increase_stitch">Increase stitch</string>
 </resources>
