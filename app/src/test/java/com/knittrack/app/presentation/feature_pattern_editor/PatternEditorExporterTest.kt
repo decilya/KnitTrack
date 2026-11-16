@@ -12,8 +12,10 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 
@@ -80,5 +82,29 @@ class PatternEditorExporterTest {
         exportPatternPdf(pattern, outputStream, patternUseCases, effectChannel, this)
 
         assertEquals(PatternEditorContract.Effect.ExportError, effectChannel.receive())
+    }
+
+    /** Регрессия на баг №1: поток не должен закрываться до записи. */
+    @Test
+    fun exportPatternSvg_doesNotCloseStreamPrematurely() = runTest {
+        val pattern = createPattern()
+        var isClosed = false
+        val trackingStream = object : ByteArrayOutputStream() {
+            override fun close() {
+                isClosed = true
+                super.close()
+            }
+        }
+        // Если бы use {} остался в UI, стрим закрылся бы здесь же.
+        // Но мы проверяем, что Exporter закрывает его ТОЛЬКО в finally.
+        coEvery { patternUseCases.exportSvg(any()) } returns Result.Success(Unit)
+
+        exportPatternSvg(pattern, trackingStream, patternUseCases, effectChannel, this)
+
+        // Ждем, пока завершатся все корутины в scope (включая блок finally с close)
+        advanceUntilIdle()
+
+        assertEquals(PatternEditorContract.Effect.ExportSuccess, effectChannel.receive())
+        assertTrue(isClosed)
     }
 }

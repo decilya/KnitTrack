@@ -47,7 +47,7 @@ class Migration2To3Test {
             testDb,
             3,
             true,
-            AppDatabase.MIGRATION_2_3,
+            AppDatabaseMigrations.MIGRATION_2_3,
         )
         db.close()
     }
@@ -75,7 +75,7 @@ class Migration2To3Test {
             testDb,
             3,
             true,
-            AppDatabase.MIGRATION_2_3,
+            AppDatabaseMigrations.MIGRATION_2_3,
         )
 
         v3.query("SELECT name FROM projects WHERE id = 1").use { c ->
@@ -132,7 +132,7 @@ class Migration2To3Test {
             testDb,
             3,
             true,
-            AppDatabase.MIGRATION_2_3,
+            AppDatabaseMigrations.MIGRATION_2_3,
         )
 
         v3.query("SELECT COUNT(*) FROM sessions WHERE project_id = 10").use { c ->

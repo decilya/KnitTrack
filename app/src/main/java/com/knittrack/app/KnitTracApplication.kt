@@ -63,6 +63,8 @@ class KnitTracApplication : Application() {
         applicationScope.launch {
             try {
                 localeService.ensureLanguageInitialized()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize locale, using system default")
             }
@@ -85,7 +87,8 @@ private class CrashlyticsTree : Timber.Tree() {
                 t?.let { crashlytics.recordException(it) }
             } catch (e: Exception) {
                 // Firebase не инициализирован (нет google-services.json или это unit-тест).
-                // Игнорируем, чтобы не уронить приложение/тесты.
+                // Не используем Timber, чтобы избежать рекурсии.
+                android.util.Log.w("CrashlyticsTree", "Firebase not initialized", e)
             }
         }
     }
