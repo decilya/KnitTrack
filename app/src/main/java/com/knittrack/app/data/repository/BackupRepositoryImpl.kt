@@ -37,29 +37,26 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePatternsBatch(patterns: List<Pattern>) {
-        val patternDao = database.patternDao()
-        for (pattern in patterns) {
-            patternDao.insertPattern(pattern.toEntity())
-        }
+        database.patternDao().upsertPatterns(patterns.map { it.toEntity() })
     }
 
     override suspend fun savePatternRowsBatch(rows: List<PatternRowWithId>) {
-        database.patternDao().insertRows(rows.map { it.row.toEntity(it.patternId.value) })
+        database.patternDao().upsertRows(rows.map { it.row.toEntity(it.patternId.value) })
     }
 
     override suspend fun saveSymbolsBatch(symbols: List<Symbol>) {
-        database.symbolDao().insertSymbols(symbols.map { it.toEntity() })
+        database.symbolDao().upsertSymbols(symbols.map { it.toEntity() })
     }
 
     override suspend fun savePatternRepeatsBatch(repeats: List<PatternRepeatWithId>) {
-        database.patternRepeatDao().insertRepeats(
+        database.patternRepeatDao().upsertRepeats(
             repeats.map { it.repeat.toEntity(it.patternId.value) }
         )
     }
 
     override suspend fun savePatternOperationsBatch(operations: List<PatternOperation>): Result<Unit> {
         return try {
-            database.patternDao().insertOperations(operations.map { it.toEntity() })
+            database.patternDao().upsertOperations(operations.map { it.toEntity() })
             Result.Success(Unit)
         } catch (e: SQLiteConstraintException) {
             // Нарушение FK (row/symbol) или триггера repeat_code.
@@ -70,11 +67,15 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveProjectsBatch(batch: List<Project>) {
-        projectDao.insertProjects(batch.map { it.toEntity() })
+        projectDao.upsertProjects(batch.map { it.toEntity() })
     }
 
     override suspend fun saveSessionsBatch(batch: List<Session>) {
-        sessionDao.insertSessions(batch.map { it.toEntity() })
+        sessionDao.upsertSessions(batch.map { it.toEntity() })
+    }
+
+    override suspend fun recomputeProjectTotals() {
+        projectDao.recomputeTotalsFromSessions()
     }
 
     override suspend fun <T> exportSnapshot(block: suspend (BackupRepository.ExportContext) -> T): T {

@@ -167,7 +167,16 @@
    падение на чанке откатывает всё, половинчатых состояний нет.
 3. Чтение при экспорте — в withTransaction: один снапшот БД.
 4. Потоки НЕ закрываются реализацией — ответственность вызывающей стороны.
-5. Семантика импорта — merge (REPLACE), озвучена пользователю в UI.
+5. Семантика импорта — merge через UPDATE-then-INSERT, озвучена
+   пользователю в UI. Не REPLACE: DELETE+INSERT срабатывает FK CASCADE
+   (sessions), SET NULL (projects.pattern_id/current_pattern_row_id) и
+   RESTRICT (pattern_operations.symbol_code), теряя данные вне бэкапа.
+   Не `@Upsert`: Room 2.6.1 реализует его через try/catch
+   SQLiteConstraintException с парсингом текста сообщения, что под
+   Robolectric < 4.12 на Windows даёт false red. «Backup wins»:
+   сущности из бэкапа перезаписываются, сущности вне бэкапа сохраняются.
+   После сессий импортёр вызывает recomputeProjectTotals() — восстанавливает
+   инвариант `projects.total_* == SUM(sessions)`.
 
 ---
 

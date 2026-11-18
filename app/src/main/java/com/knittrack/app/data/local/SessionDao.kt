@@ -33,10 +33,6 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSessionOrThrow(session: SessionEntity): Long
 
-    /** Пакетная вставка (для импорта). @return список id. */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSessions(sessions: List<SessionEntity>): List<Long>
-
     /**
      * Upsert списка сессий для импорта (UPDATE по PK; при 0 — INSERT ABORT).
      *

@@ -37,6 +37,20 @@ interface BackupRepository {
     suspend fun savePatternOperationsBatch(operations: List<PatternOperation>): Result<Unit>
     suspend fun saveProjectsBatch(batch: List<Project>)
     suspend fun saveSessionsBatch(batch: List<Session>)
+
+    /**
+     * Пересчитывает агрегированные totals проектов
+     * (total_time_seconds, total_rows) из SUM(sessions) для всех проектов.
+     *
+     * Инвариант: projects.total_* == SUM(sessions.duration_seconds/row_count).
+     * Импорт перезаписывает totals значениями из бэкапа, которые могут
+     * расходиться с актуальной суммой сессий (бэкап старше последних
+     * локальных сессий или totals устарели на момент экспорта). После
+     * импорта DataImporterImpl вызывает этот метод для восстановления
+     * инварианта.
+     */
+    suspend fun recomputeProjectTotals()
+
     suspend fun <T> exportSnapshot(block: suspend (ExportContext) -> T): T
 
     interface ExportContext {

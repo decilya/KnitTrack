@@ -38,10 +38,6 @@ interface ProjectDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProjectOrThrow(project: ProjectEntity): Long
 
-    /** Пакетная вставка (для импорта). @return список id. */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertProjects(projects: List<ProjectEntity>): List<Long>
-
     /**
      * Upsert списка проектов для импорта (UPDATE по PK; при 0 — INSERT ABORT).
      *
@@ -128,6 +124,23 @@ interface ProjectDao {
         updatedAt: Long,
         pendingStatus: String = SyncStatus.PENDING.name
     ): Int
+
+    /**
+     * Пересчитывает total_time_seconds и total_rows из SUM(sessions)
+     * для всех проектов. Возвращает количество обновлённых строк.
+     *
+     * Используется после импорта бэкапа: бэкап перезаписывает totals
+     * значениями на момент экспорта, которые могут расходиться с
+     * актуальной суммой сессий (сессии новее бэкапа, бэкап старше).
+     */
+    @Query("""
+        UPDATE projects
+        SET total_time_seconds = COALESCE(
+                (SELECT SUM(duration_seconds) FROM sessions WHERE sessions.project_id = projects.id), 0),
+            total_rows = COALESCE(
+                (SELECT SUM(row_count) FROM sessions WHERE sessions.project_id = projects.id), 0)
+    """)
+    suspend fun recomputeTotalsFromSessions(): Int
 
     companion object {
         private const val BASE_PROJECT_QUERY =

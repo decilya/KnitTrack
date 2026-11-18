@@ -39,6 +39,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -92,6 +93,208 @@ class DataRoundTripTest {
         }
     }
 
+    /**
+     * Сессия, созданная локально после экспорта, выживает после импорта.
+     *
+     * Регрессия: batch @Insert(REPLACE) в saveSessionsBatch делал
+     * DELETE+INSERT на session_id, а DELETE на sessions не запускал
+     * CASCADE для других сессий; но REPLACE на projects (saveProjectsBatch)
+     * через FK CASCADE удалял ВСЕ сессии проекта, включая локальные.
+     * После UPDATE-then-INSERT локальные сессии целы.
+     */
+    @Test
+    fun importOverExistingData_preservesSessionsCreatedAfterExport() = runTest(UnconfinedTestDispatcher()) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dest = openDb(context)
+        try {
+            seed(dest)
+            val bytes = ByteArrayOutputStream()
+            assertTrue(exporter(dest).exportTo(bytes) is Result.Success)
+
+            dest.sessionDao().insertSession(
+                session().copy(id = SessionId.create(99L), startTimestamp = 500L).toEntity()
+            )
+
+            assertTrue(
+                importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray())) is Result.Success
+            )
+
+            val sessions = dest.sessionDao().getAllSessions().map { it.id }.toSet()
+            assertEquals(setOf(1L, 99L), sessions)
+        } finally {
+            dest.close()
+        }
+    }
+
+    /**
+     * Локальный проект, отсутствующий в бэкапе, сохраняет привязку к схеме
+     * и текущий ряд.
+     *
+     * Регрессия: REPLACE на patterns (savePatternsBatch) через FK CASCADE
+     * удалял pattern_rows, а через SET NULL обнулял projects.pattern_id и
+     * projects.current_pattern_row_id у ВСЕХ проектов, ссылающихся на
+     * перезаписанную схему, включая проекты, которых нет в бэкапе.
+     * После UPDATE-then-INSERT этих потерь нет.
+     */
+    @Test
+    fun importOverExistingData_preservesLocalProjectAbsentFromBackup() = runTest(UnconfinedTestDispatcher()) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val source = openDb(context)
+        val dest = openDb(context)
+        try {
+            seed(source)
+            val bytes = ByteArrayOutputStream()
+            assertTrue(exporter(source).exportTo(bytes) is Result.Success)
+
+            seed(dest)
+            dest.projectDao().insertProject(
+                linkedProject().copy(id = ProjectId.create(99L)).toEntity()
+            )
+
+            assertTrue(
+                importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray())) is Result.Success
+            )
+
+            val localProject = dest.projectDao().getProjectById(99L)?.toDomain()
+            assertNotNull(localProject)
+            assertEquals(PatternId.create(1L), localProject?.patternId)
+            assertEquals(PatternRowId.create(10L), localProject?.currentPatternRowId)
+        } finally {
+            source.close()
+            dest.close()
+        }
+    }
+
+    /**
+     * Импорт частичного бэкапа succeeds, даже если локальная схема
+     * использует символ, которого нет в бэкапе.
+     *
+     * Регрессия: REPLACE на symbols (saveSymbolsBatch) удалял системный
+     * символ K, а pattern_operations.symbol_code -> symbols ON DELETE
+     * RESTRICT отказывал, если K использовался в локальной схеме,
+     * отсутствующей в бэкапе. SQLiteConstraintException -> откат
+     * всего импорта с ValidationError. После UPDATE-then-INSERT символ
+     * K обновляется без DELETE, RESTRICT не срабатывает.
+     */
+    @Test
+    fun importOverExistingData_partialBackupWithLocalPattern() = runTest(UnconfinedTestDispatcher()) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val source = openDb(context)
+        val dest = openDb(context)
+        try {
+            seed(source)
+            val bytes = ByteArrayOutputStream()
+            assertTrue(exporter(source).exportTo(bytes) is Result.Success)
+
+            seed(dest)
+            val localPattern = Pattern(
+                id = PatternId.create(77L),
+                name = PatternName.create("Локальная"),
+                technique = Technique.KNITTING,
+                direction = PatternDirection.LTR,
+                isReversible = false
+            )
+            dest.patternDao().insertPattern(localPattern.toEntity())
+            val localRow = PatternRow(
+                id = PatternRowId.create(770L),
+                rowNumber = RowNumber.create(1)
+            )
+            dest.patternDao().insertRows(listOf(localRow.toEntity(77L)))
+            val localOp = PatternOperation(
+                patternRowId = PatternRowId.create(770L),
+                columnStart = ColumnStart.create(0),
+                symbol = knitSymbol(),
+                repeatCode = null
+            )
+            dest.patternDao().insertOperations(listOf(localOp.toEntity()))
+
+            val result = importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray()))
+            assertTrue("Expected Success, got $result", result is Result.Success)
+
+            val localOps = dest.patternDao().getOperationsForRow(770L)
+            assertEquals(1, localOps.size)
+            assertEquals("K", localOps[0].symbolCode)
+        } finally {
+            source.close()
+            dest.close()
+        }
+    }
+
+    /**
+     * Двойной импорт одного файла даёт то же состояние.
+     *
+     * Страж: до фикса REPLACE тоже был идемпотентен (DELETE+INSERT
+     * возвращает то же состояние), но с потерей локальных данных.
+     * Тест фиксирует контракт: повторный импорт не должен накапливать
+     * дубликаты или терять строки.
+     */
+    @Test
+    fun importOverExistingData_isIdempotent() = runTest(UnconfinedTestDispatcher()) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dest = openDb(context)
+        try {
+            seed(dest)
+            val bytes = ByteArrayOutputStream()
+            assertTrue(exporter(dest).exportTo(bytes) is Result.Success)
+            assertTrue(
+                importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray())) is Result.Success
+            )
+
+            val sessions1 = dest.sessionDao().getAllSessions().map { it.id }.toSet()
+            val projects1 = dest.projectDao().getAllProjects().size
+            val patterns1 = dest.patternDao().getAllPatterns().size
+            val rows1 = dest.patternDao().getAllRows().size
+            val ops1 = dest.patternDao().getAllOperations().size
+            val repeats1 = dest.patternRepeatDao().getAllRepeats().size
+
+            assertTrue(
+                importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray())) is Result.Success
+            )
+
+            assertEquals(sessions1, dest.sessionDao().getAllSessions().map { it.id }.toSet())
+            assertEquals(projects1, dest.projectDao().getAllProjects().size)
+            assertEquals(patterns1, dest.patternDao().getAllPatterns().size)
+            assertEquals(rows1, dest.patternDao().getAllRows().size)
+            assertEquals(ops1, dest.patternDao().getAllOperations().size)
+            assertEquals(repeats1, dest.patternRepeatDao().getAllRepeats().size)
+        } finally {
+            dest.close()
+        }
+    }
+
+    /**
+     * После импорта инвариант projects.total_* == SUM(sessions)
+     * восстановлен.
+     *
+     * Регрессия: seed-фикстура linkedProject() имеет totals=0, а
+     * session() — duration=100s, rowCount=10. Без пересчёта totals
+     * остались бы 0/0 после импорта — расхождение с суммой сессий.
+     * recomputeProjectTotals() обновляет totals на 100/10.
+     */
+    @Test
+    fun importOverExistingData_recomputesTotals() = runTest(UnconfinedTestDispatcher()) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val source = openDb(context)
+        val dest = openDb(context)
+        try {
+            seed(source)
+            val bytes = ByteArrayOutputStream()
+            assertTrue(exporter(source).exportTo(bytes) is Result.Success)
+
+            assertTrue(
+                importer(dest).importFrom(ByteArrayInputStream(bytes.toByteArray())) is Result.Success
+            )
+
+            val project = dest.projectDao().getProjectById(1L)?.toDomain()
+            assertNotNull(project)
+            assertEquals(Duration.create(100L), project?.totalTimeSeconds)
+            assertEquals(RowCount.create(10), project?.totalRows)
+        } finally {
+            source.close()
+            dest.close()
+        }
+    }
+
     private fun openDb(context: Context): AppDatabase =
         Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
@@ -118,8 +321,8 @@ class DataRoundTripTest {
         db.patternDao().insertRows(listOf(firstRow().toEntity(1L)))
         db.patternRepeatDao().insertRepeats(listOf(repeatA().toEntity(1L)))
         db.patternDao().insertOperations(listOf(operation(symbol).toEntity()))
-        db.projectDao().insertProjects(listOf(linkedProject().toEntity()))
-        db.sessionDao().insertSessions(listOf(session().toEntity()))
+        db.projectDao().insertProject(linkedProject().toEntity())
+        db.sessionDao().insertSession(session().toEntity())
     }
 
     private fun knitSymbol() = Symbol(

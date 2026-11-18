@@ -98,6 +98,7 @@ class DataImporterImpl @Inject constructor(
                         }
                     }
                     parser.parse(inputStream, visitor)
+                    backupRepository.recomputeProjectTotals()
                 }
                 Result.Success(Unit)
             } catch (e: CancellationException) {
