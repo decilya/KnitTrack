@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 517 уникальных (1034 прогонов: debug + release), 0 failures.
+**Тесты:** 522 уникальных (1044 прогонов: debug + release), 0 failures.
 
 ---
 
@@ -1590,4 +1590,5 @@ ViewModel с >4 зависимостями — кандидат на деком�
 Сессия 18.11.2026 (P2 таймер-персистентность, шаги 1/3–3/3, диапазон `eebc738..HEAD`):
 - **Проблема:** `TimerServiceImpl` держит `sessionStartElapsed`, `totalPausedDuration`, `lastPauseElapsed` в памяти. Смерть процесса (system kill, reboot, user swipe) обнуляет их — таймер не переживает перезапуск. `TimerForegroundService.handleSystemRestart()` сразу `stopSelf()`, потому что восстанавливать нечего.
 - **Шаг 1/3:** `TimerSnapshot` (Domain, 5 полей), `TimerState.fromStringOrNull` (null на неизвестном — не fallback на IDLE, чтобы не маскировать повреждённые данные), +5 ключей в `SettingsKeys`, `SettingsRepository.timerSnapshotFlow` / `saveTimerSnapshot` / `clearTimerSnapshot`, реализация в `SettingsRepositoryImpl`. `build.gradle.kts`: DataStore 1.0.0 → 1.1.0 (в 1.0.0 на Windows-JVM `SingleProcessDataStore.writeData` падает на `File.renameTo` с IOException; 1.1.0 использует `Files.move` с `REPLACE_EXISTING`). +8 тестов: `TimerStateTest` (4), `SettingsRepositoryImplTest` (4, DataStore в `TestScope.backgroundScope` + flush через `dataStore.data.first()`).
-- **Шаги 2/3, 3/3:** в работе (TimerServiceImpl restore, TimerForegroundService restart).
+- **Шаг 2/3:** `TimerServiceImpl` — чтение снапшота в `init`, сохранение в `start()`/`pause()`, очистка в `reset()`. Обработка reboot: если `sessionStartElapsed > nowElapsed`, снапшот невалиден, сброс в `IDLE` и очистка. +5 тестов в `TimerServiceImplTest` (restore RUNNING, restore PAUSED, reboot clear, start saves, reset clears).
+- **Шаг 3/3:** в работе (`TimerForegroundService.handleSystemRestart` — восстановление состояния вместо `stopSelf()`).

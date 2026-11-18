@@ -1,6 +1,8 @@
 package com.knittrack.app.platform.timer
 
+import com.knittrack.app.core.common.FakeSettingsRepository
 import com.knittrack.app.core.common.TimeProvider
+import com.knittrack.app.domain.model.TimerSnapshot
 import com.knittrack.app.domain.service.TimerState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -8,6 +10,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -47,12 +50,14 @@ class TimerServiceImplTest {
 
     private lateinit var timerManager: TimerServiceImpl
     private lateinit var fakeTime: FakeTimeProvider
+    private lateinit var fakeRepo: FakeSettingsRepository
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
         fakeTime = FakeTimeProvider()
-        timerManager = TimerServiceImpl(testDispatcher, fakeTime)
+        fakeRepo = FakeSettingsRepository()
+        timerManager = TimerServiceImpl(testDispatcher, fakeTime, fakeRepo)
     }
 
     /**
@@ -317,6 +322,113 @@ class TimerServiceImplTest {
         advanceTimeBy(1000L)
 
         assertEquals(8L, timerManager.elapsedTime.value)
+    }
+
+    // Персистентность (P2 таймер-персистентность)
+
+    /**
+     * Восстановление из snapshot с state=RUNNING: state и elapsedTime
+     * пересчитаны от sessionStartElapsed, тикер запущен.
+     */
+    @Test
+    fun restoreFromSnapshotRunningRestoresStateAndElapsed() = runTest(testDispatcher) {
+        val localRepo = FakeSettingsRepository()
+        localRepo.setSnapshot(
+            TimerSnapshot(
+                state = TimerState.RUNNING,
+                sessionStartTime = 1_000L,
+                sessionStartElapsed = 100_000L,
+                totalPausedDuration = 0L,
+                lastPauseElapsed = 0L
+            )
+        )
+        fakeTime.elapsedMillis = 110_000L
+        val manager = TimerServiceImpl(testDispatcher, fakeTime, localRepo)
+        try {
+            advanceTimeBy(1L)
+            assertEquals(TimerState.RUNNING, manager.state.value)
+            assertEquals(10L, manager.elapsedTime.value)
+        } finally {
+            manager.reset()
+        }
+    }
+
+    /**
+     * Восстановление из snapshot с state=PAUSED: state = PAUSED,
+     * elapsedTime фиксирован на момент паузы (lastPauseElapsed).
+     */
+    @Test
+    fun restoreFromSnapshotPausedRestoresState() = runTest(testDispatcher) {
+        val localRepo = FakeSettingsRepository()
+        localRepo.setSnapshot(
+            TimerSnapshot(
+                state = TimerState.PAUSED,
+                sessionStartTime = 1_000L,
+                sessionStartElapsed = 100_000L,
+                totalPausedDuration = 0L,
+                lastPauseElapsed = 105_000L
+            )
+        )
+        fakeTime.elapsedMillis = 200_000L
+        val manager = TimerServiceImpl(testDispatcher, fakeTime, localRepo)
+        try {
+            advanceTimeBy(1L)
+            assertEquals(TimerState.PAUSED, manager.state.value)
+            assertEquals(5L, manager.elapsedTime.value)
+        } finally {
+            manager.reset()
+        }
+    }
+
+    /**
+     * Reboot: elapsedRealtime сброшен, snapshot.sessionStartElapsed >
+     * nowElapsed → clear и IDLE.
+     */
+    @Test
+    fun restoreFromSnapshotRebootClearsAndStaysIdle() = runTest(testDispatcher) {
+        val localRepo = FakeSettingsRepository()
+        localRepo.setSnapshot(
+            TimerSnapshot(
+                state = TimerState.RUNNING,
+                sessionStartTime = 1_000L,
+                sessionStartElapsed = 200_000L,
+                totalPausedDuration = 0L,
+                lastPauseElapsed = 0L
+            )
+        )
+        fakeTime.elapsedMillis = 100_000L
+        val manager = TimerServiceImpl(testDispatcher, fakeTime, localRepo)
+        try {
+            advanceTimeBy(1L)
+            assertEquals(TimerState.IDLE, manager.state.value)
+            assertEquals(0L, manager.elapsedTime.value)
+            assertNull(localRepo.snapshot)
+        } finally {
+            manager.reset()
+        }
+    }
+
+    /** start() сохраняет snapshot в SettingsRepository (async). */
+    @Test
+    fun startSavesSnapshot() = runTimerTest {
+        timerManager.start()
+        advanceTimeBy(1L)
+        val s = fakeRepo.snapshot
+        assertEquals(TimerState.RUNNING, s?.state)
+        assertEquals(FakeTimeProvider.INITIAL_WALL_MILLIS, s?.sessionStartTime)
+    }
+
+    /** reset() очищает snapshot (async). */
+    @Test
+    fun resetClearsSnapshot() = runTimerTest {
+        timerManager.start()
+        advanceTimeBy(1L)
+        fakeRepo.setSnapshot(
+            TimerSnapshot(TimerState.RUNNING, 1L, 0L, 0L, 0L)
+        )
+        timerManager.reset()
+        advanceTimeBy(1L)
+        assertNull(fakeRepo.snapshot)
     }
 }
 
