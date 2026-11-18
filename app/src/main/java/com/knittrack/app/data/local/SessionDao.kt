@@ -26,9 +26,30 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: SessionEntity): Long
 
+    /**
+     * Вставка сессии. ABORT при конфликте по PK.
+     * Используется только внутри [upsertSessions].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSessionOrThrow(session: SessionEntity): Long
+
     /** Пакетная вставка (для импорта). @return список id. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSessions(sessions: List<SessionEntity>): List<Long>
+
+    /**
+     * Upsert списка сессий для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     *
+     * Не использует DELETE, поэтому сессии, созданные локально после
+     * экспорта бэкапа, сохраняются. Семантика — merge: сессии из бэкапа
+     * перезаписываются, сессии вне бэкапа не страдают.
+     */
+    @Transaction
+    suspend fun upsertSessions(sessions: List<SessionEntity>) {
+        for (s in sessions) {
+            if (updateSession(s) == 0) insertSessionOrThrow(s)
+        }
+    }
 
     /**
      * Обновление сессии по id.

@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.knittrack.app.data.local.entity.PatternRepeatEntity
 
 /** DAO для работы с раппортами схем (повторяющимися фрагментами). */
@@ -27,4 +29,25 @@ interface PatternRepeatDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRepeats(repeats: List<PatternRepeatEntity>)
+
+    /**
+     * Вставка раппорта. ABORT при конфликте по композитному PK
+     * (pattern_id, code). Используется только внутри [upsertRepeats].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertRepeatOrThrow(repeat: PatternRepeatEntity)
+
+    /** Обновление раппорта по PK. @return количество затронутых строк. */
+    @Update
+    suspend fun updateRepeat(repeat: PatternRepeatEntity): Int
+
+    /**
+     * Upsert списка раппортов для импорта (UPDATE по PK; при 0 — INSERT).
+     */
+    @Transaction
+    suspend fun upsertRepeats(repeats: List<PatternRepeatEntity>) {
+        for (r in repeats) {
+            if (updateRepeat(r) == 0) insertRepeatOrThrow(r)
+        }
+    }
 }

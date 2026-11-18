@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.knittrack.app.data.local.entity.SymbolEntity
 
 /**
@@ -35,6 +37,33 @@ interface SymbolDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSymbol(symbol: SymbolEntity)
+
+    /**
+     * Вставка символа. ABORT при конфликте по PK (code).
+     * Используется только внутри [upsertSymbols].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSymbolOrThrow(symbol: SymbolEntity)
+
+    /** Обновление символа по PK. @return количество затронутых строк. */
+    @Update
+    suspend fun updateSymbol(symbol: SymbolEntity): Int
+
+    /**
+     * Upsert списка символов для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     *
+     * Не использует DELETE, поэтому не срабатывает FK RESTRICT
+     * (pattern_operations.symbol_code -> symbols ON DELETE RESTRICT):
+     * импорт частичного бэкапа, в котором нет системного символа,
+     * используемого в локальной схеме, больше не падает с
+     * SQLiteConstraintException.
+     */
+    @Transaction
+    suspend fun upsertSymbols(symbols: List<SymbolEntity>) {
+        for (s in symbols) {
+            if (updateSymbol(s) == 0) insertSymbolOrThrow(s)
+        }
+    }
 
     @Query("DELETE FROM symbols WHERE code = :code AND owner_pattern_id = :patternId")
     suspend fun deleteSymbol(code: String, patternId: Long): Int

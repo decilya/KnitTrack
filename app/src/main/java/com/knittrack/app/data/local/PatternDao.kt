@@ -42,14 +42,97 @@ interface PatternDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPattern(pattern: PatternEntity): Long
 
+    /**
+     * Вставка схемы. ABORT при конфликте по PK.
+     * Используется только внутри [upsertPatterns].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertPatternOrThrow(pattern: PatternEntity)
+
+    /** Обновление схемы по PK. @return количество затронутых строк. */
+    @Update
+    suspend fun updatePattern(pattern: PatternEntity): Int
+
+    /**
+     * Upsert списка схем для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     *
+     * Не использует DELETE, поэтому не срабатывают FK CASCADE
+     * (pattern_rows, symbols, pattern_repeats) и SET NULL
+     * (projects.pattern_id, projects.current_pattern_row_id).
+     */
+    @Transaction
+    suspend fun upsertPatterns(patterns: List<PatternEntity>) {
+        for (p in patterns) {
+            if (updatePattern(p) == 0) insertPatternOrThrow(p)
+        }
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRows(rows: List<PatternRowEntity>)
+
+    /**
+     * Вставка ряда. ABORT при конфликте по PK или по UNIQUE
+     * (pattern_id, row_number). Используется только внутри [upsertRows].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertRowOrThrow(row: PatternRowEntity)
+
+    /** Обновление ряда по PK. @return количество затронутых строк. */
+    @Update
+    suspend fun updateRow(row: PatternRowEntity): Int
+
+    /**
+     * Upsert списка рядов для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     *
+     * Если локальная схема перестроена (D&D-reorder) и UNIQUE
+     * (pattern_id, row_number) конфликтует с бэкапом — импорт
+     * откатывается целиком. Осознанный fail-fast вместо тихой потери.
+     */
+    @Transaction
+    suspend fun upsertRows(rows: List<PatternRowEntity>) {
+        for (r in rows) {
+            if (updateRow(r) == 0) insertRowOrThrow(r)
+        }
+    }
 
     @Query("SELECT * FROM pattern_rows WHERE pattern_id = :patternId ORDER BY row_number ASC")
     suspend fun getRowsForPattern(patternId: Long): List<PatternRowEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOperations(operations: List<PatternOperationEntity>)
+
+    /**
+     * Вставка операции. ABORT при конфликте по композитному PK
+     * (pattern_row_id, column_start) или RESTRICT-FK на symbols.
+     * Используется только внутри [upsertOperations].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertOperationOrThrow(operation: PatternOperationEntity)
+
+    /**
+     * Обновление операции по композитному PK.
+     *
+     * В отличие от [updateOperation] (8 параметров, только неключевые
+     * колонки) обновляет всю сущность через @Update. Используется
+     * только внутри [upsertOperations].
+     *
+     * @return количество затронутых строк.
+     */
+    @Update
+    suspend fun updateOperationEntity(operation: PatternOperationEntity): Int
+
+    /**
+     * Upsert списка операций для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     * Триггер orphan repeat_code (RAISE ABORT) пробрасывает
+     * SQLiteConstraintException наружу — BackupRepositoryImpl мапит
+     * её в ValidationError.
+     */
+    @Transaction
+    suspend fun upsertOperations(operations: List<PatternOperationEntity>) {
+        for (op in operations) {
+            if (updateOperationEntity(op) == 0) insertOperationOrThrow(op)
+        }
+    }
 
     @Query("SELECT * FROM pattern_operations WHERE pattern_row_id = :rowId ORDER BY column_start ASC")
     suspend fun getOperationsForRow(rowId: Long): List<PatternOperationEntity>

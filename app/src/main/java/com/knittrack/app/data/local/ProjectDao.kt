@@ -31,9 +31,32 @@ interface ProjectDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProject(project: ProjectEntity): Long
 
+    /**
+     * Вставка проекта. ABORT при конфликте по PK.
+     * Используется только внутри [upsertProjects].
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertProjectOrThrow(project: ProjectEntity): Long
+
     /** Пакетная вставка (для импорта). @return список id. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProjects(projects: List<ProjectEntity>): List<Long>
+
+    /**
+     * Upsert списка проектов для импорта (UPDATE по PK; при 0 — INSERT ABORT).
+     *
+     * Не использует DELETE, поэтому не срабатывает FK CASCADE
+     * (sessions.project_id -> projects ON DELETE CASCADE): сессии
+     * проектов, существующих в бэкапе, сохраняются. Семантика — merge:
+     * поля сущностей из бэкапа перезаписываются, сущности вне бэкапа
+     * не страдают.
+     */
+    @Transaction
+    suspend fun upsertProjects(projects: List<ProjectEntity>) {
+        for (p in projects) {
+            if (updateProject(p) == 0) insertProjectOrThrow(p)
+        }
+    }
 
     /**
      * Обновление проекта по id.
