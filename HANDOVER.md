@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 504 уникальных (980 прогонов: debug + release), 0 failures.
+**Тесты:** 509 уникальных (1018 прогонов: debug + release), 0 failures.
 
 ---
 
@@ -1074,6 +1074,16 @@ gradle/libs.versions.toml — НЕ существует.
 
 ## 24. ЧТО ДЕЛАТЬ СЕЙЧАС
 
+### Next
+
+**P2 Импорт идемпотентен — закрыт** (`70c4e8f`, `99d6517`, docs). Обновлённый диагноз и детали — §15, сессия 18.11.2026. Открытые риски перенесены в `TECHDEBT.md`: `project_progress` мёртвая, remap id при импорте, UNIQUE `(pattern_id, row_number)` fail-fast, `withoutPatternLink` + триггер D, `@Singleton` на `BackupRepositoryImpl:28`.
+
+**Следующая задача:** P2 «Таймер не переживает смерть процесса» (HANDOVER v15 §4 п.2, ~4 ч) или выбор из `TECHDEBT.md` §«Текущий техдолг». Перед стартом — recon целевых файлов, план в 3 фазы (разведка → проектирование → STOP).
+
+---
+
+### Архив (7f-D и post-snapshot до 16.11.2026)
+
 **Серия 7f-D закрыта** (7f-D-1..7): 11 коммитов, detekt 0. P1-долг после 7f-D — см. `TECHDEBT.md` §«Открытые P1 после 7f-D».
 
 ### Закрытые шаги (7f-D)
@@ -1566,3 +1576,11 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - **P1 targetSdk 35:** Обновлен targetSdk с 34 на 35 (требование Google Play), добавлен `enableEdgeToEdge()` в MainActivity, `TimerScreen` обернут в `systemBarsPadding()`. Коммит от 16.11.2026.
 
 - **P1 Canvas глифы:** На Canvas добавлена отрисовка `symbol.textGlyph` внутри прямоугольников операций (оба прохода: rowSpan=1 и rowSpan>1). Лицевая/изнаночная/накид теперь визуально различимы. Коммит от 16.11.2026.
+
+Сессия 18.11.2026 (P1 импорт идемпотентен, диапазон `70c4e8f..99d6517` + текущий docs-коммит):
+- **Диагноз изменён по ходу:** исходная формулировка «Импорт не идемпотентен (`REPLACE` удаляет `project_progress`)» неточна. Реальная причина — `@Insert(REPLACE)` в `save*Batch` импорта: DELETE+INSERT через FK срабатывает на детей, а не на `project_progress`. FK-граф v10: `sessions.project_id -> projects.id ON DELETE CASCADE` (потеря сессий после экспорта), `projects.pattern_id / current_pattern_row_id -> patterns/pattern_rows ON DELETE SET NULL` (потеря привязки к схеме и текущего ряда у проектов вне бэкапа), `pattern_operations.symbol_code -> symbols.code ON DELETE RESTRICT` (жёсткий отказ импорта частичного бэкапа). `project_progress` подтверждена мёртвой: триггеры `trg_progress_check_*` — только `RAISE(ABORT)`, ни одного `INSERT INTO project_progress` в коде.
+- **Выбор фикса:** UPDATE-then-INSERT (`@Transaction upsert*`: UPDATE по PK; при 0 затронутых — INSERT ABORT), не `@Upsert`. `@Upsert` в Room 2.6.1 реализован через try/catch `SQLiteConstraintException` с парсингом текста сообщения, что под Robolectric 4.11.1 на Windows даёт false red (fix — Robolectric 4.12+). Robolectric 4.11.1 в проекте, `gradle.properties` override отсутствует.
+- **Шаг 1/3 (`70c4e8f`):** в 5 DAO добавлены `@Transaction upsert*(List)` + `insert*OrThrow` (ABORT) + `@Update update*`. Существующие `insert*` не тронуты, поведение production не меняется.
+- **Шаг 2/3 (`99d6517`):** `BackupRepositoryImpl.save*Batch` переключены на `upsert*`, удалены мёртвые batch-методы `insertProjects`/`insertSessions` (единственный production use-site — сам импорт; `DataRoundTripTest.seed()` переведён на singular). `B1`: `ProjectDao.recomputeTotalsFromSessions()` пересчитывает `total_time_seconds`/`total_rows` из `SUM(sessions)` для всех проектов; `BackupRepository.recomputeProjectTotals()` — Domain-метод; `DataImporterImpl` вызывает его после `parser.parse` (внутри `withTransaction`). Восстановлен инвариант `projects.total_* == SUM(sessions)`. +5 тестов (`preservesSessionsCreatedAfterExport`, `preservesLocalProjectAbsentFromBackup`, `partialBackupWithLocalPattern`, `isIdempotent`, `recomputesTotals`), все Robolectric + реальный Room. PHILOSOPHY §6: merge через UPDATE-then-INSERT.
+- **Шаг 3/3 (docs, текущий коммит):** HANDOVER + TECHDEBT.
+- **Тесты:** 504 → 509. Detekt 0.
