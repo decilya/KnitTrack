@@ -21,5 +21,22 @@ interface TimerService {
 enum class TimerState {
     IDLE,     // Остановлен
     RUNNING,  // Работает
-    PAUSED    // На паузе
+    PAUSED;   // На паузе
+
+    /** Фабрики для восстановления [TimerState] из строкового представления. */
+    companion object {
+        /**
+         * Восстанавливает [TimerState] из строкового представления.
+         *
+         * Возвращает null при неизвестном значении — fallback на [IDLE]
+         * опасен: он маскирует повреждённые данные как «таймер остановлен»,
+         * хотя пользователь мог вязать. Восстановление из DataStore при
+         * null обязано очистить snapshot.
+         *
+         * @param value Строковое значение (обычно [name]).
+         * @return Соответствующий [TimerState] или null.
+         */
+        fun fromStringOrNull(value: String): TimerState? =
+            entries.firstOrNull { it.name == value }
+    }
 }

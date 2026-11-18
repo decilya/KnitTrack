@@ -2,6 +2,7 @@ package com.knittrack.app.domain.repository
 
 import com.knittrack.app.core.common.Result
 import com.knittrack.app.domain.entity.ThemeMode
+import com.knittrack.app.domain.model.TimerSnapshot
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -47,4 +48,30 @@ interface SettingsRepository {
 
     /** Сохраняет флаг «туториал показан». */
     suspend fun setEditTutorialShown(shown: Boolean): Result<Unit>
+
+    /**
+     * Реактивный поток снимка таймера для восстановления после смерти
+     * процесса.
+     *
+     * `null` — снапшота нет (таймер никогда не запускался, был сброшен,
+     * или данные повреждены/неполны). Восстановление в `TimerServiceImpl`
+     * при null переходит в [com.knittrack.app.domain.service.TimerState.IDLE].
+     */
+    val timerSnapshotFlow: Flow<TimerSnapshot?>
+
+    /**
+     * Сохраняет снимок таймера (атомарно, все 5 полей).
+     *
+     * Вызывается `TimerServiceImpl` при `start()` / `pause()`.
+     * Не блокирует: `TimerServiceImpl` — Singleton, save в его scope.
+     */
+    suspend fun saveTimerSnapshot(snapshot: TimerSnapshot): Result<Unit>
+
+    /**
+     * Очищает снимок таймера (все 5 ключей).
+     *
+     * Вызывается `TimerServiceImpl.reset()` — чтобы после явного
+     * сброса или reboot-восстановления не осталось мусора.
+     */
+    suspend fun clearTimerSnapshot(): Result<Unit>
 }

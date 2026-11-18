@@ -1,7 +1,7 @@
 # HANDOVER — KnitTrac
 
 **Состояние:** см. `git log --oneline -1`, `git status --short`.
-**Тесты:** 509 уникальных (1018 прогонов: debug + release), 0 failures.
+**Тесты:** 517 уникальных (1034 прогонов: debug + release), 0 failures.
 
 ---
 
@@ -1078,7 +1078,9 @@ gradle/libs.versions.toml — НЕ существует.
 
 **P2 Импорт идемпотентен — закрыт** (`70c4e8f`, `99d6517`, docs). Обновлённый диагноз и детали — §15, сессия 18.11.2026. Открытые риски перенесены в `TECHDEBT.md`: `project_progress` мёртвая, remap id при импорте, UNIQUE `(pattern_id, row_number)` fail-fast, `withoutPatternLink` + триггер D, `@Singleton` на `BackupRepositoryImpl:28`.
 
-**Следующая задача:** P2 «Таймер не переживает смерть процесса» (HANDOVER v15 §4 п.2, ~4 ч) или выбор из `TECHDEBT.md` §«Текущий техдолг». Перед стартом — recon целевых файлов, план в 3 фазы (разведка → проектирование → STOP).
+**В работе:** P2 «Таймер не переживает смерть процесса» (шаги 1/3–3/3, сессия 18.11.2026). Шаг 1/3 закрыт (`TimerSnapshot` + DataStore 1.1.0). Шаги 2/3 (`TimerServiceImpl` restore) и 3/3 (`TimerForegroundService.handleSystemRestart`) — в следующих коммитах. Детали — §15.
+
+**После закрытия:** выбор из `TECHDEBT.md` §«Текущий техдолг» (P2 remap id, P2 UNIQUE fail-fast, P2 `withoutPatternLink` + триггер D). Перед стартом — recon целевых файлов, план в 3 фазы (разведка → проектирование → STOP).
 
 ---
 
@@ -1584,3 +1586,8 @@ ViewModel с >4 зависимостями — кандидат на деком�
 - **Шаг 2/3 (`99d6517`):** `BackupRepositoryImpl.save*Batch` переключены на `upsert*`, удалены мёртвые batch-методы `insertProjects`/`insertSessions` (единственный production use-site — сам импорт; `DataRoundTripTest.seed()` переведён на singular). `B1`: `ProjectDao.recomputeTotalsFromSessions()` пересчитывает `total_time_seconds`/`total_rows` из `SUM(sessions)` для всех проектов; `BackupRepository.recomputeProjectTotals()` — Domain-метод; `DataImporterImpl` вызывает его после `parser.parse` (внутри `withTransaction`). Восстановлен инвариант `projects.total_* == SUM(sessions)`. +5 тестов (`preservesSessionsCreatedAfterExport`, `preservesLocalProjectAbsentFromBackup`, `partialBackupWithLocalPattern`, `isIdempotent`, `recomputesTotals`), все Robolectric + реальный Room. PHILOSOPHY §6: merge через UPDATE-then-INSERT.
 - **Шаг 3/3 (docs, текущий коммит):** HANDOVER + TECHDEBT.
 - **Тесты:** 504 → 509. Detekt 0.
+
+Сессия 18.11.2026 (P2 таймер-персистентность, шаги 1/3–3/3, диапазон `eebc738..HEAD`):
+- **Проблема:** `TimerServiceImpl` держит `sessionStartElapsed`, `totalPausedDuration`, `lastPauseElapsed` в памяти. Смерть процесса (system kill, reboot, user swipe) обнуляет их — таймер не переживает перезапуск. `TimerForegroundService.handleSystemRestart()` сразу `stopSelf()`, потому что восстанавливать нечего.
+- **Шаг 1/3:** `TimerSnapshot` (Domain, 5 полей), `TimerState.fromStringOrNull` (null на неизвестном — не fallback на IDLE, чтобы не маскировать повреждённые данные), +5 ключей в `SettingsKeys`, `SettingsRepository.timerSnapshotFlow` / `saveTimerSnapshot` / `clearTimerSnapshot`, реализация в `SettingsRepositoryImpl`. `build.gradle.kts`: DataStore 1.0.0 → 1.1.0 (в 1.0.0 на Windows-JVM `SingleProcessDataStore.writeData` падает на `File.renameTo` с IOException; 1.1.0 использует `Files.move` с `REPLACE_EXISTING`). +8 тестов: `TimerStateTest` (4), `SettingsRepositoryImplTest` (4, DataStore в `TestScope.backgroundScope` + flush через `dataStore.data.first()`).
+- **Шаги 2/3, 3/3:** в работе (TimerServiceImpl restore, TimerForegroundService restart).
