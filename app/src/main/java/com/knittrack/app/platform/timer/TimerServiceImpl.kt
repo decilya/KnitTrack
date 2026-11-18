@@ -13,6 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -51,6 +52,9 @@ class TimerServiceImpl @Inject constructor(
 
     private val _state = MutableStateFlow(TimerState.IDLE)
     override val state: StateFlow<TimerState> = _state
+
+    private val _isRestored = MutableStateFlow(false)
+    override val isRestored: StateFlow<Boolean> = _isRestored.asStateFlow()
 
     /**
      * Wall clock (Unix epoch) первой сессии. Идёт в [Session.startTimestamp].
@@ -145,6 +149,24 @@ class TimerServiceImpl @Inject constructor(
     }
 
     /**
+     * Проверяет, был ли reboot (monotonic-время сброшено в 0).
+     *
+     * Если `sessionStartElapsed > nowElapsed`, значит устройство
+     * перезагрузилось и `elapsedRealtime` сбросился. Снимок невалиден.
+     */
+    private fun isReboot(snapshot: TimerSnapshot, nowElapsed: Long): Boolean {
+        if (snapshot.sessionStartElapsed > nowElapsed) {
+            Timber.w(
+                "Timer snapshot invalid: sessionStartElapsed=%d > nowElapsed=%d (reboot)",
+                snapshot.sessionStartElapsed, nowElapsed
+            )
+            return true
+        }
+        return false
+    }
+
+
+    /**
      * Восстанавливает состояние из [SettingsRepository] при создании
      * Singleton'а.
      *
@@ -159,33 +181,33 @@ class TimerServiceImpl @Inject constructor(
      *   момент паузы.
      */
     private suspend fun restoreFromSnapshot() {
-        val snapshot = settingsRepository.timerSnapshotFlow.first() ?: return
-        val nowElapsed = timeProvider.elapsedRealtime()
+        try {
+            val snapshot = settingsRepository.timerSnapshotFlow.first() ?: return
+            val nowElapsed = timeProvider.elapsedRealtime()
 
-        if (snapshot.sessionStartElapsed > nowElapsed) {
-            Timber.w(
-                "Timer snapshot invalid: sessionStartElapsed=%d > nowElapsed=%d (reboot)",
-                snapshot.sessionStartElapsed, nowElapsed
-            )
-            settingsRepository.clearTimerSnapshot()
-            return
-        }
+            if (isReboot(snapshot, nowElapsed)) {
+                settingsRepository.clearTimerSnapshot()
+                return
+            }
 
-        sessionStartTime = snapshot.sessionStartTime
-        sessionStartElapsed = snapshot.sessionStartElapsed
-        totalPausedDuration = snapshot.totalPausedDuration
-        lastPauseElapsed = snapshot.lastPauseElapsed
-        _state.value = snapshot.state
-        _elapsedTime.value = when (snapshot.state) {
-            TimerState.RUNNING ->
-                (nowElapsed - sessionStartElapsed - totalPausedDuration) / 1000L
-            TimerState.PAUSED ->
-                (lastPauseElapsed - sessionStartElapsed - totalPausedDuration) / 1000L
-            TimerState.IDLE -> 0L
-        }
+            sessionStartTime = snapshot.sessionStartTime
+            sessionStartElapsed = snapshot.sessionStartElapsed
+            totalPausedDuration = snapshot.totalPausedDuration
+            lastPauseElapsed = snapshot.lastPauseElapsed
+            _state.value = snapshot.state
+            _elapsedTime.value = when (snapshot.state) {
+                TimerState.RUNNING ->
+                    (nowElapsed - sessionStartElapsed - totalPausedDuration) / 1000L
+                TimerState.PAUSED ->
+                    (lastPauseElapsed - sessionStartElapsed - totalPausedDuration) / 1000L
+                TimerState.IDLE -> 0L
+            }
 
-        if (snapshot.state == TimerState.RUNNING) {
-            startJob()
+            if (snapshot.state == TimerState.RUNNING) {
+                startJob()
+            }
+        } finally {
+            _isRestored.value = true
         }
     }
 
