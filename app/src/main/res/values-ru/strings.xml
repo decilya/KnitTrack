@@ -56,6 +56,7 @@
     <!-- Timer -->
     <string name="timer_started">Таймер запущен</string>
     <string name="timer_running">Таймер работает</string>
+    <string name="timer_paused">Таймер на паузе</string>
     <string name="timer_channel_name">Таймер KnitTrack</string>
     <string name="timer_channel_description">Уведомления о работе таймера</string>
     <string name="timer_save_error">Не удалось сохранить сессию</string>

@@ -10,6 +10,13 @@ interface TimerService {
     val state: StateFlow<TimerState>
     val sessionStartTime: Long
 
+    /**
+     * Становится `true` после завершения восстановления из snapshot
+     * (включая случаи null/reboot). Foreground-сервис ждёт этого сигнала
+     * перед принятием решения о состоянии таймера.
+     */
+    val isRestored: StateFlow<Boolean>
+
     fun start()
     fun pause()
     fun reset()

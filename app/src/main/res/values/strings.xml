@@ -36,6 +36,7 @@
     <!-- Timer -->
     <string name="timer_started">Timer started</string>
     <string name="timer_running">Timer is running</string>
+    <string name="timer_paused">Timer paused</string>
     <string name="timer_channel_name">KnitTrac Timer</string>
     <string name="timer_channel_description">Notifications about timer operation</string>
     <string name="timer_save_error">Failed to save session</string>
