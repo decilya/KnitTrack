@@ -16,11 +16,13 @@ import com.knittrack.app.MainActivity
 import com.knittrack.app.R
 import com.knittrack.app.core.di.IoDispatcher
 import com.knittrack.app.domain.service.TimerService
+import com.knittrack.app.domain.service.TimerState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -237,19 +239,62 @@ class TimerForegroundService : Service() {
             notification,
             foregroundServiceType()
         )
-        stopSelf()
+        serviceScope.launch {
+            timerManager.isRestored.first { it }
+            handlePostRestore()
+        }
     }
 
     /**
-     * Android 15 вызывает timeout у foreground-сервиса. Тип в манифесте —
-     * specialUse, не dataSync. Останавливаемся сразу: иначе
-     * RemoteServiceException. Таймер на паузе, сессию можно сохранить
-     * при следующем открытии.
+     * После восстановления из snapshot принимает решение о состоянии сервиса.
+     *
+     * - RUNNING: таймер работает, запускаем collect для обновления уведомления.
+     * - PAUSED: таймер на паузе, показываем уведомление "Таймер на паузе".
+     * - IDLE: таймер не запускался или был сброшен (reboot), останавливаем сервис.
+     */
+    private fun handlePostRestore() {
+        when (timerManager.state.value) {
+            TimerState.RUNNING -> startCollecting()
+            TimerState.PAUSED -> showPausedNotification()
+            TimerState.IDLE -> stopSelf()
+        }
+    }
+
+    /** Запускает collect для обновления уведомления (после восстановления RUNNING). */
+    private fun startCollecting() {
+        collectJob?.cancel()
+        collectJob = serviceScope.launch {
+            timerManager.elapsedTime.collect { elapsed ->
+                val updatedNotification = createNotification(
+                    title = getString(R.string.timer_running),
+                    text = formatTime(elapsed)
+                )
+                notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+            }
+        }
+    }
+
+    /** Показывает уведомление "Таймер на паузе" (после восстановления PAUSED). */
+    private fun showPausedNotification() {
+        val notification = createNotification(
+            title = getString(R.string.timer_paused),
+            text = formatTime(timerManager.elapsedTime.value)
+        )
+        notificationManager.notify(NOTIFICATION_ID, notification)
+    }
+
+    /**
+     * Вызывается системой, если foreground-сервис не уложился в таймаут
+     * для своего типа. Для `specialUse` таймаута нет (Android 15).
+     * Если сюда попали — тип в манифесте не совпадает с типом,
+     * переданным в startForeground(). На всякий случай ставим таймер
+     * на паузу и останавливаемся.
      */
     override fun onTimeout(startId: Int) {
         Timber.w(
-            "Foreground service timeout (dataSync limit on API 35). " +
-            "Stopping gracefully, timer paused."
+            "Foreground service timeout on API %d. " +
+            "Timer paused gracefully.",
+            Build.VERSION.SDK_INT
         )
         timerManager.pause()
         stopForeground(STOP_FOREGROUND_REMOVE)
